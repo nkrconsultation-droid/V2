@@ -1,0 +1,15 @@
+{
+  "name": "karratha-wtp-simulator-root",
+  "version": "1.0.0",
+  "description": "Karratha Water Treatment Plant Simulator - Root convenience scripts",
+  "scripts": {
+    "install": "cd karratha-wtp-simulator && npm install",
+    "dev": "cd karratha-wtp-simulator && npm run dev",
+    "build": "cd karratha-wtp-simulator && npm run build",
+    "preview": "cd karratha-wtp-simulator && npm run preview",
+    "start": "cd karratha-wtp-simulator && npm install && npm run dev"
+  },
+  "keywords": ["water-treatment", "simulator", "centrifuge", "process-control"],
+  "author": "",
+  "license": "ISC"
+}
