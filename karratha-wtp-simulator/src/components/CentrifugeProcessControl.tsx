@@ -1,10 +1,38 @@
 // @ts-nocheck
 /* eslint-disable */
 /**
- * CENTRIFUGE PROCESS CONTROL - Version 13
- * Advanced industrial centrifuge simulation with Stokes Law physics,
- * chemical dosing, SPDD1600 polishing filter, and comprehensive process control.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CENTRIFUGE PROCESS CONTROL - Version 14
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Advanced industrial centrifuge simulation featuring:
+ * - Stokes Law separation physics with Richardson-Zaki correlation
+ * - Chemical dosing system (7 chemicals with Langmuir/Smoluchowski models)
+ * - SPDD1600 Waterco polishing filter simulation
+ * - Tank farm management (6 feed + 6 oil tanks + 8ML pond)
+ * - Batch processing with 6 ISA-88 compliant phases
+ * - PID control loops (TIC, FIC, SIC)
+ * - Automatic Quality Control (AQC) system
+ * - License compliance monitoring (TRH, COD, pH, OiW, turbidity)
+ *
+ * INDUSTRY STANDARDS:
+ * - ISA-101: HMI Design (display hierarchy L1-L4)
+ * - ISA-18.2: Alarm Management (priority-based, state machine)
+ * - ISA-88: Batch Control (states, modes, phases)
+ * - High Performance HMI: Gray backgrounds, color for abnormal only
+ *
+ * DEBUGGING:
+ * - Press Ctrl+Shift+D to toggle debug panel
+ * - Debug logs available in browser console
+ * - State snapshots captured every 5 seconds
+ * - Performance monitoring for slow operations
+ *
+ * @version 14.0.0
+ * @author Karratha WTP Team
+ * @license MIT
+ * ═══════════════════════════════════════════════════════════════════════════
  */
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
 
