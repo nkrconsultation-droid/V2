@@ -3434,11 +3434,19 @@ export default function CentrifugeProcessControl() {
                 </div>
               </div>
               <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <h4 className="text-sm font-semibold text-cyan-400 mb-3">📈 Session</h4>
+                <h4 className="text-sm font-semibold text-cyan-400 mb-3">📈 Session Totals</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Feed Processed</span><span>{totals.feed.toFixed(1)} m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Oil Recovered</span><span className="text-amber-400">{(totals.oil * 1000).toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Run Time</span><span>{formatTime(totals.runTime)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Feed Processed</span><span>{totals.feed.toFixed(2)} m³</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Oil Recovered</span><span className="text-amber-400">{(totals.oil * 1000).toFixed(1)} L</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Water Discharged</span><span className="text-cyan-400">{totals.water.toFixed(2)} m³</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Sludge Disposal</span><span className="text-orange-400">{(totals.solids * 1000).toFixed(1)} L</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Energy Used</span><span className="text-yellow-400">{totals.energy.toFixed(1)} kWh</span></div>
+                  <div className="flex justify-between border-t border-slate-600 pt-2 mt-2"><span className="text-slate-400">Run Time</span><span>{formatTime(totals.runTime)}</span></div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-600">
+                  <div className="text-xs text-slate-500 mb-1">Sludge Disposal Cost</div>
+                  <div className="text-lg font-bold text-orange-400">${(totals.solids * costs.sludgeDisposal).toFixed(2)}</div>
+                  <div className="text-xs text-slate-500">@ ${costs.sludgeDisposal}/m³</div>
                 </div>
               </div>
             </div>
@@ -5253,8 +5261,20 @@ export default function CentrifugeProcessControl() {
                 <KPI title="Specific Energy" val={computed.specificEnergy} unit="kWh/m³" target={targets.maxEnergy} icon="⚡" good={computed.specificEnergy <= targets.maxEnergy} />
                 <KPI title="Total Power" val={smoothedProc.totalPower} unit="kW" target={150} icon="🔌" />
                 <KPI title="Run Time" val={totals.runTime / 3600} unit="h" target={8} icon="⏱️" />
-                <KPI title="Backwash Count" val={polishingFilter.backwashCount} unit="" target={5} icon="🔄" good={polishingFilter.backwashCount < 10} />
-                <KPI title="Filter Run Hours" val={polishingFilter.runHours} unit="h" target={24} icon="🔵" />
+                <KPI title="Sludge Rate" val={smoothedProc.solidsOut * 1000} unit="L/h" target={1000} icon="🪨" good={smoothedProc.solidsOut * 1000 <= 1500} />
+                <KPI title="Sludge Total" val={totals.solids * 1000} unit="L" target={5000} icon="🚛" />
+              </div>
+            </div>
+
+            {/* Sludge Disposal Summary */}
+            <div className="bg-slate-800 rounded-lg p-4 border border-orange-900/50">
+              <h3 className="text-sm font-semibold text-orange-400 mb-3">🚛 SLUDGE DISPOSAL</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <KPI title="Sludge Rate" val={smoothedProc.solidsOut} unit="m³/h" target={0.5} icon="📊" good={smoothedProc.solidsOut <= 1.0} />
+                <KPI title="Session Total" val={totals.solids * 1000} unit="L" target={5000} icon="🛢️" />
+                <KPI title="Cake Moisture" val={smoothedProc.sludgeMoisture || 20} unit="%" target={productLimits.sludgeMoisture} icon="💧" good={(smoothedProc.sludgeMoisture || 20) <= productLimits.sludgeMoisture} />
+                <KPI title="Disposal Cost" val={totals.solids * costs.sludgeDisposal} unit="$" target={500} icon="💰" />
+                <KPI title="Cost Rate" val={smoothedProc.solidsOut * costs.sludgeDisposal} unit="$/h" target={100} icon="📈" good={smoothedProc.solidsOut * costs.sludgeDisposal <= 150} />
               </div>
             </div>
 
