@@ -2,10 +2,17 @@
 /* eslint-disable */
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * CENTRIFUGE PROCESS CONTROL - Version 14
+ * CENTRIFUGE PROCESS CONTROL - Version 15 (Delta-Canter 20-843A)
  * ═══════════════════════════════════════════════════════════════════════════
  *
- * Advanced industrial centrifuge simulation featuring:
+ * EQUIPMENT: SACOR Delta-Canter 20-843A Three-Phase Tricanter
+ * - Bowl: 520mm diameter × 1800mm length (L:D 4.0:1)
+ * - Speed: 2200-3600 RPM (max 3000 G)
+ * - Capacity: 15 m³/h design, 10-30 m³/h operating range
+ * - Motors: 45kW main + 11kW back-drive (56kW total)
+ * - Guarantees: ≥95% oil recovery, ≤500 mg/L TPH, ≤20% cake moisture
+ *
+ * SIMULATION FEATURES:
  * - Stokes Law separation physics with Richardson-Zaki correlation
  * - Chemical dosing system (7 chemicals with Langmuir/Smoluchowski models)
  * - SPDD1600 Waterco polishing filter simulation
@@ -19,6 +26,7 @@
  * - ISA-101: HMI Design (display hierarchy L1-L4)
  * - ISA-18.2: Alarm Management (priority-based, state machine)
  * - ISA-88: Batch Control (states, modes, phases)
+ * - ISO 10816-3: Vibration limits (Zone A/B/C/D)
  * - High Performance HMI: Gray backgrounds, color for abnormal only
  *
  * DEBUGGING:
@@ -27,7 +35,9 @@
  * - State snapshots captured every 5 seconds
  * - Performance monitoring for slow operations
  *
- * @version 14.0.0
+ * @version 15.0.0
+ * @equipment SACOR Delta-Canter 20-843A
+ * @reference SAC-PRO-A26-003 (SACOR Technical Proposal)
  * @author Karratha WTP Team
  * @license MIT
  * ═══════════════════════════════════════════════════════════════════════════
@@ -384,10 +394,11 @@ export default function CentrifugeProcessControl() {
   // ═══════════════════════════════════════════════════════════════
   //                   EQUIPMENT & FEED PROPERTIES
   // ═══════════════════════════════════════════════════════════════
+  // Delta-Canter 20-843A Three-Phase Tricanter (SACOR Australia)
   const [equipment, setEquipment] = useState({
-    heaterCapacity: 120, heaterEfficiency: 92, heaterMaxTemp: 85, heaterTimeConstant: 30,
-    centrifugeCapacity: 100, maxRPM: 5000, minRPM: 1500, maxFlow: 15,
-    bowlDiameter: 400, bowlLength: 1100, motorEfficiency: 94, vfdEfficiency: 97,
+    heaterCapacity: 150, heaterEfficiency: 92, heaterMaxTemp: 95, heaterTimeConstant: 180,
+    centrifugeCapacity: 56, maxRPM: 3600, minRPM: 2200, maxFlow: 30,
+    bowlDiameter: 520, bowlLength: 1800, motorEfficiency: 94, vfdEfficiency: 97,
     bearingCondition: 100,
   });
 
@@ -504,11 +515,11 @@ export default function CentrifugeProcessControl() {
 
   // ═══════════════════════════════════════════════════════════════
   //                   CONTROL LOOPS (Simplified 3-loop)
-  // ═══════════════════════════════════════════════════════════════
+  // Delta-Canter 20-843A Control Loops (nominal operating points)
   const [loops, setLoops] = useState({
     TIC: { tag: 'TIC-001', desc: 'Heater Outlet Temp', unit: '°C', pv: 65, sp: 65, op: 50, mode: 'AUTO', kp: 2.0, ki: 0.1, kd: 0.5, int: 0, lastErr: 0 },
-    FIC: { tag: 'FIC-001', desc: 'Feed Flow Rate', unit: 'm³/h', pv: 12, sp: 12, op: 60, mode: 'AUTO', kp: 1.5, ki: 0.2, kd: 0.1, int: 0, lastErr: 0 },
-    SIC: { tag: 'SIC-001', desc: 'Bowl Speed', unit: 'RPM', pv: 3500, sp: 3500, op: 70, mode: 'AUTO', kp: 0.5, ki: 0.05, kd: 0.02, int: 0, lastErr: 0 },
+    FIC: { tag: 'FIC-001', desc: 'Feed Flow Rate', unit: 'm³/h', pv: 15, sp: 15, op: 50, mode: 'AUTO', kp: 1.5, ki: 0.2, kd: 0.1, int: 0, lastErr: 0 },
+    SIC: { tag: 'SIC-001', desc: 'Bowl Speed', unit: 'RPM', pv: 3200, sp: 3200, op: 72, mode: 'AUTO', kp: 0.5, ki: 0.05, kd: 0.02, int: 0, lastErr: 0 },
   });
 
   // ═══════════════════════════════════════════════════════════════
@@ -714,33 +725,36 @@ export default function CentrifugeProcessControl() {
   const pendingRef = useRef({});
 
   const [totals, setTotals] = useState({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 });
-  const [costs, setCosts] = useState({ elec: 0.34, sludgeDisposal: 85, waterTreatment: 2.5, oilValue: 340, laborRate: 140 });
-  const [targets, setTargets] = useState({ oilEff: 90, solidsEff: 95, waterQuality: 50, minFlow: 10, maxEnergy: 15, maxVib: 5, pH: { min: 6.5, max: 8.5 }, turbidity: 100 });
+  // Australian market rates (WA commercial)
+  const [costs, setCosts] = useState({ elec: 0.28, sludgeDisposal: 180, waterTreatment: 2.5, oilValue: 450, laborRate: 85 });
+  // Delta-Canter 20-843A Performance Guarantees (SACOR)
+  const [targets, setTargets] = useState({ oilEff: 95, solidsEff: 95, waterQuality: 500, minFlow: 10, maxEnergy: 5, maxVib: 4.5, pH: { min: 6.5, max: 8.5 }, turbidity: 30 });
 
   // ═══════════════════════════════════════════════════════════════
   //    WATER DISCHARGE - License compliance (regulatory/environmental)
   // ═══════════════════════════════════════════════════════════════
   // These limits ONLY apply to the water discharge stream (to evaporation pond)
   // NOT to oil product or sludge/CF cake outputs
+  // Delta-Canter 20-843A Discharge Limits (per SACOR guarantee & license)
   const [dischargeLimits, setDischargeLimits] = useState({
-    oilInWater: 15,        // ppm - max OiW allowed in discharge (visual sheen threshold ~10-15 ppm)
-    tph: 500,              // ppm - Total Petroleum Hydrocarbons limit for evaporation pond (internal)
-    trh: 50,               // mg/L - Total Recoverable Hydrocarbons (license limit, includes dissolved)
-    cod: 1000,             // mg/L - Chemical Oxygen Demand (license limit, measures oxidizable organics)
-    turbidity: 20,         // NTU - max turbidity allowed (correlates with TSS)
+    oilInWater: 500,       // ppm - max OiW allowed in centrate (SACOR guarantee ≤500 mg/L TPH)
+    tph: 500,              // ppm - Total Petroleum Hydrocarbons (per guarantee)
+    trh: 15,               // mg/L - Total Recoverable Hydrocarbons (environmental license)
+    cod: 250,              // mg/L - Chemical Oxygen Demand (environmental license)
+    turbidity: 50,         // NTU - max turbidity allowed (correlates with TSS)
     pH: { min: 6.0, max: 9.0 },  // pH range for discharge (aquatic life protection)
-    tss: 30,               // mg/L - total suspended solids
-    temperature: 45,       // °C - max discharge temperature (thermal pollution limit)
+    tss: 50,               // mg/L - total suspended solids
+    temperature: 40,       // °C - max discharge temperature (per equipment spec)
     enabled: true,         // Enable/disable limit checking
   });
 
   // ═══════════════════════════════════════════════════════════════
   //    PRODUCT QUALITY LIMITS - Oil and Sludge/CF Cake
   // ═══════════════════════════════════════════════════════════════
-  // Separate from water discharge - these are product quality specs
+  // Product quality specs (per SACOR guarantee: ≤20% residual moisture in cake)
   const [productLimits, setProductLimits] = useState({
-    oilMoisture: 10,       // % v/v - max water content in recovered oil (<10%)
-    sludgeMoisture: 40,    // % v/v - max water content in sludge/CF cake (<40%)
+    oilMoisture: 5,        // % v/v - max water content in recovered oil (<5% for quality oil)
+    sludgeMoisture: 20,    // % v/v - max water content in sludge/CF cake (SACOR guarantee ≤20%)
     enabled: true,
   });
 
@@ -751,12 +765,12 @@ export default function CentrifugeProcessControl() {
     enabled: false,
     mode: 'ADVISORY',        // MONITOR (alerts only), ADVISORY (suggestions), AUTO (automatic corrections)
 
-    // Quality targets (tighter than limits for safety margin)
+    // Quality targets (tighter than limits for safety margin - Delta-Canter specs)
     targets: {
-      oiw: { enabled: true, target: 12, warningPct: 70, criticalPct: 90 },      // ppm
-      trh: { enabled: true, target: 40, warningPct: 70, criticalPct: 90 },      // mg/L
-      cod: { enabled: true, target: 800, warningPct: 70, criticalPct: 90 },     // mg/L
-      turbidity: { enabled: true, target: 15, warningPct: 70, criticalPct: 90 }, // NTU
+      oiw: { enabled: true, target: 300, warningPct: 70, criticalPct: 90 },     // ppm (target < 500 guarantee)
+      trh: { enabled: true, target: 10, warningPct: 70, criticalPct: 90 },      // mg/L (target < 15 license)
+      cod: { enabled: true, target: 180, warningPct: 70, criticalPct: 90 },     // mg/L (target < 250 license)
+      turbidity: { enabled: true, target: 30, warningPct: 70, criticalPct: 90 }, // NTU (target < 50 limit)
       pH: { enabled: true, targetMin: 6.5, targetMax: 8.5 },
     },
 
@@ -3492,12 +3506,14 @@ export default function CentrifugeProcessControl() {
                   <div className="text-xs text-slate-400 mt-1">65% oil content</div>
                 </button>
                 <button onClick={() => {
-                  setEquipment(p => ({ ...p, heaterCapacity: 120, centrifugeCapacity: 100, maxRPM: 5000, bearingCondition: 100 }));
-                  setFeedProps({ waterFraction: 0.75, oilFraction: 0.20, solidsFraction: 0.05, oilDensity: 890, solidsDensity: 2650, oilDropletD50: 25, solidsD50: 80, emulsionStability: 0.3, demulsifierEff: 0.7 });
+                  // Delta-Canter 20-843A defaults (SACOR)
+                  setEquipment(p => ({ ...p, heaterCapacity: 150, centrifugeCapacity: 56, maxRPM: 3600, minRPM: 2200, maxFlow: 30, bowlDiameter: 520, bowlLength: 1800, bearingCondition: 100 }));
+                  setFeedProps(p => ({ ...p, waterFraction: 0.75, oilFraction: 0.20, solidsFraction: 0.05, oilDensity: 890, solidsDensity: 2650, oilDropletD50: 25, solidsD50: 80, emulsionStability: 0.3, demulsifierEff: 0.7 }));
                   setDisturbances(p => ({ ...p, compVar: 0.10, tempVar: 0.05, flowVar: 0.03, pumpCavitation: false }));
+                  setLoops(p => ({ ...p, FIC: { ...p.FIC, sp: 15 }, SIC: { ...p.SIC, sp: 3200 } }));
                 }} className="p-3 bg-slate-700 hover:bg-slate-600 border border-slate-500 rounded-lg transition-colors">
                   <div className="text-slate-300 font-bold text-sm">🔄 Reset Defaults</div>
-                  <div className="text-xs text-slate-400 mt-1">Standard configuration</div>
+                  <div className="text-xs text-slate-400 mt-1">Delta-Canter 20-843A</div>
                 </button>
               </div>
             </div>
