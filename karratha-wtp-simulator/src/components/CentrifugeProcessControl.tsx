@@ -740,7 +740,15 @@ export default function CentrifugeProcessControl() {
 
   const [totals, setTotals] = useState({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 });
   // Australian market rates (WA commercial)
-  const [costs, setCosts] = useState({ elec: 0.28, sludgeDisposal: 180, waterTreatment: 2.5, oilValue: 450, laborRate: 85 });
+  const [costs, setCosts] = useState({
+    elec: 0.28,              // $/kWh
+    sludgeDisposal: 180,     // $/m³
+    waterTreatment: 2.5,     // $/m³
+    oilValue: 450,           // $/m³ (value at destination)
+    oilTransport: 220,       // $/m³ ($0.22/L Karratha to Kalgoorlie)
+    pondDisposal: 3.5,       // $/m³ ($3.5/1000L evaporation pond)
+    laborRate: 85,           // $/hour
+  });
 
   // ═══════════════════════════════════════════════════════════════
   //    CAPITAL MODEL & INVESTMENT ANALYSIS
@@ -3710,9 +3718,11 @@ export default function CentrifugeProcessControl() {
                 <h3 className="text-lg font-semibold text-green-400 mb-4">💰 Operating Costs</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Electricity" value={costs.elec} onChange={v => setCosts(p => ({ ...p, elec: v }))} unit="$/kWh" step={0.01} />
-                  <Field label="Oil Value" value={costs.oilValue} onChange={v => setCosts(p => ({ ...p, oilValue: v }))} unit="$/m³" />
+                  <Field label="Oil Value (at dest)" value={costs.oilValue} onChange={v => setCosts(p => ({ ...p, oilValue: v }))} unit="$/m³" />
+                  <Field label="Oil Transport" value={costs.oilTransport} onChange={v => setCosts(p => ({ ...p, oilTransport: v }))} unit="$/m³" />
                   <Field label="Sludge Disposal" value={costs.sludgeDisposal} onChange={v => setCosts(p => ({ ...p, sludgeDisposal: v }))} unit="$/m³" />
                   <Field label="Water Treatment" value={costs.waterTreatment} onChange={v => setCosts(p => ({ ...p, waterTreatment: v }))} unit="$/m³" />
+                  <Field label="Pond Disposal" value={costs.pondDisposal} onChange={v => setCosts(p => ({ ...p, pondDisposal: v }))} unit="$/m³" />
                   <Field label="Labor Rate" value={costs.laborRate} onChange={v => setCosts(p => ({ ...p, laborRate: v }))} unit="$/h" />
                 </div>
               </div>
@@ -5765,19 +5775,22 @@ export default function CentrifugeProcessControl() {
           const annualSolids = annualFeed * (capitalModel.feedSolidsContent / 100) * (avgSolidsEff / 100);
           const annualWater = annualFeed - annualOilRecovered - annualSolids;
 
-          // Annual revenue
-          const annualOilRevenue = annualOilRecovered * costs.oilValue;
-          const totalAnnualRevenue = annualOilRevenue;
+          // Annual revenue (oil value minus transport to Kalgoorlie)
+          const annualOilGrossRevenue = annualOilRecovered * costs.oilValue;
+          const annualOilTransportCost = annualOilRecovered * costs.oilTransport; // $0.22/L = $220/m³
+          const annualOilNetRevenue = annualOilGrossRevenue - annualOilTransportCost;
+          const totalAnnualRevenue = annualOilNetRevenue;
 
           // Annual operating costs
           const avgPowerKW = 56 * 0.7; // 70% of installed power
           const annualEnergyCost = avgPowerKW * capitalModel.operatingHours * costs.elec;
           const annualSludgeCost = annualSolids * costs.sludgeDisposal;
           const annualWaterCost = annualWater * costs.waterTreatment;
+          const annualPondCost = annualWater * costs.pondDisposal; // $3.5/1000L = $3.5/m³
           const annualLaborCost = capitalModel.operatingHours * costs.laborRate * 0.5; // 0.5 FTE
           const annualChemicalCost = annualFeed * 2.5; // ~$2.50/m³ for chemicals
           const annualInsurance = capitalModel.totalInvestment * (capitalModel.insurancePct / 100);
-          const subtotalOpex = annualEnergyCost + annualSludgeCost + annualWaterCost + annualLaborCost +
+          const subtotalOpex = annualEnergyCost + annualSludgeCost + annualWaterCost + annualPondCost + annualLaborCost +
                                annualChemicalCost + capitalModel.maintenanceCost + annualInsurance;
           const annualOverhead = subtotalOpex * (capitalModel.overheadPct / 100);
           const totalAnnualOpex = subtotalOpex + annualOverhead;
@@ -5831,9 +5844,134 @@ export default function CentrifugeProcessControl() {
           // Profitability Index
           const profitabilityIndex = (npv + capitalModel.totalInvestment) / capitalModel.totalInvestment;
 
+          // Print function for capital model
+          const printCapitalModel = () => {
+            const printContent = `
+              <html>
+              <head>
+                <title>Capital Investment Model - Karratha WTP</title>
+                <style>
+                  body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+                  h1 { color: #0d9488; border-bottom: 2px solid #0d9488; padding-bottom: 10px; }
+                  h2 { color: #1e40af; margin-top: 30px; }
+                  table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                  th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                  th { background: #f3f4f6; }
+                  .positive { color: #16a34a; font-weight: bold; }
+                  .negative { color: #dc2626; }
+                  .highlight { background: #fef3c7; }
+                  .metric-box { display: inline-block; padding: 15px; margin: 10px; border: 2px solid #ddd; border-radius: 8px; text-align: center; min-width: 150px; }
+                  .metric-value { font-size: 24px; font-weight: bold; }
+                  .metric-label { font-size: 12px; color: #666; }
+                  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+                </style>
+              </head>
+              <body>
+                <h1>💰 Capital Investment Model</h1>
+                <p><strong>Equipment:</strong> SACOR Delta-Canter 20-843A Three-Phase Tricanter</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+
+                <h2>📊 Investment Summary</h2>
+                <div class="metric-box" style="border-color: #16a34a;">
+                  <div class="metric-value positive">${formatCurrency(capitalModel.totalInvestment, 2)}</div>
+                  <div class="metric-label">Total Investment</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value">${simplePayback.toFixed(1)} yrs</div>
+                  <div class="metric-label">Payback Period</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value">${roi.toFixed(1)}%</div>
+                  <div class="metric-label">Annual ROI</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value positive">${formatCurrency(npv, 2)}</div>
+                  <div class="metric-label">NPV (${capitalModel.projectLife}yr)</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value">${irr.toFixed(1)}%</div>
+                  <div class="metric-label">IRR</div>
+                </div>
+
+                <h2>🏗️ Capital Breakdown</h2>
+                <table>
+                  <tr><th>Item</th><th>%</th><th>Amount</th></tr>
+                  <tr><td>Equipment (centrifuge, motors)</td><td>${capitalModel.breakdown.equipment}%</td><td>${formatCurrency(capBreakdown.equipment, 0)}</td></tr>
+                  <tr><td>Installation</td><td>${capitalModel.breakdown.installation}%</td><td>${formatCurrency(capBreakdown.installation, 0)}</td></tr>
+                  <tr><td>Engineering & Commissioning</td><td>${capitalModel.breakdown.engineering}%</td><td>${formatCurrency(capBreakdown.engineering, 0)}</td></tr>
+                  <tr><td>Instrumentation & Controls</td><td>${capitalModel.breakdown.instrumentation}%</td><td>${formatCurrency(capBreakdown.instrumentation, 0)}</td></tr>
+                  <tr><td>Contingency</td><td>${capitalModel.breakdown.contingency}%</td><td>${formatCurrency(capBreakdown.contingency, 0)}</td></tr>
+                  <tr class="highlight"><td><strong>Total</strong></td><td><strong>100%</strong></td><td><strong>${formatCurrency(capitalModel.totalInvestment, 2)}</strong></td></tr>
+                </table>
+
+                <h2>📈 Annual Revenue (Mass Balance)</h2>
+                <table>
+                  <tr><th>Item</th><th>Volume</th><th>Amount</th></tr>
+                  <tr><td>Oil Value (at Kalgoorlie)</td><td>${annualOilRecovered.toFixed(0)} m³ @ $${costs.oilValue}/m³</td><td class="positive">+${formatCurrency(annualOilGrossRevenue, 2)}</td></tr>
+                  <tr><td>Transport (Karratha → Kalgoorlie)</td><td>${(annualOilRecovered * 1000).toFixed(0)} kL @ $0.22/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
+                  <tr class="highlight"><td><strong>Net Oil Revenue</strong></td><td></td><td class="positive"><strong>+${formatCurrency(annualOilNetRevenue, 2)}</strong></td></tr>
+                </table>
+
+                <h2>📉 Annual Operating Costs</h2>
+                <table>
+                  <tr><th>Item</th><th>Details</th><th>Amount</th></tr>
+                  <tr><td>Electricity</td><td>${(avgPowerKW * capitalModel.operatingHours / 1000).toFixed(0)} MWh @ $${costs.elec}/kWh</td><td class="negative">-${formatCurrency(annualEnergyCost, 0)}</td></tr>
+                  <tr><td>Sludge Disposal</td><td>${annualSolids.toFixed(0)} m³ @ $${costs.sludgeDisposal}/m³</td><td class="negative">-${formatCurrency(annualSludgeCost, 0)}</td></tr>
+                  <tr><td>Water Treatment</td><td>${annualWater.toFixed(0)} m³ @ $${costs.waterTreatment}/m³</td><td class="negative">-${formatCurrency(annualWaterCost, 0)}</td></tr>
+                  <tr><td>Pond Disposal</td><td>${annualWater.toFixed(0)} m³ @ $${costs.pondDisposal}/m³</td><td class="negative">-${formatCurrency(annualPondCost, 0)}</td></tr>
+                  <tr><td>Labor</td><td>0.5 FTE @ $${costs.laborRate}/h</td><td class="negative">-${formatCurrency(annualLaborCost, 0)}</td></tr>
+                  <tr><td>Chemicals</td><td>${annualFeed.toFixed(0)} m³ @ $2.50/m³</td><td class="negative">-${formatCurrency(annualChemicalCost, 0)}</td></tr>
+                  <tr><td>Maintenance Contract</td><td>Annual</td><td class="negative">-${formatCurrency(capitalModel.maintenanceCost, 0)}</td></tr>
+                  <tr><td>Insurance</td><td>${capitalModel.insurancePct}% of capital</td><td class="negative">-${formatCurrency(annualInsurance, 0)}</td></tr>
+                  <tr><td>Overhead</td><td>${capitalModel.overheadPct}% of OPEX</td><td class="negative">-${formatCurrency(annualOverhead, 0)}</td></tr>
+                  <tr class="highlight"><td><strong>Total Annual OPEX</strong></td><td></td><td class="negative"><strong>-${formatCurrency(totalAnnualOpex, 2)}</strong></td></tr>
+                </table>
+
+                <h2>💵 Net Annual Benefit</h2>
+                <div class="metric-box" style="border-color: ${netAnnualBenefit > 0 ? '#16a34a' : '#dc2626'}; width: 100%; text-align: center;">
+                  <div class="metric-value ${netAnnualBenefit > 0 ? 'positive' : 'negative'}">${formatCurrency(netAnnualBenefit, 2)}</div>
+                  <div class="metric-label">${(netAnnualBenefit / annualFeed).toFixed(2)} per m³ processed</div>
+                </div>
+
+                <h2>⚙️ Model Assumptions</h2>
+                <table>
+                  <tr><td>Operating Hours/Year</td><td>${capitalModel.operatingHours.toLocaleString()} hrs</td></tr>
+                  <tr><td>Annual Feed Volume</td><td>${capitalModel.annualFeedVolume.toLocaleString()} m³</td></tr>
+                  <tr><td>Feed Oil Content</td><td>${capitalModel.feedOilContent}%</td></tr>
+                  <tr><td>Feed Solids Content</td><td>${capitalModel.feedSolidsContent}%</td></tr>
+                  <tr><td>Oil Recovery Efficiency</td><td>${avgOilEff.toFixed(1)}%</td></tr>
+                  <tr><td>Discount Rate (WACC)</td><td>${capitalModel.discountRate}%</td></tr>
+                  <tr><td>Project Life</td><td>${capitalModel.projectLife} years</td></tr>
+                  <tr><td>Inflation Rate</td><td>${capitalModel.inflationRate}%</td></tr>
+                </table>
+
+                <div class="footer">
+                  <p><strong>Karratha Water Treatment Plant Simulator v15</strong></p>
+                  <p>Equipment: SACOR Delta-Canter 20-843A | Reference: SAC-PRO-A26-003</p>
+                  <p>This document is for planning purposes only. Actual results may vary.</p>
+                </div>
+              </body>
+              </html>
+            `;
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(printContent);
+              printWindow.document.close();
+              printWindow.print();
+            }
+          };
+
           return (
             <div className="space-y-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">💰 Capital Investment Model</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold flex items-center gap-2">💰 Capital Investment Model</h2>
+                <button
+                  onClick={printCapitalModel}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2 transition-colors print:hidden"
+                >
+                  🖨️ Print Report
+                </button>
+              </div>
 
               {/* Investment Slider */}
               <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 rounded-xl p-6 border border-green-700/50">
@@ -5982,6 +6120,10 @@ export default function CentrifugeProcessControl() {
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualWaterCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
+                        <td className="py-2">Pond disposal ({annualWater.toFixed(0)} m³ @ $3.5/kL)</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualPondCost, 0)}</td>
+                      </tr>
+                      <tr className="border-b border-slate-700">
                         <td className="py-2">Labor (0.5 FTE @ ${costs.laborRate}/h)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualLaborCost, 0)}</td>
                       </tr>
@@ -6034,12 +6176,16 @@ export default function CentrifugeProcessControl() {
                   <table className="w-full text-sm">
                     <tbody>
                       <tr className="border-b border-slate-700">
-                        <td className="py-2">Oil recovered ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)</td>
-                        <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilRevenue, 2)}</td>
+                        <td className="py-2">Oil value ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)</td>
+                        <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilGrossRevenue, 2)}</td>
+                      </tr>
+                      <tr className="border-b border-slate-700">
+                        <td className="py-2 text-amber-400">Transport Karratha→Kalgoorlie ({(annualOilRecovered * 1000).toFixed(0)}kL @ $0.22/L)</td>
+                        <td className="py-2 text-right text-amber-400 font-mono">-{formatCurrency(annualOilTransportCost, 2)}</td>
                       </tr>
                       <tr className="bg-green-900/30">
-                        <td className="py-2 font-bold">Total Annual Revenue</td>
-                        <td className="py-2 text-right text-green-400 font-bold text-lg">+{formatCurrency(totalAnnualRevenue, 2)}</td>
+                        <td className="py-2 font-bold">Net Oil Revenue</td>
+                        <td className="py-2 text-right text-green-400 font-bold text-lg">+{formatCurrency(annualOilNetRevenue, 2)}</td>
                       </tr>
                     </tbody>
                   </table>
