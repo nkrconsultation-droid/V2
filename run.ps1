@@ -1,9 +1,10 @@
 # Karratha WTP Simulator - PowerShell Launch Script
 # Run this script to start the development server
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Karratha WTP Simulator - Version 13  " -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "  Karratha WTP Simulator - Version 15           " -ForegroundColor Cyan
+Write-Host "  Equipment: SACOR Delta-Canter 20-843A         " -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Navigate to the project directory
