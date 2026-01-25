@@ -53,6 +53,20 @@ const gaussianRandom = (mean, stdDev) => {
 };
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const formatTime = (s) => `${Math.floor(s/3600)}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+// Currency formatter - normalizes large values for easy reading
+const formatCurrency = (value: number, decimals: number = 2): string => {
+  const absValue = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (absValue >= 1000000) {
+    return `${sign}$${(absValue / 1000000).toFixed(decimals)}M`;
+  } else if (absValue >= 1000) {
+    return `${sign}$${(absValue / 1000).toFixed(decimals)}K`;
+  } else {
+    return `${sign}$${absValue.toFixed(decimals)}`;
+  }
+};
+
 const calcStats = (data, key) => {
   const vals = data.map(d => d[key]).filter(v => !isNaN(v));
   if (!vals.length) return { mean: 0, stdDev: 0, min: 0, max: 0 };
@@ -726,7 +740,15 @@ export default function CentrifugeProcessControl() {
 
   const [totals, setTotals] = useState({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 });
   // Australian market rates (WA commercial)
-  const [costs, setCosts] = useState({ elec: 0.28, sludgeDisposal: 180, waterTreatment: 2.5, oilValue: 450, laborRate: 85 });
+  const [costs, setCosts] = useState({
+    elec: 0.28,              // $/kWh
+    sludgeDisposal: 180,     // $/m³
+    waterTreatment: 2.5,     // $/m³
+    oilValue: 450,           // $/m³ (value at destination)
+    oilTransport: 220,       // $/m³ ($0.22/L Karratha to Kalgoorlie)
+    pondDisposal: 3.5,       // $/m³ ($3.5/1000L evaporation pond)
+    laborRate: 85,           // $/hour
+  });
 
   // ═══════════════════════════════════════════════════════════════
   //    CAPITAL MODEL & INVESTMENT ANALYSIS
@@ -3696,9 +3718,11 @@ export default function CentrifugeProcessControl() {
                 <h3 className="text-lg font-semibold text-green-400 mb-4">💰 Operating Costs</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Electricity" value={costs.elec} onChange={v => setCosts(p => ({ ...p, elec: v }))} unit="$/kWh" step={0.01} />
-                  <Field label="Oil Value" value={costs.oilValue} onChange={v => setCosts(p => ({ ...p, oilValue: v }))} unit="$/m³" />
+                  <Field label="Oil Value (at dest)" value={costs.oilValue} onChange={v => setCosts(p => ({ ...p, oilValue: v }))} unit="$/m³" />
+                  <Field label="Oil Transport" value={costs.oilTransport} onChange={v => setCosts(p => ({ ...p, oilTransport: v }))} unit="$/m³" />
                   <Field label="Sludge Disposal" value={costs.sludgeDisposal} onChange={v => setCosts(p => ({ ...p, sludgeDisposal: v }))} unit="$/m³" />
                   <Field label="Water Treatment" value={costs.waterTreatment} onChange={v => setCosts(p => ({ ...p, waterTreatment: v }))} unit="$/m³" />
+                  <Field label="Pond Disposal" value={costs.pondDisposal} onChange={v => setCosts(p => ({ ...p, pondDisposal: v }))} unit="$/m³" />
                   <Field label="Labor Rate" value={costs.laborRate} onChange={v => setCosts(p => ({ ...p, laborRate: v }))} unit="$/h" />
                 </div>
               </div>
@@ -5751,19 +5775,22 @@ export default function CentrifugeProcessControl() {
           const annualSolids = annualFeed * (capitalModel.feedSolidsContent / 100) * (avgSolidsEff / 100);
           const annualWater = annualFeed - annualOilRecovered - annualSolids;
 
-          // Annual revenue
-          const annualOilRevenue = annualOilRecovered * costs.oilValue;
-          const totalAnnualRevenue = annualOilRevenue;
+          // Annual revenue (oil value minus transport to Kalgoorlie)
+          const annualOilGrossRevenue = annualOilRecovered * costs.oilValue;
+          const annualOilTransportCost = annualOilRecovered * costs.oilTransport; // $0.22/L = $220/m³
+          const annualOilNetRevenue = annualOilGrossRevenue - annualOilTransportCost;
+          const totalAnnualRevenue = annualOilNetRevenue;
 
           // Annual operating costs
           const avgPowerKW = 56 * 0.7; // 70% of installed power
           const annualEnergyCost = avgPowerKW * capitalModel.operatingHours * costs.elec;
           const annualSludgeCost = annualSolids * costs.sludgeDisposal;
           const annualWaterCost = annualWater * costs.waterTreatment;
+          const annualPondCost = annualWater * costs.pondDisposal; // $3.5/1000L = $3.5/m³
           const annualLaborCost = capitalModel.operatingHours * costs.laborRate * 0.5; // 0.5 FTE
           const annualChemicalCost = annualFeed * 2.5; // ~$2.50/m³ for chemicals
           const annualInsurance = capitalModel.totalInvestment * (capitalModel.insurancePct / 100);
-          const subtotalOpex = annualEnergyCost + annualSludgeCost + annualWaterCost + annualLaborCost +
+          const subtotalOpex = annualEnergyCost + annualSludgeCost + annualWaterCost + annualPondCost + annualLaborCost +
                                annualChemicalCost + capitalModel.maintenanceCost + annualInsurance;
           const annualOverhead = subtotalOpex * (capitalModel.overheadPct / 100);
           const totalAnnualOpex = subtotalOpex + annualOverhead;
@@ -5817,9 +5844,134 @@ export default function CentrifugeProcessControl() {
           // Profitability Index
           const profitabilityIndex = (npv + capitalModel.totalInvestment) / capitalModel.totalInvestment;
 
+          // Print function for capital model
+          const printCapitalModel = () => {
+            const printContent = `
+              <html>
+              <head>
+                <title>Capital Investment Model - Karratha WTP</title>
+                <style>
+                  body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+                  h1 { color: #0d9488; border-bottom: 2px solid #0d9488; padding-bottom: 10px; }
+                  h2 { color: #1e40af; margin-top: 30px; }
+                  table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                  th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                  th { background: #f3f4f6; }
+                  .positive { color: #16a34a; font-weight: bold; }
+                  .negative { color: #dc2626; }
+                  .highlight { background: #fef3c7; }
+                  .metric-box { display: inline-block; padding: 15px; margin: 10px; border: 2px solid #ddd; border-radius: 8px; text-align: center; min-width: 150px; }
+                  .metric-value { font-size: 24px; font-weight: bold; }
+                  .metric-label { font-size: 12px; color: #666; }
+                  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+                </style>
+              </head>
+              <body>
+                <h1>💰 Capital Investment Model</h1>
+                <p><strong>Equipment:</strong> SACOR Delta-Canter 20-843A Three-Phase Tricanter</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+
+                <h2>📊 Investment Summary</h2>
+                <div class="metric-box" style="border-color: #16a34a;">
+                  <div class="metric-value positive">${formatCurrency(capitalModel.totalInvestment, 2)}</div>
+                  <div class="metric-label">Total Investment</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value">${simplePayback.toFixed(1)} yrs</div>
+                  <div class="metric-label">Payback Period</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value">${roi.toFixed(1)}%</div>
+                  <div class="metric-label">Annual ROI</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value positive">${formatCurrency(npv, 2)}</div>
+                  <div class="metric-label">NPV (${capitalModel.projectLife}yr)</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-value">${irr.toFixed(1)}%</div>
+                  <div class="metric-label">IRR</div>
+                </div>
+
+                <h2>🏗️ Capital Breakdown</h2>
+                <table>
+                  <tr><th>Item</th><th>%</th><th>Amount</th></tr>
+                  <tr><td>Equipment (centrifuge, motors)</td><td>${capitalModel.breakdown.equipment}%</td><td>${formatCurrency(capBreakdown.equipment, 0)}</td></tr>
+                  <tr><td>Installation</td><td>${capitalModel.breakdown.installation}%</td><td>${formatCurrency(capBreakdown.installation, 0)}</td></tr>
+                  <tr><td>Engineering & Commissioning</td><td>${capitalModel.breakdown.engineering}%</td><td>${formatCurrency(capBreakdown.engineering, 0)}</td></tr>
+                  <tr><td>Instrumentation & Controls</td><td>${capitalModel.breakdown.instrumentation}%</td><td>${formatCurrency(capBreakdown.instrumentation, 0)}</td></tr>
+                  <tr><td>Contingency</td><td>${capitalModel.breakdown.contingency}%</td><td>${formatCurrency(capBreakdown.contingency, 0)}</td></tr>
+                  <tr class="highlight"><td><strong>Total</strong></td><td><strong>100%</strong></td><td><strong>${formatCurrency(capitalModel.totalInvestment, 2)}</strong></td></tr>
+                </table>
+
+                <h2>📈 Annual Revenue (Mass Balance)</h2>
+                <table>
+                  <tr><th>Item</th><th>Volume</th><th>Amount</th></tr>
+                  <tr><td>Oil Value (at Kalgoorlie)</td><td>${annualOilRecovered.toFixed(0)} m³ @ $${costs.oilValue}/m³</td><td class="positive">+${formatCurrency(annualOilGrossRevenue, 2)}</td></tr>
+                  <tr><td>Transport (Karratha → Kalgoorlie)</td><td>${(annualOilRecovered * 1000).toFixed(0)} kL @ $0.22/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
+                  <tr class="highlight"><td><strong>Net Oil Revenue</strong></td><td></td><td class="positive"><strong>+${formatCurrency(annualOilNetRevenue, 2)}</strong></td></tr>
+                </table>
+
+                <h2>📉 Annual Operating Costs</h2>
+                <table>
+                  <tr><th>Item</th><th>Details</th><th>Amount</th></tr>
+                  <tr><td>Electricity</td><td>${(avgPowerKW * capitalModel.operatingHours / 1000).toFixed(0)} MWh @ $${costs.elec}/kWh</td><td class="negative">-${formatCurrency(annualEnergyCost, 0)}</td></tr>
+                  <tr><td>Sludge Disposal</td><td>${annualSolids.toFixed(0)} m³ @ $${costs.sludgeDisposal}/m³</td><td class="negative">-${formatCurrency(annualSludgeCost, 0)}</td></tr>
+                  <tr><td>Water Treatment</td><td>${annualWater.toFixed(0)} m³ @ $${costs.waterTreatment}/m³</td><td class="negative">-${formatCurrency(annualWaterCost, 0)}</td></tr>
+                  <tr><td>Pond Disposal</td><td>${annualWater.toFixed(0)} m³ @ $${costs.pondDisposal}/m³</td><td class="negative">-${formatCurrency(annualPondCost, 0)}</td></tr>
+                  <tr><td>Labor</td><td>0.5 FTE @ $${costs.laborRate}/h</td><td class="negative">-${formatCurrency(annualLaborCost, 0)}</td></tr>
+                  <tr><td>Chemicals</td><td>${annualFeed.toFixed(0)} m³ @ $2.50/m³</td><td class="negative">-${formatCurrency(annualChemicalCost, 0)}</td></tr>
+                  <tr><td>Maintenance Contract</td><td>Annual</td><td class="negative">-${formatCurrency(capitalModel.maintenanceCost, 0)}</td></tr>
+                  <tr><td>Insurance</td><td>${capitalModel.insurancePct}% of capital</td><td class="negative">-${formatCurrency(annualInsurance, 0)}</td></tr>
+                  <tr><td>Overhead</td><td>${capitalModel.overheadPct}% of OPEX</td><td class="negative">-${formatCurrency(annualOverhead, 0)}</td></tr>
+                  <tr class="highlight"><td><strong>Total Annual OPEX</strong></td><td></td><td class="negative"><strong>-${formatCurrency(totalAnnualOpex, 2)}</strong></td></tr>
+                </table>
+
+                <h2>💵 Net Annual Benefit</h2>
+                <div class="metric-box" style="border-color: ${netAnnualBenefit > 0 ? '#16a34a' : '#dc2626'}; width: 100%; text-align: center;">
+                  <div class="metric-value ${netAnnualBenefit > 0 ? 'positive' : 'negative'}">${formatCurrency(netAnnualBenefit, 2)}</div>
+                  <div class="metric-label">${(netAnnualBenefit / annualFeed).toFixed(2)} per m³ processed</div>
+                </div>
+
+                <h2>⚙️ Model Assumptions</h2>
+                <table>
+                  <tr><td>Operating Hours/Year</td><td>${capitalModel.operatingHours.toLocaleString()} hrs</td></tr>
+                  <tr><td>Annual Feed Volume</td><td>${capitalModel.annualFeedVolume.toLocaleString()} m³</td></tr>
+                  <tr><td>Feed Oil Content</td><td>${capitalModel.feedOilContent}%</td></tr>
+                  <tr><td>Feed Solids Content</td><td>${capitalModel.feedSolidsContent}%</td></tr>
+                  <tr><td>Oil Recovery Efficiency</td><td>${avgOilEff.toFixed(1)}%</td></tr>
+                  <tr><td>Discount Rate (WACC)</td><td>${capitalModel.discountRate}%</td></tr>
+                  <tr><td>Project Life</td><td>${capitalModel.projectLife} years</td></tr>
+                  <tr><td>Inflation Rate</td><td>${capitalModel.inflationRate}%</td></tr>
+                </table>
+
+                <div class="footer">
+                  <p><strong>Karratha Water Treatment Plant Simulator v15</strong></p>
+                  <p>Equipment: SACOR Delta-Canter 20-843A | Reference: SAC-PRO-A26-003</p>
+                  <p>This document is for planning purposes only. Actual results may vary.</p>
+                </div>
+              </body>
+              </html>
+            `;
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(printContent);
+              printWindow.document.close();
+              printWindow.print();
+            }
+          };
+
           return (
             <div className="space-y-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">💰 Capital Investment Model</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold flex items-center gap-2">💰 Capital Investment Model</h2>
+                <button
+                  onClick={printCapitalModel}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2 transition-colors print:hidden"
+                >
+                  🖨️ Print Report
+                </button>
+              </div>
 
               {/* Investment Slider */}
               <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 rounded-xl p-6 border border-green-700/50">
@@ -5840,10 +5992,10 @@ export default function CentrifugeProcessControl() {
                   </div>
                   <div className="text-center">
                     <div className="text-4xl font-bold text-green-400">
-                      ${capitalModel.totalInvestment.toLocaleString()}
+                      {formatCurrency(capitalModel.totalInvestment, 2)}
                     </div>
                     <div className="text-sm text-slate-400 mt-1">
-                      SACOR Base Price: $587,750 | With Options: ${(587750 + optionalCosts).toLocaleString()}
+                      SACOR Base Price: $587.75K | With Options: {formatCurrency(587750 + optionalCosts, 2)}
                     </div>
                   </div>
                   {/* Quick select buttons */}
@@ -5880,7 +6032,7 @@ export default function CentrifugeProcessControl() {
                 <div className={`bg-slate-800 rounded-lg p-4 border ${npv > 0 ? 'border-green-500' : 'border-red-500'}`}>
                   <div className="text-sm text-slate-400">NPV ({capitalModel.projectLife}yr)</div>
                   <div className={`text-2xl font-bold ${npv > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    ${(npv / 1000).toFixed(0)}K
+                    {formatCurrency(npv, 2)}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">@ {capitalModel.discountRate}% discount</div>
                 </div>
@@ -5911,40 +6063,40 @@ export default function CentrifugeProcessControl() {
                         <td className="py-2 text-right">
                           <input type="number" value={capitalModel.breakdown.equipment} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, equipment: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
                         </td>
-                        <td className="py-2 text-right text-blue-400 font-mono">${capBreakdown.equipment.toLocaleString()}</td>
+                        <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.equipment, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Installation (mechanical/electrical)</td>
                         <td className="py-2 text-right">
                           <input type="number" value={capitalModel.breakdown.installation} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, installation: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
                         </td>
-                        <td className="py-2 text-right text-blue-400 font-mono">${capBreakdown.installation.toLocaleString()}</td>
+                        <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.installation, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Engineering & commissioning</td>
                         <td className="py-2 text-right">
                           <input type="number" value={capitalModel.breakdown.engineering} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, engineering: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
                         </td>
-                        <td className="py-2 text-right text-blue-400 font-mono">${capBreakdown.engineering.toLocaleString()}</td>
+                        <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.engineering, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Instrumentation & controls</td>
                         <td className="py-2 text-right">
                           <input type="number" value={capitalModel.breakdown.instrumentation} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, instrumentation: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
                         </td>
-                        <td className="py-2 text-right text-blue-400 font-mono">${capBreakdown.instrumentation.toLocaleString()}</td>
+                        <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.instrumentation, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Contingency</td>
                         <td className="py-2 text-right">
                           <input type="number" value={capitalModel.breakdown.contingency} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, contingency: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
                         </td>
-                        <td className="py-2 text-right text-blue-400 font-mono">${capBreakdown.contingency.toLocaleString()}</td>
+                        <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.contingency, 0)}</td>
                       </tr>
                       <tr className="bg-blue-900/30">
                         <td className="py-2 font-bold">Total Capital</td>
                         <td className="py-2 text-right font-bold">{Object.values(capitalModel.breakdown).reduce((a, b) => a + b, 0)}%</td>
-                        <td className="py-2 text-right text-blue-400 font-bold text-lg">${capitalModel.totalInvestment.toLocaleString()}</td>
+                        <td className="py-2 text-right text-blue-400 font-bold text-lg">{formatCurrency(capitalModel.totalInvestment, 2)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -5957,39 +6109,43 @@ export default function CentrifugeProcessControl() {
                     <tbody>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Electricity ({(avgPowerKW * capitalModel.operatingHours / 1000).toFixed(0)} MWh)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualEnergyCost.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualEnergyCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Sludge disposal ({annualSolids.toFixed(0)} m³)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualSludgeCost.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualSludgeCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Water treatment ({annualWater.toFixed(0)} m³)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualWaterCost.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualWaterCost, 0)}</td>
+                      </tr>
+                      <tr className="border-b border-slate-700">
+                        <td className="py-2">Pond disposal ({annualWater.toFixed(0)} m³ @ $3.5/kL)</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualPondCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Labor (0.5 FTE @ ${costs.laborRate}/h)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualLaborCost.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualLaborCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Chemicals (~$2.50/m³)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualChemicalCost.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualChemicalCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Maintenance contract</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${capitalModel.maintenanceCost.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(capitalModel.maintenanceCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Insurance ({capitalModel.insurancePct}%)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualInsurance.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualInsurance, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
                         <td className="py-2">Overhead ({capitalModel.overheadPct}%)</td>
-                        <td className="py-2 text-right text-red-400 font-mono">-${annualOverhead.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualOverhead, 0)}</td>
                       </tr>
                       <tr className="bg-red-900/30">
                         <td className="py-2 font-bold">Total Annual OPEX</td>
-                        <td className="py-2 text-right text-red-400 font-bold text-lg">-${totalAnnualOpex.toLocaleString()}</td>
+                        <td className="py-2 text-right text-red-400 font-bold text-lg">-{formatCurrency(totalAnnualOpex, 2)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -6020,12 +6176,16 @@ export default function CentrifugeProcessControl() {
                   <table className="w-full text-sm">
                     <tbody>
                       <tr className="border-b border-slate-700">
-                        <td className="py-2">Oil recovered ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)</td>
-                        <td className="py-2 text-right text-green-400 font-mono">+${annualOilRevenue.toLocaleString()}</td>
+                        <td className="py-2">Oil value ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)</td>
+                        <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilGrossRevenue, 2)}</td>
+                      </tr>
+                      <tr className="border-b border-slate-700">
+                        <td className="py-2 text-amber-400">Transport Karratha→Kalgoorlie ({(annualOilRecovered * 1000).toFixed(0)}kL @ $0.22/L)</td>
+                        <td className="py-2 text-right text-amber-400 font-mono">-{formatCurrency(annualOilTransportCost, 2)}</td>
                       </tr>
                       <tr className="bg-green-900/30">
-                        <td className="py-2 font-bold">Total Annual Revenue</td>
-                        <td className="py-2 text-right text-green-400 font-bold text-lg">+${totalAnnualRevenue.toLocaleString()}</td>
+                        <td className="py-2 font-bold">Net Oil Revenue</td>
+                        <td className="py-2 text-right text-green-400 font-bold text-lg">+{formatCurrency(annualOilNetRevenue, 2)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -6033,7 +6193,7 @@ export default function CentrifugeProcessControl() {
                     <div className="flex justify-between items-center">
                       <div className="font-bold">Net Annual Benefit</div>
                       <div className={`text-2xl font-bold ${netAnnualBenefit > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {netAnnualBenefit > 0 ? '+' : ''}${netAnnualBenefit.toLocaleString()}
+                        {netAnnualBenefit > 0 ? '+' : ''}{formatCurrency(netAnnualBenefit, 2)}
                       </div>
                     </div>
                     <div className="text-xs text-slate-400 mt-1">
@@ -6089,15 +6249,15 @@ export default function CentrifugeProcessControl() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={cashFlows.map((cf, i) => ({
                       year: i === 0 ? 'Y0' : `Y${i}`,
-                      cashFlow: cf / 1000,
-                      cumulative: cashFlows.slice(0, i + 1).reduce((a, b) => a + b, 0) / 1000,
+                      cashFlow: cf,
+                      cumulative: cashFlows.slice(0, i + 1).reduce((a, b) => a + b, 0),
                     }))}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                       <XAxis dataKey="year" stroke="#94a3b8" fontSize={10} />
-                      <YAxis stroke="#94a3b8" fontSize={10} tickFormatter={v => `$${v}K`} />
+                      <YAxis stroke="#94a3b8" fontSize={10} tickFormatter={v => formatCurrency(v, 1)} />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }}
-                        formatter={(value: number) => [`$${value.toFixed(0)}K`, '']}
+                        formatter={(value: number) => [formatCurrency(value, 2), '']}
                       />
                       <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="3 3" />
                       <Area type="monotone" dataKey="cashFlow" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.3} name="Annual" />
@@ -6108,19 +6268,19 @@ export default function CentrifugeProcessControl() {
                 <div className="mt-4 grid grid-cols-4 gap-4 text-center">
                   <div className="bg-slate-700/50 rounded-lg p-3">
                     <div className="text-xs text-slate-400">Year 1 Cash Flow</div>
-                    <div className="text-lg font-bold text-cyan-400">${(cashFlows[1] / 1000).toFixed(0)}K</div>
+                    <div className="text-lg font-bold text-cyan-400">{formatCurrency(cashFlows[1] || 0, 2)}</div>
                   </div>
                   <div className="bg-slate-700/50 rounded-lg p-3">
                     <div className="text-xs text-slate-400">Year 5 Cumulative</div>
-                    <div className="text-lg font-bold text-green-400">${(cashFlows.slice(0, 6).reduce((a, b) => a + b, 0) / 1000).toFixed(0)}K</div>
+                    <div className="text-lg font-bold text-green-400">{formatCurrency(cashFlows.slice(0, 6).reduce((a, b) => a + b, 0), 2)}</div>
                   </div>
                   <div className="bg-slate-700/50 rounded-lg p-3">
                     <div className="text-xs text-slate-400">Year 10 Cumulative</div>
-                    <div className="text-lg font-bold text-green-400">${(cashFlows.slice(0, 11).reduce((a, b) => a + b, 0) / 1000).toFixed(0)}K</div>
+                    <div className="text-lg font-bold text-green-400">{formatCurrency(cashFlows.slice(0, 11).reduce((a, b) => a + b, 0), 2)}</div>
                   </div>
                   <div className="bg-slate-700/50 rounded-lg p-3">
                     <div className="text-xs text-slate-400">Total {capitalModel.projectLife}yr Return</div>
-                    <div className="text-lg font-bold text-green-400">${(cashFlows.reduce((a, b) => a + b, 0) / 1000).toFixed(0)}K</div>
+                    <div className="text-lg font-bold text-green-400">{formatCurrency(cashFlows.reduce((a, b) => a + b, 0), 2)}</div>
                   </div>
                 </div>
               </div>
@@ -6160,7 +6320,7 @@ export default function CentrifugeProcessControl() {
                 </div>
                 <div className="mt-4 flex justify-between items-center p-3 bg-amber-900/20 rounded-lg">
                   <span className="font-medium">Total Optional Items</span>
-                  <span className="text-xl font-bold text-amber-400">+${optionalCosts.toLocaleString()}</span>
+                  <span className="text-xl font-bold text-amber-400">+{formatCurrency(optionalCosts, 0)}</span>
                 </div>
               </div>
 
@@ -6173,7 +6333,7 @@ export default function CentrifugeProcessControl() {
                     </h3>
                     <div className="text-slate-400 mt-1">
                       {npv > 0 && irr > capitalModel.discountRate
-                        ? `Project meets investment criteria. NPV positive at $${(npv/1000).toFixed(0)}K with ${irr.toFixed(1)}% IRR exceeding ${capitalModel.discountRate}% hurdle rate.`
+                        ? `Project meets investment criteria. NPV positive at ${formatCurrency(npv, 2)} with ${irr.toFixed(1)}% IRR exceeding ${capitalModel.discountRate}% hurdle rate.`
                         : `Project does not meet investment criteria. Consider adjusting operating assumptions or capital investment.`
                       }
                     </div>
@@ -6181,7 +6341,7 @@ export default function CentrifugeProcessControl() {
                   <div className="text-right">
                     <div className="text-sm text-slate-400">Lifetime Value Created</div>
                     <div className={`text-3xl font-bold ${npv > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      ${((npv + capitalModel.totalInvestment) / 1000).toFixed(0)}K
+                      {formatCurrency(npv + capitalModel.totalInvestment, 2)}
                     </div>
                   </div>
                 </div>
