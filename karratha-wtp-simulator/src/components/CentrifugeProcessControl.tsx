@@ -2540,186 +2540,351 @@ export default function CentrifugeProcessControl() {
   }, [smoothedProc, costs, totals, equipment, oilTanks, chemCosts, filterCosts]);
 
   // ═══════════════════════════════════════════════════════════════
-  //                   UI COMPONENTS
+  //                   UI COMPONENTS - MODERN DESIGN SYSTEM
   // ═══════════════════════════════════════════════════════════════
-  const PV = ({ tag, val, unit, lo, hi, dec = 1 }) => (
-    <div className={`px-3 py-2 rounded ${val < lo || val > hi ? 'bg-red-900/50 border border-red-500' : 'bg-slate-700/50'}`}>
-      <div className="text-xs text-slate-400">{tag}</div>
-      <div className={`text-xl font-bold ${val < lo || val > hi ? 'text-red-400' : 'text-white'}`}>{val?.toFixed(dec)} <span className="text-sm text-slate-400">{unit}</span></div>
-    </div>
-  );
 
-  // Visual Faceplate with pictorial elements
-  const Faceplate = ({ loop, onUp, smoothedPV }) => {
-    const displayPV = smoothedPV !== undefined ? smoothedPV : loop.pv;
-    const deviation = Math.abs(displayPV - loop.sp);
-    const deviationPct = loop.sp > 0 ? (deviation / loop.sp) * 100 : 0;
-    const isDeviated = deviationPct > 10;
-    
+  // Process Value Display - Clean minimal card
+  const PV = ({ tag, val, unit, lo, hi, dec = 1 }) => {
+    const isAlarm = val < lo || val > hi;
     return (
-      <div className={`bg-slate-800 rounded-xl border-2 ${isDeviated ? 'border-yellow-500' : 'border-slate-600'} p-4 relative overflow-hidden`}>
-        {/* Status indicator bar */}
-        <div className={`absolute top-0 left-0 right-0 h-1 ${loop.mode === 'AUTO' ? 'bg-green-500' : 'bg-amber-500'}`} />
-        
-        {/* Header */}
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <span className="font-bold text-cyan-400">{loop.tag}</span>
-            <div className="text-xs text-slate-400">{loop.desc}</div>
-          </div>
-          <button 
-            onClick={() => onUp({ mode: loop.mode === 'AUTO' ? 'MAN' : 'AUTO' })} 
-            className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${loop.mode === 'AUTO' ? 'bg-green-600 hover:bg-green-500' : 'bg-amber-600 hover:bg-amber-500'}`}
-          >
-            {loop.mode}
-          </button>
+      <div className={`relative overflow-hidden rounded-2xl p-4 transition-all duration-300 ${
+        isAlarm
+          ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 ring-1 ring-red-500/50'
+          : 'bg-white/5 hover:bg-white/10'
+      }`}>
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{tag}</div>
+        <div className="flex items-baseline gap-1">
+          <span className={`text-2xl font-semibold ${isAlarm ? 'text-red-400' : 'text-white'}`}>
+            {val?.toFixed(dec)}
+          </span>
+          <span className="text-sm text-gray-500">{unit}</span>
         </div>
-        
-        {/* Big PV Display */}
-        <div className="text-center mb-3">
-          <div className="text-4xl font-bold text-white">{displayPV?.toFixed(1)}</div>
-          <div className="text-sm text-slate-400">{loop.unit}</div>
-        </div>
-        
-        {/* SP Input */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="text-xs text-slate-500">SP:</span>
-          <NumInput 
-            value={loop.sp} 
-            onChange={v => onUp({ sp: v })} 
-            className="w-20 text-lg text-green-400 font-bold"
-          />
-          <span className="text-xs text-slate-500">{loop.unit}</span>
-        </div>
-        
-        {/* Output Bar */}
-        <div className="relative">
-          <div className="flex justify-between text-xs text-slate-500 mb-1">
-            <span>OP</span>
-            <span className="text-blue-400 font-bold">{loop.op?.toFixed(0)}%</span>
-          </div>
-          <div className="h-4 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className={`h-full rounded-full transition-all duration-300 ${loop.mode === 'AUTO' ? 'bg-gradient-to-r from-green-600 to-green-400' : 'bg-gradient-to-r from-amber-600 to-amber-400'}`}
-              style={{ width: `${loop.op}%` }}
-            />
-          </div>
-        </div>
-        
-        {/* Deviation indicator */}
-        {isDeviated && (
-          <div className="absolute top-2 right-2">
-            <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" title={`Deviation: ${deviationPct.toFixed(1)}%`} />
-          </div>
+        {isAlarm && (
+          <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
         )}
       </div>
     );
   };
 
-  const KPI = ({ title, val, unit, target, icon, good }) => (
-    <div className={`bg-slate-800 rounded-lg p-4 border ${(good ?? val >= target) ? 'border-green-500/50' : 'border-red-500/50'}`}>
-      <div className="flex items-center gap-2 mb-2"><span className="text-2xl">{icon}</span><span className="text-sm text-slate-400">{title}</span></div>
-      <div className={`text-2xl font-bold ${(good ?? val >= target) ? 'text-green-400' : 'text-red-400'}`}>{val?.toFixed(1)} <span className="text-sm">{unit}</span></div>
-      <div className="text-xs text-slate-500 mt-1">Target: {target} {unit}</div>
+  // Modern Faceplate - Glass morphism control card
+  const Faceplate = ({ loop, onUp, smoothedPV }) => {
+    const displayPV = smoothedPV !== undefined ? smoothedPV : loop.pv;
+    const deviation = Math.abs(displayPV - loop.sp);
+    const deviationPct = loop.sp > 0 ? (deviation / loop.sp) * 100 : 0;
+    const isDeviated = deviationPct > 10;
+    const isAuto = loop.mode === 'AUTO';
+
+    return (
+      <div className={`relative rounded-3xl overflow-hidden transition-all duration-300 ${
+        isDeviated ? 'ring-2 ring-amber-500/50' : ''
+      }`}>
+        {/* Gradient background */}
+        <div className={`absolute inset-0 ${
+          isAuto
+            ? 'bg-gradient-to-br from-emerald-500/10 via-transparent to-teal-500/5'
+            : 'bg-gradient-to-br from-amber-500/10 via-transparent to-orange-500/5'
+        }`} />
+
+        <div className="relative backdrop-blur-xl bg-white/5 p-6">
+          {/* Header */}
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <div className={`text-sm font-bold tracking-wide ${isAuto ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {loop.tag}
+              </div>
+              <div className="text-xs text-gray-500 mt-0.5">{loop.desc}</div>
+            </div>
+            <button
+              onClick={() => onUp({ mode: isAuto ? 'MAN' : 'AUTO' })}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+                isAuto
+                  ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+              }`}
+            >
+              {loop.mode}
+            </button>
+          </div>
+
+          {/* Big PV Display */}
+          <div className="text-center mb-6">
+            <div className="text-5xl font-light text-white tracking-tight">{displayPV?.toFixed(1)}</div>
+            <div className="text-sm text-gray-500 mt-1">{loop.unit}</div>
+          </div>
+
+          {/* Setpoint */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <span className="text-xs text-gray-500 uppercase tracking-wider">Setpoint</span>
+            <NumInput
+              value={loop.sp}
+              onChange={v => onUp({ sp: v })}
+              className="w-20 text-lg font-medium text-center bg-white/10 border-0 rounded-xl text-emerald-400"
+            />
+            <span className="text-xs text-gray-500">{loop.unit}</span>
+          </div>
+
+          {/* Output Bar */}
+          <div>
+            <div className="flex justify-between text-xs mb-2">
+              <span className="text-gray-500 uppercase tracking-wider">Output</span>
+              <span className={`font-semibold ${isAuto ? 'text-emerald-400' : 'text-amber-400'}`}>{loop.op?.toFixed(0)}%</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ease-out ${
+                  isAuto ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-amber-500 to-orange-400'
+                }`}
+                style={{ width: `${loop.op}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Deviation indicator */}
+          {isDeviated && (
+            <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/20">
+              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+              <span className="text-xs text-amber-400">{deviationPct.toFixed(0)}%</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Modern KPI Card - Clean metrics display
+  const KPI = ({ title, val, unit, target, icon, good }) => {
+    const isGood = good ?? val >= target;
+    return (
+      <div className={`relative overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] ${
+        isGood
+          ? 'bg-gradient-to-br from-emerald-500/10 to-transparent'
+          : 'bg-gradient-to-br from-red-500/10 to-transparent'
+      }`}>
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-2xl opacity-80">{icon}</span>
+          <span className="text-sm font-medium text-gray-400">{title}</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className={`text-3xl font-semibold ${isGood ? 'text-emerald-400' : 'text-red-400'}`}>
+            {val?.toFixed(1)}
+          </span>
+          <span className="text-sm text-gray-500">{unit}</span>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${isGood ? 'bg-emerald-500' : 'bg-red-500'}`} />
+          <span className="text-xs text-gray-500">Target: {target} {unit}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Modern Field Input - Clean form element
+  const Field = ({ label, value, onChange, unit, min, max, step }) => (
+    <div className="space-y-2">
+      <label className="flex justify-between items-center">
+        <span className="text-sm font-medium text-gray-300">{label}</span>
+        {unit && <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded">{unit}</span>}
+      </label>
+      <NumInput
+        value={value}
+        onChange={onChange}
+        min={min}
+        max={max}
+        step={step}
+        className="w-full text-sm bg-white/5 border-0 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 transition-all"
+      />
     </div>
   );
 
-  // Labeled input field component
-  const Field = ({ label, value, onChange, unit, min, max, step }) => (
-    <div className="space-y-1">
-      <label className="text-xs text-slate-400 flex justify-between">
-        <span>{label}</span>
-        {unit && <span className="text-slate-500">({unit})</span>}
-      </label>
-      <NumInput value={value} onChange={onChange} min={min} max={max} step={step} className="w-full text-sm" />
+  // Section Card wrapper - Glass morphism container
+  const Card = ({ children, className = '', title, subtitle, action }) => (
+    <div className={`relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 ${className}`}>
+      {title && (
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div>
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+          </div>
+          {action}
+        </div>
+      )}
+      <div className="p-6">{children}</div>
     </div>
   );
+
+  // Stat display - Compact metric
+  const Stat = ({ label, value, unit, trend, color = 'blue' }) => {
+    const colors = {
+      blue: 'text-blue-400',
+      green: 'text-emerald-400',
+      amber: 'text-amber-400',
+      red: 'text-red-400',
+      purple: 'text-purple-400',
+      cyan: 'text-cyan-400',
+    };
+    return (
+      <div className="text-center">
+        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{label}</div>
+        <div className={`text-2xl font-semibold ${colors[color]}`}>{value}</div>
+        {unit && <div className="text-xs text-gray-500">{unit}</div>}
+        {trend && <div className={`text-xs mt-1 ${trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%</div>}
+      </div>
+    );
+  };
+
+  // Tab configuration for cleaner rendering
+  const tabs = [
+    { id: 'feed', label: 'Feed Lab', icon: '◉' },
+    { id: 'chemDosing', label: 'Chemicals', icon: '◎' },
+    { id: 'centrifuge', label: 'Centrifuge', icon: '⟳' },
+    { id: 'tankage', label: 'Tanks', icon: '▣' },
+    { id: 'controls', label: 'Controls', icon: '◫' },
+    { id: 'config', label: 'Config', icon: '⚙' },
+    { id: 'batch', label: 'Batch', icon: '▤' },
+    { id: 'trends', label: 'Trends', icon: '◠' },
+    { id: 'kpi', label: 'KPI', icon: '◈' },
+    { id: 'spc', label: 'SPC', icon: '∿' },
+    { id: 'report', label: 'Report', icon: '▦' },
+    { id: 'capital', label: 'Capital', icon: '◇' },
+    { id: 'alarms', label: alarms.length ? `Alarms (${alarms.length})` : 'Alarms', icon: '◬' },
+    { id: 'massBalance', label: 'Balance', icon: '⚖' },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      <header className="bg-slate-800 border-b border-slate-700 px-4 py-3">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-cyan-400">⚙️ Centrifuge Control</h1>
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${isRunning ? 'bg-green-900/50 text-green-400 border border-green-500' : 'bg-slate-700 text-slate-400'}`}>
-                {isRunning ? '● RUNNING' : '○ STOPPED'}
+    <div className="min-h-screen bg-[#0a0f1a] text-white">
+      {/* Ambient background gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/10 pointer-events-none" />
+
+      {/* Header */}
+      <header className="relative z-10 backdrop-blur-xl bg-white/5 border-b border-white/10">
+        <div className="max-w-[1600px] mx-auto px-6">
+          {/* Top bar */}
+          <div className="flex items-center justify-between h-16">
+            {/* Logo & Status */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+                  <span className="text-xl">⟳</span>
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-white">Centrifuge Control</h1>
+                  <div className="text-xs text-gray-500">Delta-Canter 20-843A</div>
+                </div>
               </div>
+
+              {/* Status pill */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                isRunning
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-gray-500/20 text-gray-400'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-gray-500'}`} />
+                <span className="text-sm font-medium">{isRunning ? 'Running' : 'Stopped'}</span>
+              </div>
+
+              {/* Batch mode indicator */}
               {isBatchMode && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-900/50 border border-purple-500">
-                  <span className="text-xl">{batchPhases[batchPhase]?.icon}</span>
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-purple-500/20">
+                  <span className="text-lg">{batchPhases[batchPhase]?.icon}</span>
                   <div>
-                    <div className="text-purple-300 font-bold text-sm leading-tight">{batchPhases[batchPhase]?.name}</div>
-                    <div className="text-purple-400 text-xs leading-tight">Phase {batchPhase + 1}/{batchPhases.length} • {batchProgress.pct.toFixed(0)}%</div>
+                    <div className="text-sm font-medium text-purple-300">{batchPhases[batchPhase]?.name}</div>
+                    <div className="text-xs text-purple-400">Phase {batchPhase + 1}/{batchPhases.length} · {batchProgress.pct.toFixed(0)}%</div>
                   </div>
                 </div>
               )}
               {!isBatchMode && isRunning && (
-                <div className="px-3 py-1 rounded-full bg-cyan-900/50 text-cyan-400 text-sm border border-cyan-500">
+                <div className="px-4 py-2 rounded-full bg-blue-500/20 text-blue-400 text-sm font-medium">
                   Manual Mode
                 </div>
               )}
             </div>
+
+            {/* Controls */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400">⏱️ <span className="text-white font-mono">{formatTime(simTime)}</span></span>
-              <select value={simSpeed} onChange={e => setSimSpeed(+e.target.value)} className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm">
+              {/* Time display */}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5">
+                <span className="text-gray-500 text-sm">⏱</span>
+                <span className="font-mono text-white text-sm">{formatTime(simTime)}</span>
+              </div>
+
+              {/* Speed selector */}
+              <select
+                value={simSpeed}
+                onChange={e => setSimSpeed(+e.target.value)}
+                className="px-4 py-2 rounded-xl bg-white/5 border-0 text-sm text-white focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+              >
                 <option value={1}>1× Real</option>
                 <option value={10}>10× Fast</option>
                 <option value={60}>60× Faster</option>
                 <option value={300}>5 min/s</option>
               </select>
-              <button onClick={() => setIsRunning(!isRunning)} className={`px-5 py-2 rounded-lg font-bold text-sm transition-all ${isRunning ? 'bg-red-600 hover:bg-red-500' : 'bg-green-600 hover:bg-green-500'}`}>
-                {isRunning ? '⏹ STOP' : '▶ START'}
+
+              {/* Action buttons */}
+              <button
+                onClick={() => setIsRunning(!isRunning)}
+                className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                  isRunning
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : 'bg-emerald-500 text-white hover:bg-emerald-400'
+                }`}
+              >
+                {isRunning ? '⏹ Stop' : '▶ Start'}
               </button>
+
               <button
                 onClick={() => { if (window.confirm('Reset entire session? This will clear all data, trends, chemical usage, and filter statistics.')) dailyReset(); }}
-                className="px-4 py-2 rounded-lg font-bold text-sm bg-orange-600 hover:bg-orange-500 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all text-sm"
                 title="Reset all simulation data"
               >
-                🔄 RESET SESSION
+                ↺ Reset
               </button>
             </div>
           </div>
-          <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
-            {['feed', 'chemDosing', 'centrifuge', 'tankage', 'controls', 'config', 'batch', 'trends', 'kpi', 'spc', 'report', 'capital', 'alarms', 'massBalance'].map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} className={`px-4 py-2 rounded-t-lg text-sm font-medium whitespace-nowrap transition-all ${activeTab === t ? 'bg-slate-700 text-cyan-400 border-t-2 border-cyan-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-300'} ${t === 'alarms' && alarms.length ? 'text-red-400' : ''}`}>
-                {t === 'feed' ? '🧪 Feed' :
-                 t === 'chemDosing' ? '💉 Chemicals' :
-                 t === 'centrifuge' ? '⚙️ Centrifuge' :
-                 t === 'tankage' ? '🛢️ Tankage' :
-                 t === 'controls' ? '🎛️ Controls' :
-                 t === 'config' ? '⚙️ Config' :
-                 t === 'batch' ? '📦 Batch' :
-                 t === 'trends' ? '📈 Trends' :
-                 t === 'kpi' ? '📊 KPI' :
-                 t === 'spc' ? '📉 SPC' :
-                 t === 'report' ? '📋 Report' :
-                 t === 'capital' ? '💰 Capital' :
-                 t === 'alarms' && alarms.length ? `🚨 Alarms (${alarms.length})` :
-                 t === 'alarms' ? '🚨 Alarms' :
-                 t === 'massBalance' ? '⚖️ Mass Balance' :
-                 t.charAt(0).toUpperCase() + t.slice(1)}
+          {/* Navigation tabs */}
+          <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-white/10 text-white'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                } ${tab.id === 'alarms' && alarms.length ? 'text-red-400' : ''}`}
+              >
+                <span className={`text-base ${activeTab === tab.id ? 'opacity-100' : 'opacity-50'}`}>{tab.icon}</span>
+                <span>{tab.label}</span>
+                {activeTab === tab.id && (
+                  <div className="w-1 h-1 rounded-full bg-blue-400" />
+                )}
               </button>
             ))}
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      {/* Main content */}
+      <main className="relative z-10 max-w-[1600px] mx-auto px-6 py-8">
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*                         FEED LAB TAB                            */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/*                         FEED LAB TAB                            */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {activeTab === 'feed' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* Page header */}
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">🧪 Feed Characterization</h2>
-              <div className="flex gap-2">
+              <div>
+                <h2 className="text-2xl font-semibold text-white">Feed Characterization</h2>
+                <p className="text-gray-500 mt-1">Configure feed properties and flow parameters</p>
+              </div>
+              <div className="flex gap-3">
                 <select
                   onChange={(e) => {
                     const preset = CONFIG.feedPresets[e.target.value];
                     if (preset) setFeedProps(p => ({ ...p, ...preset }));
                   }}
-                  className="bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm"
+                  className="px-4 py-2.5 rounded-xl bg-white/5 border-0 text-sm text-gray-300 focus:ring-2 focus:ring-blue-500/50"
                   defaultValue=""
                 >
                   <option value="" disabled>Load Preset...</option>
@@ -2740,28 +2905,36 @@ export default function CentrifugeProcessControl() {
                     maxPackingFraction: 0.64, hinderedSettlingExp: 4.65,
                     oilDropletSphericity: 1.0, solidsSphericity: 0.8,
                   })}
-                  className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-sm"
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all text-sm"
                 >
-                  Reset Defaults
+                  ↺ Reset Defaults
                 </button>
               </div>
             </div>
 
-            {/* Feed Flow Rate Control */}
-            <div className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-xl p-6 border-2 border-cyan-500/50">
-              <div className="flex items-center justify-between">
+            {/* Feed Flow Rate Control - Hero card */}
+            <Card className="bg-gradient-to-br from-blue-500/10 via-transparent to-cyan-500/5">
+              <div className="flex items-center justify-between flex-wrap gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-cyan-400">⚡ Feed Flow Rate</h3>
-                  <div className="text-xs text-slate-400 mt-1">Controls FIC-001 setpoint (m³/h)</div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                      <span className="text-blue-400">◉</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Feed Flow Rate</h3>
+                      <div className="text-sm text-gray-500">FIC-001 Setpoint Control</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-8">
                   <div className="text-center">
-                    <div className="text-xs text-slate-500 mb-1">Current (PV)</div>
-                    <div className="text-2xl font-bold text-cyan-400">{smoothedProc.feedFlow.toFixed(1)}</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Current</div>
+                    <div className="text-3xl font-light text-blue-400">{smoothedProc.feedFlow.toFixed(1)}</div>
+                    <div className="text-xs text-gray-500">m³/h</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xs text-slate-500 mb-1">Setpoint (SP)</div>
-                    <div className="flex items-center gap-2">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Setpoint</div>
+                    <div className="flex items-center gap-3">
                       <input
                         type="range"
                         min="1"
@@ -2769,7 +2942,7 @@ export default function CentrifugeProcessControl() {
                         step="0.5"
                         value={loops.FIC.sp}
                         onChange={(e) => setLoops(p => ({ ...p, FIC: { ...p.FIC, sp: parseFloat(e.target.value) } }))}
-                        className="w-32 h-3 bg-slate-600 rounded-lg cursor-pointer accent-green-500"
+                        className="w-40 h-2 bg-white/10 rounded-full cursor-pointer accent-emerald-500"
                       />
                       <NumInput
                         value={loops.FIC.sp}
@@ -2777,405 +2950,436 @@ export default function CentrifugeProcessControl() {
                         min={1}
                         max={equipment.maxFlow}
                         step={0.5}
-                        className="w-20 text-xl text-green-400 font-bold"
+                        className="w-20 text-xl text-center bg-white/10 border-0 rounded-xl text-emerald-400 font-medium"
                       />
-                      <span className="text-slate-400">m³/h</span>
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xs text-slate-500 mb-1">Max Capacity</div>
-                    <div className="text-lg font-bold text-slate-400">{equipment.maxFlow} m³/h</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Capacity</div>
+                    <div className="text-xl font-medium text-gray-400">{equipment.maxFlow}</div>
+                    <div className="text-xs text-gray-500">m³/h max</div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Phase Composition */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-blue-900/50">
-              <h3 className="text-lg font-semibold text-blue-400 mb-4">📊 Phase Composition (must sum to 100%)</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-sm text-cyan-400 block mb-2">Water Fraction</label>
-                  <div className="flex items-center gap-3">
-                    <input type="range" min="0" max="100" step="1"
-                      value={feedProps.waterFraction * 100}
-                      onChange={(e) => {
-                        const newWater = parseFloat(e.target.value) / 100;
-                        const remaining = 1 - newWater;
-                        const oilRatio = feedProps.oilFraction / (feedProps.oilFraction + feedProps.solidsFraction || 0.01);
-                        setFeedProps(p => ({
-                          ...p,
-                          waterFraction: newWater,
-                          oilFraction: remaining * oilRatio,
-                          solidsFraction: remaining * (1 - oilRatio)
-                        }));
-                      }}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer accent-cyan-500"
-                    />
-                    <span className="w-16 text-right font-mono text-cyan-400">{(feedProps.waterFraction * 100).toFixed(1)}%</span>
+            <Card title="Phase Composition" subtitle="Must sum to 100%">
+              <div className="grid md:grid-cols-3 gap-8">
+                {/* Water */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-cyan-500" />
+                      <span className="text-sm font-medium text-gray-300">Water</span>
+                    </div>
+                    <span className="text-lg font-semibold text-cyan-400">{(feedProps.waterFraction * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="h-3 bg-cyan-500/30 rounded mt-2" style={{ width: `${feedProps.waterFraction * 100}%` }} />
+                  <input type="range" min="0" max="100" step="1"
+                    value={feedProps.waterFraction * 100}
+                    onChange={(e) => {
+                      const newWater = parseFloat(e.target.value) / 100;
+                      const remaining = 1 - newWater;
+                      const oilRatio = feedProps.oilFraction / (feedProps.oilFraction + feedProps.solidsFraction || 0.01);
+                      setFeedProps(p => ({
+                        ...p,
+                        waterFraction: newWater,
+                        oilFraction: remaining * oilRatio,
+                        solidsFraction: remaining * (1 - oilRatio)
+                      }));
+                    }}
+                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-cyan-500"
+                  />
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full transition-all duration-300" style={{ width: `${feedProps.waterFraction * 100}%` }} />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm text-amber-400 block mb-2">Oil Fraction</label>
-                  <div className="flex items-center gap-3">
-                    <input type="range" min="0" max="100" step="1"
-                      value={feedProps.oilFraction * 100}
-                      onChange={(e) => {
-                        const newOil = parseFloat(e.target.value) / 100;
-                        const maxOil = 1 - feedProps.solidsFraction;
-                        const clampedOil = Math.min(newOil, maxOil);
-                        setFeedProps(p => ({
-                          ...p,
-                          oilFraction: clampedOil,
-                          waterFraction: 1 - clampedOil - p.solidsFraction
-                        }));
-                      }}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer accent-amber-500"
-                    />
-                    <span className="w-16 text-right font-mono text-amber-400">{(feedProps.oilFraction * 100).toFixed(1)}%</span>
+
+                {/* Oil */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <span className="text-sm font-medium text-gray-300">Oil</span>
+                    </div>
+                    <span className="text-lg font-semibold text-amber-400">{(feedProps.oilFraction * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="h-3 bg-amber-500/30 rounded mt-2" style={{ width: `${feedProps.oilFraction * 100}%` }} />
+                  <input type="range" min="0" max="100" step="1"
+                    value={feedProps.oilFraction * 100}
+                    onChange={(e) => {
+                      const newOil = parseFloat(e.target.value) / 100;
+                      const maxOil = 1 - feedProps.solidsFraction;
+                      const clampedOil = Math.min(newOil, maxOil);
+                      setFeedProps(p => ({
+                        ...p,
+                        oilFraction: clampedOil,
+                        waterFraction: 1 - clampedOil - p.solidsFraction
+                      }));
+                    }}
+                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-amber-500"
+                  />
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-300" style={{ width: `${feedProps.oilFraction * 100}%` }} />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm text-orange-400 block mb-2">Solids Fraction</label>
-                  <div className="flex items-center gap-3">
-                    <input type="range" min="0" max="30" step="0.5"
-                      value={feedProps.solidsFraction * 100}
-                      onChange={(e) => {
-                        const newSolids = parseFloat(e.target.value) / 100;
-                        const maxSolids = 1 - feedProps.oilFraction;
-                        const clampedSolids = Math.min(newSolids, maxSolids);
-                        setFeedProps(p => ({
-                          ...p,
-                          solidsFraction: clampedSolids,
-                          waterFraction: 1 - p.oilFraction - clampedSolids
-                        }));
-                      }}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer accent-orange-500"
-                    />
-                    <span className="w-16 text-right font-mono text-orange-400">{(feedProps.solidsFraction * 100).toFixed(1)}%</span>
+
+                {/* Solids */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-orange-500" />
+                      <span className="text-sm font-medium text-gray-300">Solids</span>
+                    </div>
+                    <span className="text-lg font-semibold text-orange-400">{(feedProps.solidsFraction * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="h-3 bg-orange-500/30 rounded mt-2" style={{ width: `${feedProps.solidsFraction * 100}%` }} />
+                  <input type="range" min="0" max="30" step="0.5"
+                    value={feedProps.solidsFraction * 100}
+                    onChange={(e) => {
+                      const newSolids = parseFloat(e.target.value) / 100;
+                      const maxSolids = 1 - feedProps.oilFraction;
+                      const clampedSolids = Math.min(newSolids, maxSolids);
+                      setFeedProps(p => ({
+                        ...p,
+                        solidsFraction: clampedSolids,
+                        waterFraction: 1 - p.oilFraction - clampedSolids
+                      }));
+                    }}
+                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-orange-500"
+                  />
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-300" style={{ width: `${feedProps.solidsFraction * 100}%` }} />
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 p-3 bg-slate-700/50 rounded-lg flex items-center justify-center gap-4">
+              {/* Total indicator */}
+              <div className="mt-6 p-4 bg-white/5 rounded-2xl flex items-center justify-center gap-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-cyan-500 rounded" />
-                  <span className="text-sm">Water {(feedProps.waterFraction * 100).toFixed(1)}%</span>
+                  <div className="w-3 h-3 bg-cyan-500 rounded-full" />
+                  <span className="text-sm text-gray-400">Water {(feedProps.waterFraction * 100).toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-amber-500 rounded" />
-                  <span className="text-sm">Oil {(feedProps.oilFraction * 100).toFixed(1)}%</span>
+                  <div className="w-3 h-3 bg-amber-500 rounded-full" />
+                  <span className="text-sm text-gray-400">Oil {(feedProps.oilFraction * 100).toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-orange-500 rounded" />
-                  <span className="text-sm">Solids {(feedProps.solidsFraction * 100).toFixed(1)}%</span>
+                  <div className="w-3 h-3 bg-orange-500 rounded-full" />
+                  <span className="text-sm text-gray-400">Solids {(feedProps.solidsFraction * 100).toFixed(1)}%</span>
                 </div>
-                <div className={`px-3 py-1 rounded ${Math.abs(feedProps.waterFraction + feedProps.oilFraction + feedProps.solidsFraction - 1) < 0.001 ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                <div className={`px-4 py-1.5 rounded-xl ${Math.abs(feedProps.waterFraction + feedProps.oilFraction + feedProps.solidsFraction - 1) < 0.001 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'} text-sm font-medium`}>
                   Total: {((feedProps.waterFraction + feedProps.oilFraction + feedProps.solidsFraction) * 100).toFixed(1)}%
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Density Properties */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-purple-900/50">
-              <h3 className="text-lg font-semibold text-purple-400 mb-4">⚖️ Density Properties (kg/m³)</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Water Density (affected by salinity)</label>
-                  <div className="flex items-center gap-3">
-                    <input type="range" min="990" max="1100" step="1"
-                      value={feedProps.waterDensity}
-                      onChange={(e) => setFeedProps(p => ({ ...p, waterDensity: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
-                    />
-                    <NumInput value={feedProps.waterDensity} onChange={v => setFeedProps(p => ({ ...p, waterDensity: v }))} min={990} max={1100} className="w-20 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+            <Card title="Density Properties" subtitle="kg/m³">
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Water Density</span>
+                    <span className="text-lg font-semibold text-cyan-400">{feedProps.waterDensity}</span>
                   </div>
+                  <input type="range" min="990" max="1100" step="1"
+                    value={feedProps.waterDensity}
+                    onChange={(e) => setFeedProps(p => ({ ...p, waterDensity: parseFloat(e.target.value) }))}
+                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-cyan-500"
+                  />
+                  <div className="text-xs text-gray-500">Affected by salinity</div>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Oil Density</label>
-                  <div className="flex items-center gap-3">
-                    <input type="range" min="700" max="1000" step="5"
-                      value={feedProps.oilDensity}
-                      onChange={(e) => setFeedProps(p => ({ ...p, oilDensity: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
-                    />
-                    <NumInput value={feedProps.oilDensity} onChange={v => setFeedProps(p => ({ ...p, oilDensity: v }))} min={700} max={1000} className="w-20 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Oil Density</span>
+                    <span className="text-lg font-semibold text-amber-400">{feedProps.oilDensity}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Δρ = {Math.abs(feedProps.waterDensity - feedProps.oilDensity)} kg/m³ (oil-water)</div>
+                  <input type="range" min="700" max="1000" step="5"
+                    value={feedProps.oilDensity}
+                    onChange={(e) => setFeedProps(p => ({ ...p, oilDensity: parseFloat(e.target.value) }))}
+                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-amber-500"
+                  />
+                  <div className="text-xs text-gray-500">Δρ = {Math.abs(feedProps.waterDensity - feedProps.oilDensity)} kg/m³ (oil-water)</div>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Solids Density</label>
-                  <div className="flex items-center gap-3">
-                    <input type="range" min="1500" max="4000" step="50"
-                      value={feedProps.solidsDensity}
-                      onChange={(e) => setFeedProps(p => ({ ...p, solidsDensity: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
-                    />
-                    <NumInput value={feedProps.solidsDensity} onChange={v => setFeedProps(p => ({ ...p, solidsDensity: v }))} min={1500} max={4000} className="w-20 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Solids Density</span>
+                    <span className="text-lg font-semibold text-orange-400">{feedProps.solidsDensity}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Δρ = {feedProps.solidsDensity - feedProps.waterDensity} kg/m³ (solids-water)</div>
+                  <input type="range" min="1500" max="4000" step="50"
+                    value={feedProps.solidsDensity}
+                    onChange={(e) => setFeedProps(p => ({ ...p, solidsDensity: parseFloat(e.target.value) }))}
+                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-orange-500"
+                  />
+                  <div className="text-xs text-gray-500">Δρ = {feedProps.solidsDensity - feedProps.waterDensity} kg/m³ (solids-water)</div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Particle Size Distribution */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-green-900/50">
-              <h3 className="text-lg font-semibold text-green-400 mb-4">📏 Particle Size Distribution (microns)</h3>
-              <div className="grid md:grid-cols-2 gap-6">
+            <Card title="Particle Size Distribution" subtitle="microns">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Oil Droplets */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-amber-400 border-b border-slate-700 pb-2">Oil Droplets</h4>
+                  <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    <h4 className="text-sm font-medium text-amber-400">Oil Droplets</h4>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">D10 (Fine)</label>
-                      <NumInput value={feedProps.oilDropletD10} onChange={v => setFeedProps(p => ({ ...p, oilDropletD10: v }))} min={1} max={100} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">D10 (Fine)</label>
+                      <NumInput value={feedProps.oilDropletD10} onChange={v => setFeedProps(p => ({ ...p, oilDropletD10: v }))} min={1} max={100} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
                     </div>
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">D50 (Median)</label>
-                      <NumInput value={feedProps.oilDropletD50} onChange={v => setFeedProps(p => ({ ...p, oilDropletD50: v }))} min={1} max={200} className="w-full bg-slate-700 border border-amber-500 rounded px-2 py-1 text-center text-amber-400" />
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">D50 (Median)</label>
+                      <NumInput value={feedProps.oilDropletD50} onChange={v => setFeedProps(p => ({ ...p, oilDropletD50: v }))} min={1} max={200} className="w-full bg-amber-500/10 border-0 rounded-xl px-3 py-2 text-center text-amber-400 font-medium" />
                     </div>
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">D90 (Coarse)</label>
-                      <NumInput value={feedProps.oilDropletD90} onChange={v => setFeedProps(p => ({ ...p, oilDropletD90: v }))} min={1} max={500} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">D90 (Coarse)</label>
+                      <NumInput value={feedProps.oilDropletD90} onChange={v => setFeedProps(p => ({ ...p, oilDropletD90: v }))} min={1} max={500} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
                     <span>Span = {((feedProps.oilDropletD90 - feedProps.oilDropletD10) / feedProps.oilDropletD50).toFixed(2)}</span>
-                    <span className="text-slate-600">|</span>
-                    <span>Sphericity:</span>
-                    <input type="range" min="0.4" max="1" step="0.05" value={feedProps.oilDropletSphericity}
-                      onChange={(e) => setFeedProps(p => ({ ...p, oilDropletSphericity: parseFloat(e.target.value) }))}
-                      className="w-20 h-1 bg-slate-600 rounded-lg cursor-pointer" />
-                    <span>{feedProps.oilDropletSphericity.toFixed(2)}</span>
+                    <div className="flex items-center gap-2">
+                      <span>Sphericity:</span>
+                      <input type="range" min="0.4" max="1" step="0.05" value={feedProps.oilDropletSphericity}
+                        onChange={(e) => setFeedProps(p => ({ ...p, oilDropletSphericity: parseFloat(e.target.value) }))}
+                        className="w-16 h-1 bg-white/10 rounded-full cursor-pointer" />
+                      <span className="text-white">{feedProps.oilDropletSphericity.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Solid Particles */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-orange-400 border-b border-slate-700 pb-2">Solid Particles</h4>
+                  <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    <h4 className="text-sm font-medium text-orange-400">Solid Particles</h4>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">D10 (Fine)</label>
-                      <NumInput value={feedProps.solidsD10} onChange={v => setFeedProps(p => ({ ...p, solidsD10: v }))} min={1} max={200} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">D10 (Fine)</label>
+                      <NumInput value={feedProps.solidsD10} onChange={v => setFeedProps(p => ({ ...p, solidsD10: v }))} min={1} max={200} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
                     </div>
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">D50 (Median)</label>
-                      <NumInput value={feedProps.solidsD50} onChange={v => setFeedProps(p => ({ ...p, solidsD50: v }))} min={1} max={500} className="w-full bg-slate-700 border border-orange-500 rounded px-2 py-1 text-center text-orange-400" />
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">D50 (Median)</label>
+                      <NumInput value={feedProps.solidsD50} onChange={v => setFeedProps(p => ({ ...p, solidsD50: v }))} min={1} max={500} className="w-full bg-orange-500/10 border-0 rounded-xl px-3 py-2 text-center text-orange-400 font-medium" />
                     </div>
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">D90 (Coarse)</label>
-                      <NumInput value={feedProps.solidsD90} onChange={v => setFeedProps(p => ({ ...p, solidsD90: v }))} min={1} max={1000} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">D90 (Coarse)</label>
+                      <NumInput value={feedProps.solidsD90} onChange={v => setFeedProps(p => ({ ...p, solidsD90: v }))} min={1} max={1000} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
                     <span>Span = {((feedProps.solidsD90 - feedProps.solidsD10) / feedProps.solidsD50).toFixed(2)}</span>
-                    <span className="text-slate-600">|</span>
-                    <span>Sphericity:</span>
-                    <input type="range" min="0.4" max="1" step="0.05" value={feedProps.solidsSphericity}
-                      onChange={(e) => setFeedProps(p => ({ ...p, solidsSphericity: parseFloat(e.target.value) }))}
-                      className="w-20 h-1 bg-slate-600 rounded-lg cursor-pointer" />
-                    <span>{feedProps.solidsSphericity.toFixed(2)}</span>
+                    <div className="flex items-center gap-2">
+                      <span>Sphericity:</span>
+                      <input type="range" min="0.4" max="1" step="0.05" value={feedProps.solidsSphericity}
+                        onChange={(e) => setFeedProps(p => ({ ...p, solidsSphericity: parseFloat(e.target.value) }))}
+                        className="w-16 h-1 bg-white/10 rounded-full cursor-pointer" />
+                      <span className="text-white">{feedProps.solidsSphericity.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Rheological Properties */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-red-900/50">
-              <h3 className="text-lg font-semibold text-red-400 mb-4">🌊 Rheological Properties</h3>
+            <Card title="Rheological Properties" subtitle="Fluid behavior">
               <div className="grid md:grid-cols-4 gap-6">
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Oil Viscosity @ 25°C (mPa·s)</label>
-                  <NumInput value={feedProps.oilViscosity} onChange={v => setFeedProps(p => ({ ...p, oilViscosity: v }))} min={1} max={10000} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-center text-lg" />
-                  <div className="text-xs text-slate-500 mt-1">Light: 5-50, Medium: 50-200, Heavy: 200+</div>
+                <div className="space-y-3">
+                  <label className="text-sm text-gray-400">Oil Viscosity @ 25°C</label>
+                  <NumInput value={feedProps.oilViscosity} onChange={v => setFeedProps(p => ({ ...p, oilViscosity: v }))} min={1} max={10000} className="w-full bg-white/5 border-0 rounded-xl px-4 py-3 text-center text-xl text-white" />
+                  <div className="text-xs text-gray-500">Light: 5-50 · Medium: 50-200 · Heavy: 200+ mPa·s</div>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Temp Coefficient</label>
+                <div className="space-y-3">
+                  <label className="text-sm text-gray-400">Temp Coefficient</label>
                   <div className="flex items-center gap-3">
                     <input type="range" min="0.01" max="0.05" step="0.001"
                       value={feedProps.viscosityTempCoeff}
                       onChange={(e) => setFeedProps(p => ({ ...p, viscosityTempCoeff: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                     />
-                    <span className="w-14 text-right font-mono">{feedProps.viscosityTempCoeff.toFixed(3)}</span>
+                    <span className="w-14 text-right font-mono text-white">{feedProps.viscosityTempCoeff.toFixed(3)}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Higher = more temp sensitive</div>
+                  <div className="text-xs text-gray-500">Higher = more temp sensitive</div>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Yield Stress (Pa)</label>
+                <div className="space-y-3">
+                  <label className="text-sm text-gray-400">Yield Stress (Pa)</label>
                   <div className="flex items-center gap-3">
                     <input type="range" min="0" max="100" step="1"
                       value={feedProps.yieldStress}
                       onChange={(e) => setFeedProps(p => ({ ...p, yieldStress: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                     />
-                    <span className="w-14 text-right font-mono">{feedProps.yieldStress}</span>
+                    <span className="w-14 text-right font-mono text-white">{feedProps.yieldStress}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">0 = Newtonian fluid</div>
+                  <div className="text-xs text-gray-500">0 = Newtonian fluid</div>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Flow Behavior Index (n)</label>
+                <div className="space-y-3">
+                  <label className="text-sm text-gray-400">Flow Behavior Index (n)</label>
                   <div className="flex items-center gap-3">
                     <input type="range" min="0.3" max="1.5" step="0.05"
                       value={feedProps.flowBehaviorIndex}
                       onChange={(e) => setFeedProps(p => ({ ...p, flowBehaviorIndex: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                     />
-                    <span className="w-14 text-right font-mono">{feedProps.flowBehaviorIndex.toFixed(2)}</span>
+                    <span className="w-14 text-right font-mono text-white">{feedProps.flowBehaviorIndex.toFixed(2)}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">&lt;1: shear-thin, 1: Newtonian, &gt;1: shear-thick</div>
+                  <div className="text-xs text-gray-500">&lt;1: shear-thin · 1: Newtonian · &gt;1: shear-thick</div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Emulsion & Interfacial Properties */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-pink-900/50">
-              <h3 className="text-lg font-semibold text-pink-400 mb-4">🧴 Emulsion & Interfacial Properties</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Emulsion Stability (0 = easy to break, 1 = very stable)</label>
-                  <div className="flex items-center gap-3">
-                    <span className="text-green-400 text-xs">Easy</span>
-                    <input type="range" min="0" max="1" step="0.05"
-                      value={feedProps.emulsionStability}
-                      onChange={(e) => setFeedProps(p => ({ ...p, emulsionStability: parseFloat(e.target.value) }))}
-                      className="flex-1 h-3 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg cursor-pointer appearance-none"
-                    />
-                    <span className="text-red-400 text-xs">Stable</span>
-                    <span className="w-14 text-right font-mono font-bold">{feedProps.emulsionStability.toFixed(2)}</span>
+            <Card title="Emulsion & Interfacial Properties" subtitle="Separation difficulty">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <label className="text-sm text-gray-400">Emulsion Stability</label>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-emerald-400">Easy</span>
+                    <div className="flex-1 relative h-3 rounded-full overflow-hidden bg-gradient-to-r from-emerald-500/30 via-amber-500/30 to-red-500/30">
+                      <input type="range" min="0" max="1" step="0.05"
+                        value={feedProps.emulsionStability}
+                        onChange={(e) => setFeedProps(p => ({ ...p, emulsionStability: parseFloat(e.target.value) }))}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="absolute top-0 left-0 h-full bg-white/80 rounded-full transition-all" style={{ width: `${feedProps.emulsionStability * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-red-400">Stable</span>
+                    <span className="w-12 text-right font-semibold text-white">{feedProps.emulsionStability.toFixed(2)}</span>
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-400 block mb-2">Interfacial Tension (mN/m)</label>
-                  <div className="flex items-center gap-3">
-                    <span className="text-red-400 text-xs">Low</span>
+                <div className="space-y-4">
+                  <label className="text-sm text-gray-400">Interfacial Tension (mN/m)</label>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-red-400">Low</span>
                     <input type="range" min="1" max="50" step="0.5"
                       value={feedProps.interfacialTension}
                       onChange={(e) => setFeedProps(p => ({ ...p, interfacialTension: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                     />
-                    <span className="text-green-400 text-xs">High</span>
-                    <span className="w-14 text-right font-mono">{feedProps.interfacialTension.toFixed(1)}</span>
+                    <span className="text-xs text-emerald-400">High</span>
+                    <span className="w-12 text-right font-semibold text-white">{feedProps.interfacialTension.toFixed(1)}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Low IFT = harder to coalesce droplets</div>
+                  <div className="text-xs text-gray-500">Low IFT = harder to coalesce droplets</div>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* Chemical Dosing Reference - Moved to dedicated ChemDosing tab */}
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-teal-900/30">
+            {/* Chemical Dosing Link */}
+            <div className="rounded-2xl p-5 bg-gradient-to-r from-teal-500/10 to-cyan-500/5 border border-teal-500/20">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">💊</span>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 flex items-center justify-center">
+                    <span className="text-xl">◎</span>
+                  </div>
                   <div>
                     <h3 className="font-semibold text-teal-400">Chemical Treatment</h3>
-                    <p className="text-xs text-slate-400">Configure dosing in the Chemical Dosing tab</p>
+                    <p className="text-sm text-gray-500">Configure dosing parameters in the Chemicals tab</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setActiveTab('chemDosing')}
-                  className="px-4 py-2 bg-teal-600 hover:bg-teal-500 rounded-lg text-sm font-medium transition-colors"
+                  className="px-5 py-2.5 bg-teal-500/20 hover:bg-teal-500/30 rounded-xl text-sm font-medium text-teal-400 transition-all"
                 >
-                  Go to Chemical Dosing →
+                  Open Chemicals →
                 </button>
               </div>
             </div>
 
             {/* Water Quality & Advanced Parameters */}
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-slate-800 rounded-xl p-6 border border-blue-900/50">
-                <h3 className="text-lg font-semibold text-blue-400 mb-4">🌊 Water Quality Parameters</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-slate-400 block mb-2">Salinity / TDS (mg/L)</label>
+              <Card title="Water Quality" subtitle="Environmental parameters">
+                <div className="space-y-5">
+                  <div className="space-y-3">
+                    <label className="text-sm text-gray-400">Salinity / TDS (mg/L)</label>
                     <div className="flex items-center gap-3">
                       <input type="range" min="0" max="200000" step="1000"
                         value={feedProps.salinity}
                         onChange={(e) => setFeedProps(p => ({ ...p, salinity: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                       />
-                      <NumInput value={feedProps.salinity} onChange={v => setFeedProps(p => ({ ...p, salinity: v }))} min={0} max={200000} className="w-24 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center" />
+                      <NumInput value={feedProps.salinity} onChange={v => setFeedProps(p => ({ ...p, salinity: v }))} min={0} max={200000} className="w-24 bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">Freshwater &lt;1000, Seawater ~35000, Brine 50000+</div>
+                    <div className="text-xs text-gray-500">Freshwater &lt;1000 · Seawater ~35000 · Brine 50000+</div>
                   </div>
-                  <div>
-                    <label className="text-sm text-slate-400 block mb-2">Dissolved Gas (%)</label>
+                  <div className="space-y-3">
+                    <label className="text-sm text-gray-400">Dissolved Gas (%)</label>
                     <div className="flex items-center gap-3">
                       <input type="range" min="0" max="20" step="0.5"
                         value={feedProps.dissolvedGas}
                         onChange={(e) => setFeedProps(p => ({ ...p, dissolvedGas: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                       />
-                      <span className="w-14 text-right font-mono">{feedProps.dissolvedGas.toFixed(1)}%</span>
+                      <span className="w-14 text-right font-mono text-white">{feedProps.dissolvedGas.toFixed(1)}%</span>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">High gas content can cause cavitation</div>
+                    <div className="text-xs text-gray-500">High gas content can cause cavitation</div>
                   </div>
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-slate-800 rounded-xl p-6 border border-slate-600">
-                <h3 className="text-lg font-semibold text-slate-400 mb-4">⚙️ Advanced Settling Parameters</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-slate-400 block mb-2">Max Packing Fraction (Richardson-Zaki)</label>
+              <Card title="Advanced Settling" subtitle="Richardson-Zaki parameters">
+                <div className="space-y-5">
+                  <div className="space-y-3">
+                    <label className="text-sm text-gray-400">Max Packing Fraction</label>
                     <div className="flex items-center gap-3">
                       <input type="range" min="0.5" max="0.74" step="0.01"
                         value={feedProps.maxPackingFraction}
                         onChange={(e) => setFeedProps(p => ({ ...p, maxPackingFraction: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                       />
-                      <span className="w-14 text-right font-mono">{feedProps.maxPackingFraction.toFixed(2)}</span>
+                      <span className="w-14 text-right font-mono text-white">{feedProps.maxPackingFraction.toFixed(2)}</span>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">Random close packing ~0.64</div>
+                    <div className="text-xs text-gray-500">Random close packing ~0.64</div>
                   </div>
-                  <div>
-                    <label className="text-sm text-slate-400 block mb-2">Hindered Settling Exponent</label>
+                  <div className="space-y-3">
+                    <label className="text-sm text-gray-400">Hindered Settling Exponent</label>
                     <div className="flex items-center gap-3">
                       <input type="range" min="2.5" max="6" step="0.1"
                         value={feedProps.hinderedSettlingExp}
                         onChange={(e) => setFeedProps(p => ({ ...p, hinderedSettlingExp: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-slate-600 rounded-lg cursor-pointer"
+                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
                       />
-                      <span className="w-14 text-right font-mono">{feedProps.hinderedSettlingExp.toFixed(1)}</span>
+                      <span className="w-14 text-right font-mono text-white">{feedProps.hinderedSettlingExp.toFixed(1)}</span>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">Spheres ~4.65, irregular particles higher</div>
+                    <div className="text-xs text-gray-500">Spheres ~4.65, irregular particles higher</div>
                   </div>
                 </div>
-              </div>
+              </Card>
             </div>
 
-            {/* Feed Impact Summary - Shows how current feed settings affect separation */}
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-600">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-300">Feed Impact on Separation</h3>
+            {/* Feed Impact Summary */}
+            <div className="rounded-2xl p-5 bg-gradient-to-r from-white/5 to-transparent border border-white/10">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white">Feed Impact on Separation</h3>
                 <button
                   onClick={() => setActiveTab('centrifuge')}
-                  className="text-xs text-cyan-400 hover:text-cyan-300"
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
                 >
                   View Live Operations →
                 </button>
               </div>
-              <div className="grid grid-cols-4 gap-3 mt-3">
-                <div className="text-center">
-                  <div className="text-xs text-slate-500">Separation Difficulty</div>
-                  <div className={`text-lg font-bold ${feedProps.emulsionStability < 0.3 ? 'text-green-400' : feedProps.emulsionStability < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center p-3 rounded-xl bg-white/5">
+                  <div className="text-xs text-gray-500 mb-1">Separation</div>
+                  <div className={`text-lg font-semibold ${feedProps.emulsionStability < 0.3 ? 'text-emerald-400' : feedProps.emulsionStability < 0.6 ? 'text-amber-400' : 'text-red-400'}`}>
                     {feedProps.emulsionStability < 0.3 ? 'Easy' : feedProps.emulsionStability < 0.6 ? 'Moderate' : 'Difficult'}
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-slate-500">Oil Viscosity</div>
-                  <div className={`text-lg font-bold ${feedProps.oilViscosity < 30 ? 'text-green-400' : feedProps.oilViscosity < 100 ? 'text-yellow-400' : 'text-red-400'}`}>
+                <div className="text-center p-3 rounded-xl bg-white/5">
+                  <div className="text-xs text-gray-500 mb-1">Viscosity</div>
+                  <div className={`text-lg font-semibold ${feedProps.oilViscosity < 30 ? 'text-emerald-400' : feedProps.oilViscosity < 100 ? 'text-amber-400' : 'text-red-400'}`}>
                     {feedProps.oilViscosity} mPa·s
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-slate-500">Solids Load</div>
-                  <div className={`text-lg font-bold ${feedProps.solidsFraction < 0.03 ? 'text-green-400' : feedProps.solidsFraction < 0.08 ? 'text-yellow-400' : 'text-red-400'}`}>
+                <div className="text-center p-3 rounded-xl bg-white/5">
+                  <div className="text-xs text-gray-500 mb-1">Solids Load</div>
+                  <div className={`text-lg font-semibold ${feedProps.solidsFraction < 0.03 ? 'text-emerald-400' : feedProps.solidsFraction < 0.08 ? 'text-amber-400' : 'text-red-400'}`}>
                     {(feedProps.solidsFraction * 100).toFixed(1)}%
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-slate-500">Expected Recovery</div>
-                  <div className={`text-lg font-bold ${smoothedProc.oilEff >= 90 ? 'text-green-400' : smoothedProc.oilEff >= 80 ? 'text-yellow-400' : 'text-red-400'}`}>
+                <div className="text-center p-3 rounded-xl bg-white/5">
+                  <div className="text-xs text-gray-500 mb-1">Recovery</div>
+                  <div className={`text-lg font-semibold ${smoothedProc.oilEff >= 90 ? 'text-emerald-400' : smoothedProc.oilEff >= 80 ? 'text-amber-400' : 'text-red-400'}`}>
                     {smoothedProc.oilEff.toFixed(0)}%
                   </div>
                 </div>
