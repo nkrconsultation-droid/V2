@@ -7250,32 +7250,6 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </div>
                   </div>
 
-                  {/* Gate Fee Slider */}
-                  <div className="mb-4 p-3 bg-purple-900/20 rounded-lg border border-purple-700/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-purple-300">
-                        💰 Input Feed Collection Fee (Gate Fee)
-                      </label>
-                      <span className="text-lg font-bold text-purple-400 font-mono">
-                        ${(capitalModel.gateFee / 1000).toFixed(2)}/L
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="2000"
-                      step="50"
-                      value={capitalModel.gateFee}
-                      onChange={e => setCapitalModel(p => ({ ...p, gateFee: Number(e.target.value) }))}
-                      className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                    />
-                    <div className="flex justify-between text-xs text-slate-500 mt-1">
-                      <span>$0/L</span>
-                      <span className="text-purple-400">${(capitalModel.gateFee).toLocaleString()}/m³</span>
-                      <span>$2/L</span>
-                    </div>
-                  </div>
-
                   <table className="w-full text-sm">
                     <tbody>
                       {/* Gate Fee Revenue */}
@@ -7359,6 +7333,28 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <div>
                       <label className="text-xs text-slate-400">Maintenance $/year</label>
                       <input type="number" value={capitalModel.maintenanceCost} onChange={e => setCapitalModel(p => ({ ...p, maintenanceCost: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs text-slate-400">Gate Fee - Input Feed Collection ($/L)</label>
+                      <div className="flex items-center gap-3 mt-1">
+                        <input
+                          type="range"
+                          min="0"
+                          max="2000"
+                          step="50"
+                          value={capitalModel.gateFee}
+                          onChange={e => setCapitalModel(p => ({ ...p, gateFee: Number(e.target.value) }))}
+                          className="flex-1 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                        />
+                        <span className="text-lg font-bold text-purple-400 font-mono w-24 text-right">
+                          ${(capitalModel.gateFee / 1000).toFixed(2)}/L
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>$0/L</span>
+                        <span className="text-purple-400">${capitalModel.gateFee.toLocaleString()}/m³</span>
+                        <span>$2/L</span>
+                      </div>
                     </div>
                   </div>
                 </div>
