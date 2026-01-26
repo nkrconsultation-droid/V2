@@ -806,85 +806,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     currentPhaseDataRef.current = null;
   }, []);
 
-  // Start tracking a new phase
-  const startPhaseTracking = useCallback((phaseIndex: number, simTime: number) => {
-    // Finalize previous phase if exists
-    if (currentPhaseDataRef.current !== null) {
-      finalizePhaseData(simTime);
-    }
-
-    // Initialize new phase tracking
-    currentPhaseDataRef.current = {
-      phaseIndex,
-      startTime: simTime,
-      totals: { feed: 0, water: 0, oil: 0, solids: 0, energy: 0 },
-      qualitySamples: { oilEff: [], solidsEff: [], wq: [], pH: [], turb: [] },
-      fractionSamples: {
-        waterPurity: [], waterOil: [], waterTSS: [],
-        oilWater: [], oilSolids: [], oilRecovery: [],
-        solidsMoisture: [], solidsOil: [], solidsRecovery: [],
-      },
-      costs: { energy: 0, chemicals: 0, disposal: 0, water: 0, labor: 0, filter: 0 },
-      massIn: 0,
-      massOut: 0,
-      closureSamples: [],
-      anomalies: [],
-    };
-  }, []);
-
-  // Update phase data with current process values
-  const updatePhaseData = useCallback((proc: any, dt: number, currentCosts: any, currentChemCosts: any, currentFilterCosts: any) => {
-    if (!currentPhaseDataRef.current) return;
-
-    const ref = currentPhaseDataRef.current;
-
-    // Update volume totals
-    ref.totals.feed += proc.feedFlow * dt / 3600;
-    ref.totals.water += proc.waterOut * dt / 3600;
-    ref.totals.oil += proc.oilOut * dt / 3600;
-    ref.totals.solids += proc.solidsOut * dt / 3600;
-    ref.totals.energy += proc.totalPower * dt / 3600;
-
-    // Collect quality samples (every second of sim time)
-    ref.qualitySamples.oilEff.push(proc.oilEff);
-    ref.qualitySamples.solidsEff.push(proc.solidsEff);
-    ref.qualitySamples.wq.push(proc.waterQuality);
-    ref.qualitySamples.pH.push(proc.pH);
-    ref.qualitySamples.turb.push(proc.turbidity);
-
-    // Three-fraction quality samples
-    ref.fractionSamples.waterPurity.push(100 - (proc.waterQuality / 10000) * 100); // OiW in ppm -> purity %
-    ref.fractionSamples.waterOil.push(proc.waterQuality); // ppm OiW
-    ref.fractionSamples.waterTSS.push(proc.turbidity * 1.2); // Approx TSS from turbidity
-
-    ref.fractionSamples.oilWater.push(proc.oilMoisture || 3); // % water in oil
-    ref.fractionSamples.oilSolids.push(proc.oilSolids || 0.5); // % solids in oil
-    ref.fractionSamples.oilRecovery.push(proc.oilEff); // % oil recovery
-
-    ref.fractionSamples.solidsMoisture.push(proc.cakeMoisture || 18); // % moisture in solids
-    ref.fractionSamples.solidsOil.push(proc.cakeOil || 2); // % oil in solids
-    ref.fractionSamples.solidsRecovery.push(proc.solidsEff); // % solids recovery
-
-    // Update costs
-    ref.costs.energy += proc.totalPower * dt / 3600 * currentCosts.elec;
-    ref.costs.water += proc.waterOut * dt / 3600 * currentCosts.waterTreatment;
-    ref.costs.disposal += proc.solidsOut * dt / 3600 * currentCosts.sludgeDisposal;
-    ref.costs.labor += (dt / 3600) * currentCosts.laborRate;
-
-    // Mass balance
-    ref.massIn += proc.feedFlow * dt / 3600;
-    const totalOut = (proc.waterOut + proc.oilOut + proc.solidsOut) * dt / 3600;
-    ref.massOut += totalOut;
-    const closure = ref.massIn > 0 ? (ref.massOut / ref.massIn) * 100 : 100;
-    ref.closureSamples.push(closure);
-
-    // Check for anomalies
-    if (proc.oilEff < 70) ref.anomalies.push(`Low oil efficiency: ${proc.oilEff.toFixed(1)}%`);
-    if (proc.vibration > 6) ref.anomalies.push(`High vibration: ${proc.vibration.toFixed(1)} mm/s`);
-    if (closure < 95 || closure > 105) ref.anomalies.push(`Mass balance deviation: ${closure.toFixed(1)}%`);
-  }, []);
-
-  // Finalize phase data and store
+  // Finalize phase data and store - defined BEFORE startPhaseTracking
   const finalizePhaseData = useCallback((endTime: number) => {
     if (!currentPhaseDataRef.current) return;
 
@@ -948,6 +870,89 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     setPhaseData(prev => [...prev, phaseRecord]);
     currentPhaseDataRef.current = null;
   }, [batchPhases]);
+
+  // Start tracking a new phase
+  const startPhaseTracking = useCallback((phaseIndex: number, simTime: number) => {
+    // Guard: Don't start if we're already tracking this exact phase
+    if (currentPhaseDataRef.current?.phaseIndex === phaseIndex) {
+      return;
+    }
+
+    // Finalize previous phase if exists
+    if (currentPhaseDataRef.current !== null) {
+      finalizePhaseData(simTime);
+    }
+
+    // Initialize new phase tracking
+    currentPhaseDataRef.current = {
+      phaseIndex,
+      startTime: simTime,
+      totals: { feed: 0, water: 0, oil: 0, solids: 0, energy: 0 },
+      qualitySamples: { oilEff: [], solidsEff: [], wq: [], pH: [], turb: [] },
+      fractionSamples: {
+        waterPurity: [], waterOil: [], waterTSS: [],
+        oilWater: [], oilSolids: [], oilRecovery: [],
+        solidsMoisture: [], solidsOil: [], solidsRecovery: [],
+      },
+      costs: { energy: 0, chemicals: 0, disposal: 0, water: 0, labor: 0, filter: 0 },
+      massIn: 0,
+      massOut: 0,
+      closureSamples: [],
+      anomalies: [],
+    };
+  }, [finalizePhaseData]);
+
+  // Update phase data with current process values
+  const updatePhaseData = useCallback((proc: any, dt: number, currentCosts: any, currentChemCosts: any, currentFilterCosts: any) => {
+    if (!currentPhaseDataRef.current) return;
+
+    const ref = currentPhaseDataRef.current;
+
+    // Update volume totals
+    ref.totals.feed += proc.feedFlow * dt / 3600;
+    ref.totals.water += proc.waterOut * dt / 3600;
+    ref.totals.oil += proc.oilOut * dt / 3600;
+    ref.totals.solids += proc.solidsOut * dt / 3600;
+    ref.totals.energy += proc.totalPower * dt / 3600;
+
+    // Collect quality samples (every second of sim time)
+    ref.qualitySamples.oilEff.push(proc.oilEff);
+    ref.qualitySamples.solidsEff.push(proc.solidsEff);
+    ref.qualitySamples.wq.push(proc.waterQuality);
+    ref.qualitySamples.pH.push(proc.pH);
+    ref.qualitySamples.turb.push(proc.turbidity);
+
+    // Three-fraction quality samples
+    ref.fractionSamples.waterPurity.push(100 - (proc.waterQuality / 10000) * 100); // OiW in ppm -> purity %
+    ref.fractionSamples.waterOil.push(proc.waterQuality); // ppm OiW
+    ref.fractionSamples.waterTSS.push(proc.turbidity * 1.2); // Approx TSS from turbidity
+
+    ref.fractionSamples.oilWater.push(proc.oilMoisture || 3); // % water in oil
+    ref.fractionSamples.oilSolids.push(proc.oilSolids || 0.5); // % solids in oil
+    ref.fractionSamples.oilRecovery.push(proc.oilEff); // % oil recovery
+
+    ref.fractionSamples.solidsMoisture.push(proc.cakeMoisture || 18); // % moisture in solids
+    ref.fractionSamples.solidsOil.push(proc.cakeOil || 2); // % oil in solids
+    ref.fractionSamples.solidsRecovery.push(proc.solidsEff); // % solids recovery
+
+    // Update costs
+    ref.costs.energy += proc.totalPower * dt / 3600 * currentCosts.elec;
+    ref.costs.water += proc.waterOut * dt / 3600 * currentCosts.waterTreatment;
+    ref.costs.disposal += proc.solidsOut * dt / 3600 * currentCosts.sludgeDisposal;
+    ref.costs.labor += (dt / 3600) * currentCosts.laborRate;
+
+    // Mass balance
+    ref.massIn += proc.feedFlow * dt / 3600;
+    const totalOut = (proc.waterOut + proc.oilOut + proc.solidsOut) * dt / 3600;
+    ref.massOut += totalOut;
+    const closure = ref.massIn > 0 ? (ref.massOut / ref.massIn) * 100 : 100;
+    ref.closureSamples.push(closure);
+
+    // Check for anomalies
+    if (proc.oilEff < 70) ref.anomalies.push(`Low oil efficiency: ${proc.oilEff.toFixed(1)}%`);
+    if (proc.vibration > 6) ref.anomalies.push(`High vibration: ${proc.vibration.toFixed(1)} mm/s`);
+    if (closure < 95 || closure > 105) ref.anomalies.push(`Mass balance deviation: ${closure.toFixed(1)}%`);
+  }, []);
 
   // ═══════════════════════════════════════════════════════════════
   //    FEEDSTOCK TYPES & OIL VALUE MATRIX
