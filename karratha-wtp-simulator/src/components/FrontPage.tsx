@@ -29,6 +29,15 @@ interface FrontPageProps {
 
 const NAVIGATION_TILES: NavigationTile[] = [
   {
+    id: 'process-overview',
+    title: 'Process Flow',
+    subtitle: 'L1 - Block Flow Diagram',
+    icon: '🔀',
+    color: 'from-emerald-600 to-emerald-800',
+    description: 'Interactive process overview with flow visualization',
+    status: 'online',
+  },
+  {
     id: 'overview',
     title: 'Plant Overview',
     subtitle: 'L1 - Process Summary',

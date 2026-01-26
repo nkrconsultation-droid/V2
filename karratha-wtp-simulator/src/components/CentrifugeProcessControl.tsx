@@ -46,6 +46,12 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
 
+// Extracted modules
+import { usePhaseTracking, ProcessDataSnapshot } from '../hooks/usePhaseTracking';
+import { FEEDSTOCK_TYPES, TRANSPORT_DESTINATIONS, DEFAULT_COSTS } from '../lib/constants';
+import { BATCH_PHASES, getTotalBatchVolume } from '../lib/constants/batch-phases';
+import { generatePhaseReportHTML } from '../lib/reports/phase-report';
+
 const gaussianRandom = (mean, stdDev) => {
   if (stdDev === 0) return mean;
   const u1 = Math.random(), u2 = Math.random();
@@ -399,11 +405,20 @@ const NumInput = ({ value, onChange, className = '', min, max, step = 1 }) => {
   );
 };
 
-export default function CentrifugeProcessControl() {
+interface CentrifugeProcessControlProps {
+  initialTab?: string;
+}
+
+export default function CentrifugeProcessControl({ initialTab = 'feed' }: CentrifugeProcessControlProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [simSpeed, setSimSpeed] = useState(10);
   const [simTime, setSimTime] = useState(0);
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync activeTab when initialTab changes (user navigates from home with different tile)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // ═══════════════════════════════════════════════════════════════
   //                   EQUIPMENT & FEED PROPERTIES
@@ -516,16 +531,12 @@ export default function CentrifugeProcessControl() {
   // ═══════════════════════════════════════════════════════════════
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [batchPhase, setBatchPhase] = useState(0);
+  const batchPhaseRef = useRef(0); // Ref for use inside animation loop to avoid stale closures
+  const pendingPhaseRef = useRef<{ phase: number; detectedAt: number } | null>(null); // 10-second debounce for phase transitions
   const [tankVolume, setTankVolume] = useState(55);
 
-  const batchPhases = useMemo(() => [
-    { name: 'Heavy Sediment', icon: '🪨', water: 60, oil: 10, sediment: 30, volume: 2.75, temp: 55, flow: 6, rpm: 4200 },
-    { name: 'Mixed Sludge', icon: '🌊', water: 65, oil: 15, sediment: 20, volume: 5.5, temp: 58, flow: 8, rpm: 4000 },
-    { name: 'Emulsion Layer', icon: '🧴', water: 50, oil: 45, sediment: 5, volume: 8.25, temp: 65, flow: 10, rpm: 3800 },
-    { name: 'Oil-Rich', icon: '🛢️', water: 30, oil: 65, sediment: 5, volume: 11.0, temp: 68, flow: 12, rpm: 3500 },
-    { name: 'Water-Rich', icon: '💧', water: 85, oil: 12, sediment: 3, volume: 22.0, temp: 62, flow: 14, rpm: 3200 },
-    { name: 'Final Rinse', icon: '✨', water: 95, oil: 4, sediment: 1, volume: 5.5, temp: 55, flow: 10, rpm: 3000 },
-  ], []);
+  // Batch phases imported from constants
+  const batchPhases = BATCH_PHASES;
 
   // ═══════════════════════════════════════════════════════════════
   //                   CONTROL LOOPS (Simplified 3-loop)
@@ -741,291 +752,62 @@ export default function CentrifugeProcessControl() {
   const [totals, setTotals] = useState({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 });
 
   // ═══════════════════════════════════════════════════════════════
-  //    PHASE DATA TRACKING (for Phase Cost & Quality Report)
+  //    PHASE DATA TRACKING (using extracted hook)
   // ═══════════════════════════════════════════════════════════════
-  // Tracks detailed metrics for each operational phase during batch processing
-  const [phaseData, setPhaseData] = useState<{
-    phaseIndex: number;
-    phaseName: string;
-    startTime: number;
-    endTime: number | null;
-    // Volume totals (m³)
-    totals: { feed: number; water: number; oil: number; solids: number; energy: number; duration: number };
-    // Quality metrics (rolling averages)
-    quality: {
-      oilEfficiency: { sum: number; count: number; min: number; max: number };
-      solidsEfficiency: { sum: number; count: number; min: number; max: number };
-      waterQuality: { sum: number; count: number; min: number; max: number };
-      pH: { sum: number; count: number; min: number; max: number };
-      turbidity: { sum: number; count: number; min: number; max: number };
+  const {
+    phaseData,
+    currentPhaseDataRef,
+    initializePhaseData,
+    startPhaseTracking,
+    updatePhaseData: updatePhaseDataHook,
+    finalizePhaseData,
+    clearPhaseData,
+  } = usePhaseTracking(batchPhases);
+
+  // Wrapper for updatePhaseData to match existing call signature
+  const updatePhaseData = useCallback((proc: any, dt: number, currentCosts: any, _chemCosts: any, _filterCosts: any) => {
+    const procSnapshot: ProcessDataSnapshot = {
+      feedFlow: proc.feedFlow,
+      waterOut: proc.waterOut,
+      oilOut: proc.oilOut,
+      solidsOut: proc.solidsOut,
+      totalPower: proc.totalPower,
+      oilEff: proc.oilEff,
+      solidsEff: proc.solidsEff,
+      waterQuality: proc.waterQuality,
+      pH: proc.pH,
+      turbidity: proc.turbidity,
+      vibration: proc.vibration,
+      oilMoisture: proc.oilMoisture,
+      oilSolids: proc.oilSolids,
+      cakeMoisture: proc.cakeMoisture,
+      cakeOil: proc.cakeOil,
     };
-    // Cost breakdown ($)
-    costs: { energy: number; chemicals: number; disposal: number; water: number; labor: number; filter: number };
-    // Three-fraction output quality
-    fractions: {
-      water: { purity: { sum: number; count: number }; oilContent: { sum: number; count: number }; tss: { sum: number; count: number } };
-      oil: { waterContent: { sum: number; count: number }; solidsContent: { sum: number; count: number }; recovery: { sum: number; count: number } };
-      solids: { moisture: { sum: number; count: number }; oilContent: { sum: number; count: number }; recovery: { sum: number; count: number } };
-    };
-    // Mass balance validation
-    massBalance: { totalIn: number; totalOut: number; closurePct: { sum: number; count: number } };
-    // Data quality flags
-    dataQuality: { samplesCollected: number; anomalies: string[]; confidenceLevel: string };
-  }[]>([]);
-
-  // Current phase tracking reference (used in simulation loop)
-  const currentPhaseDataRef = useRef<{
-    phaseIndex: number;
-    startTime: number;
-    totals: { feed: number; water: number; oil: number; solids: number; energy: number };
-    qualitySamples: { oilEff: number[]; solidsEff: number[]; wq: number[]; pH: number[]; turb: number[] };
-    fractionSamples: {
-      waterPurity: number[]; waterOil: number[]; waterTSS: number[];
-      oilWater: number[]; oilSolids: number[]; oilRecovery: number[];
-      solidsMoisture: number[]; solidsOil: number[]; solidsRecovery: number[];
-    };
-    costs: { energy: number; chemicals: number; disposal: number; water: number; labor: number; filter: number };
-    massIn: number;
-    massOut: number;
-    closureSamples: number[];
-    anomalies: string[];
-  } | null>(null);
-
-  // Initialize phase data when batch mode starts
-  const initializePhaseData = useCallback(() => {
-    setPhaseData([]);
-    currentPhaseDataRef.current = null;
-  }, []);
-
-  // Start tracking a new phase
-  const startPhaseTracking = useCallback((phaseIndex: number, simTime: number) => {
-    // Finalize previous phase if exists
-    if (currentPhaseDataRef.current !== null) {
-      finalizePhaseData(simTime);
-    }
-
-    // Initialize new phase tracking
-    currentPhaseDataRef.current = {
-      phaseIndex,
-      startTime: simTime,
-      totals: { feed: 0, water: 0, oil: 0, solids: 0, energy: 0 },
-      qualitySamples: { oilEff: [], solidsEff: [], wq: [], pH: [], turb: [] },
-      fractionSamples: {
-        waterPurity: [], waterOil: [], waterTSS: [],
-        oilWater: [], oilSolids: [], oilRecovery: [],
-        solidsMoisture: [], solidsOil: [], solidsRecovery: [],
-      },
-      costs: { energy: 0, chemicals: 0, disposal: 0, water: 0, labor: 0, filter: 0 },
-      massIn: 0,
-      massOut: 0,
-      closureSamples: [],
-      anomalies: [],
-    };
-  }, []);
-
-  // Update phase data with current process values
-  const updatePhaseData = useCallback((proc: any, dt: number, currentCosts: any, currentChemCosts: any, currentFilterCosts: any) => {
-    if (!currentPhaseDataRef.current) return;
-
-    const ref = currentPhaseDataRef.current;
-
-    // Update volume totals
-    ref.totals.feed += proc.feedFlow * dt / 3600;
-    ref.totals.water += proc.waterOut * dt / 3600;
-    ref.totals.oil += proc.oilOut * dt / 3600;
-    ref.totals.solids += proc.solidsOut * dt / 3600;
-    ref.totals.energy += proc.totalPower * dt / 3600;
-
-    // Collect quality samples (every second of sim time)
-    ref.qualitySamples.oilEff.push(proc.oilEff);
-    ref.qualitySamples.solidsEff.push(proc.solidsEff);
-    ref.qualitySamples.wq.push(proc.waterQuality);
-    ref.qualitySamples.pH.push(proc.pH);
-    ref.qualitySamples.turb.push(proc.turbidity);
-
-    // Three-fraction quality samples
-    ref.fractionSamples.waterPurity.push(100 - (proc.waterQuality / 10000) * 100); // OiW in ppm -> purity %
-    ref.fractionSamples.waterOil.push(proc.waterQuality); // ppm OiW
-    ref.fractionSamples.waterTSS.push(proc.turbidity * 1.2); // Approx TSS from turbidity
-
-    ref.fractionSamples.oilWater.push(proc.oilMoisture || 3); // % water in oil
-    ref.fractionSamples.oilSolids.push(proc.oilSolids || 0.5); // % solids in oil
-    ref.fractionSamples.oilRecovery.push(proc.oilEff); // % oil recovery
-
-    ref.fractionSamples.solidsMoisture.push(proc.cakeMoisture || 18); // % moisture in solids
-    ref.fractionSamples.solidsOil.push(proc.cakeOil || 2); // % oil in solids
-    ref.fractionSamples.solidsRecovery.push(proc.solidsEff); // % solids recovery
-
-    // Update costs
-    ref.costs.energy += proc.totalPower * dt / 3600 * currentCosts.elec;
-    ref.costs.water += proc.waterOut * dt / 3600 * currentCosts.waterTreatment;
-    ref.costs.disposal += proc.solidsOut * dt / 3600 * currentCosts.sludgeDisposal;
-    ref.costs.labor += (dt / 3600) * currentCosts.laborRate;
-
-    // Mass balance
-    ref.massIn += proc.feedFlow * dt / 3600;
-    const totalOut = (proc.waterOut + proc.oilOut + proc.solidsOut) * dt / 3600;
-    ref.massOut += totalOut;
-    const closure = ref.massIn > 0 ? (ref.massOut / ref.massIn) * 100 : 100;
-    ref.closureSamples.push(closure);
-
-    // Check for anomalies
-    if (proc.oilEff < 70) ref.anomalies.push(`Low oil efficiency: ${proc.oilEff.toFixed(1)}%`);
-    if (proc.vibration > 6) ref.anomalies.push(`High vibration: ${proc.vibration.toFixed(1)} mm/s`);
-    if (closure < 95 || closure > 105) ref.anomalies.push(`Mass balance deviation: ${closure.toFixed(1)}%`);
-  }, []);
-
-  // Finalize phase data and store
-  const finalizePhaseData = useCallback((endTime: number) => {
-    if (!currentPhaseDataRef.current) return;
-
-    const ref = currentPhaseDataRef.current;
-    const calcStats = (arr: number[]) => {
-      if (arr.length === 0) return { sum: 0, count: 0, min: 0, max: 0 };
-      return {
-        sum: arr.reduce((a, b) => a + b, 0),
-        count: arr.length,
-        min: Math.min(...arr),
-        max: Math.max(...arr),
-      };
-    };
-
-    const phaseRecord = {
-      phaseIndex: ref.phaseIndex,
-      phaseName: batchPhases[ref.phaseIndex]?.name || `Phase ${ref.phaseIndex + 1}`,
-      startTime: ref.startTime,
-      endTime: endTime,
-      totals: {
-        ...ref.totals,
-        duration: endTime - ref.startTime,
-      },
-      quality: {
-        oilEfficiency: calcStats(ref.qualitySamples.oilEff),
-        solidsEfficiency: calcStats(ref.qualitySamples.solidsEff),
-        waterQuality: calcStats(ref.qualitySamples.wq),
-        pH: calcStats(ref.qualitySamples.pH),
-        turbidity: calcStats(ref.qualitySamples.turb),
-      },
-      costs: ref.costs,
-      fractions: {
-        water: {
-          purity: calcStats(ref.fractionSamples.waterPurity),
-          oilContent: calcStats(ref.fractionSamples.waterOil),
-          tss: calcStats(ref.fractionSamples.waterTSS),
-        },
-        oil: {
-          waterContent: calcStats(ref.fractionSamples.oilWater),
-          solidsContent: calcStats(ref.fractionSamples.oilSolids),
-          recovery: calcStats(ref.fractionSamples.oilRecovery),
-        },
-        solids: {
-          moisture: calcStats(ref.fractionSamples.solidsMoisture),
-          oilContent: calcStats(ref.fractionSamples.solidsOil),
-          recovery: calcStats(ref.fractionSamples.solidsRecovery),
-        },
-      },
-      massBalance: {
-        totalIn: ref.massIn,
-        totalOut: ref.massOut,
-        closurePct: calcStats(ref.closureSamples),
-      },
-      dataQuality: {
-        samplesCollected: ref.qualitySamples.oilEff.length,
-        anomalies: [...new Set(ref.anomalies)].slice(0, 10), // Unique anomalies, max 10
-        confidenceLevel: ref.qualitySamples.oilEff.length > 60 ? 'High' : ref.qualitySamples.oilEff.length > 30 ? 'Medium' : 'Low',
-      },
-    };
-
-    setPhaseData(prev => [...prev, phaseRecord]);
-    currentPhaseDataRef.current = null;
-  }, [batchPhases]);
+    updatePhaseDataHook(procSnapshot, dt, {
+      elec: currentCosts.elec,
+      waterTreatment: currentCosts.waterTreatment,
+      sludgeDisposal: currentCosts.sludgeDisposal,
+      laborRate: currentCosts.laborRate,
+    });
+  }, [updatePhaseDataHook]);
 
   // ═══════════════════════════════════════════════════════════════
-  //    FEEDSTOCK TYPES & OIL VALUE MATRIX
+  //    FEEDSTOCK TYPES & OIL VALUE MATRIX (imported from constants)
   // ═══════════════════════════════════════════════════════════════
-  const feedstockTypes = {
-    washWater: {
-      id: 'washWater',
-      name: 'Wash Water',
-      oilContent: 2.5,        // % typical oil content
-      solidsContent: 1.5,     // % typical solids
-      oilValue: 350,          // $/m³ recovered oil (lower grade, needs processing)
-      description: 'Equipment/tank wash water - lower grade oil',
-      color: 'text-blue-400',
-    },
-    refinerySlop: {
-      id: 'refinerySlop',
-      name: 'Refinery Slop Oil',
-      oilContent: 8.0,        // %
-      solidsContent: 3.0,     // %
-      oilValue: 450,          // $/m³ (medium grade)
-      description: 'Refinery process water/slop - medium grade',
-      color: 'text-purple-400',
-    },
-    tankBottoms: {
-      id: 'tankBottoms',
-      name: 'Tank Bottom Sludge',
-      oilContent: 15.0,       // %
-      solidsContent: 8.0,     // %
-      oilValue: 280,          // $/m³ (heavy, high sediment)
-      description: 'Storage tank sediment/BS&W - heavy, high sediment',
-      color: 'text-amber-400',
-    },
-    producedWater: {
-      id: 'producedWater',
-      name: 'Produced Water',
-      oilContent: 1.5,        // %
-      solidsContent: 0.5,     // %
-      oilValue: 400,          // $/m³ (light but dilute)
-      description: 'Oil/gas production water - light but dilute',
-      color: 'text-cyan-400',
-    },
-    lightCrude: {
-      id: 'lightCrude',
-      name: 'Light Crude Emulsion',
-      oilContent: 25.0,       // %
-      solidsContent: 2.0,     // %
-      oilValue: 520,          // $/m³ (premium, low sulfur)
-      description: 'Light crude/condensate emulsion - premium grade',
-      color: 'text-green-400',
-    },
-    heavyCrude: {
-      id: 'heavyCrude',
-      name: 'Heavy Crude Emulsion',
-      oilContent: 20.0,       // %
-      solidsContent: 5.0,     // %
-      oilValue: 380,          // $/m³ (discount for API gravity)
-      description: 'Heavy crude water cut - discounted for API',
-      color: 'text-orange-400',
-    },
-  };
+  // Using imported FEEDSTOCK_TYPES and TRANSPORT_DESTINATIONS from lib/constants
+  const feedstockTypes = FEEDSTOCK_TYPES;
+  const transportDestinations = TRANSPORT_DESTINATIONS;
 
-  // Transport destinations with costs
-  const transportDestinations = {
-    kalgoorlie: { name: 'Kalgoorlie Refinery', cost: 220, distance: '1,200 km' },
-    perth: { name: 'Perth (Kwinana)', cost: 280, distance: '1,500 km' },
-    local: { name: 'Local Processing', cost: 80, distance: '< 50 km' },
-    export: { name: 'Port Hedland (Export)', cost: 150, distance: '240 km' },
-  };
+  const [selectedFeedstock, setSelectedFeedstock] = useState<keyof typeof FEEDSTOCK_TYPES>('refinerySlop');
+  const [selectedDestination, setSelectedDestination] = useState<keyof typeof TRANSPORT_DESTINATIONS>('kalgoorlie');
 
-  const [selectedFeedstock, setSelectedFeedstock] = useState<keyof typeof feedstockTypes>('refinerySlop');
-  const [selectedDestination, setSelectedDestination] = useState<keyof typeof transportDestinations>('kalgoorlie');
-
-  // Australian market rates (WA commercial)
-  const [costs, setCosts] = useState({
-    elec: 0.34,              // $/kWh
-    sludgeDisposal: 270,     // $/m³
-    waterTreatment: 3.5,     // $/m³
-    oilValue: 450,           // $/m³ (value at destination) - updated by feedstock
-    oilTransport: 220,       // $/m³ ($0.22/L) - updated by destination
-    pondDisposal: 3.5,       // $/m³ ($3.5/1000L evaporation pond)
-    laborRate: 140,          // $/hour
-  });
+  // Australian market rates (WA commercial) - using imported defaults
+  const [costs, setCosts] = useState({ ...DEFAULT_COSTS });
 
   // Update costs and capital model when feedstock or destination changes
   useEffect(() => {
-    const feedstock = feedstockTypes[selectedFeedstock];
-    const destination = transportDestinations[selectedDestination];
+    const feedstock = FEEDSTOCK_TYPES[selectedFeedstock];
+    const destination = TRANSPORT_DESTINATIONS[selectedDestination];
     setCosts(prev => ({
       ...prev,
       oilValue: feedstock.oilValue,
@@ -2374,6 +2156,8 @@ export default function CentrifugeProcessControl() {
     setFeedProps(p => ({ ...p, waterFraction: tank.water / 100, oilFraction: tank.oil / 100, solidsFraction: tank.sediment / 100 }));
     const vol = (tank.level / 100) * TANK.volume;
     simRef.current = { time: 0, vol, phase: 0 };
+    batchPhaseRef.current = 0; // Initialize ref for animation loop
+    pendingPhaseRef.current = null; // Clear any pending phase transition
     setIsBatchMode(true); setBatchPhase(0); setTankVolume(vol); setSimTime(0);
     // Initialize phase data tracking for report
     initializePhaseData();
@@ -2453,8 +2237,8 @@ export default function CentrifugeProcessControl() {
       setSimTime(simRef.current.time);
 
       let waterFrac = feedProps.waterFraction, oilFrac = feedProps.oilFraction, solidsFrac = feedProps.solidsFraction;
-      if (isBatchMode && batchPhases[batchPhase]) {
-        const ph = batchPhases[batchPhase];
+      if (isBatchMode && batchPhases[batchPhaseRef.current]) {
+        const ph = batchPhases[batchPhaseRef.current];
         waterFrac = ph.water / 100; oilFrac = ph.oil / 100; solidsFrac = ph.sediment / 100;
         setLoops(p => ({ ...p, TIC: { ...p.TIC, sp: ph.temp }, FIC: { ...p.FIC, sp: ph.flow }, SIC: { ...p.SIC, sp: ph.rpm } }));
       }
@@ -2677,11 +2461,27 @@ export default function CentrifugeProcessControl() {
         for (let i = 0; i < batchPhases.length; i++) {
           cum += batchPhases[i].volume;
           if (processed < cum) {
-            if (i !== batchPhase) {
-              // Phase transition - finalize current phase and start new one
-              startPhaseTracking(i, simRef.current.time);
-              setBatchPhase(i);
-              addEvent('PHASE', batchPhases[i].name);
+            // Use ref to check current phase (React state is async, can cause duplicate detections)
+            const currentTrackingPhase = currentPhaseDataRef.current?.phaseIndex;
+            if (i !== currentTrackingPhase) {
+              // Phase transition detected - apply 60-second debounce rule
+              const PHASE_DEBOUNCE_SECONDS = 60;
+
+              if (pendingPhaseRef.current === null || pendingPhaseRef.current.phase !== i) {
+                // New pending phase detected - start tracking when it was first seen
+                pendingPhaseRef.current = { phase: i, detectedAt: simRef.current.time };
+              } else if (simRef.current.time - pendingPhaseRef.current.detectedAt >= PHASE_DEBOUNCE_SECONDS) {
+                // Phase has been stable for 60+ seconds - commit the transition
+                startPhaseTracking(i, simRef.current.time);
+                batchPhaseRef.current = i; // Update ref immediately for animation loop
+                setBatchPhase(i); // Update state for UI
+                addEvent('PHASE', batchPhases[i].name);
+                pendingPhaseRef.current = null; // Clear pending after transition
+              }
+              // If < 10 seconds, keep waiting (do nothing, continue tracking current phase)
+            } else {
+              // Current phase matches detected phase - clear any pending transition
+              pendingPhaseRef.current = null;
             }
             break;
           }
@@ -2729,7 +2529,7 @@ export default function CentrifugeProcessControl() {
     };
     frameRef.current = requestAnimationFrame(tick);
     return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
-  }, [isRunning, simSpeed, feedProps, disturbances, equipment, loops, calcPID, calcEfficiency, isBatchMode, batchPhase, batchPhases, selectedOilTank, oilTanks, addEvent, updateSmoothedValues, startPhaseTracking, updatePhaseData, finalizePhaseData, costs, chemCosts, filterCosts]);
+  }, [isRunning, simSpeed, feedProps, disturbances, equipment, loops, calcPID, calcEfficiency, isBatchMode, batchPhases, selectedOilTank, oilTanks, addEvent, updateSmoothedValues, startPhaseTracking, updatePhaseData, finalizePhaseData, costs, chemCosts, filterCosts]);
 
   const batchProgress = useMemo(() => { const total = batchPhases.reduce((s, p) => s + p.volume, 0); return { pct: Math.min(100, ((total - tankVolume) / total) * 100), remain: tankVolume }; }, [batchPhases, tankVolume]);
   const kpiStats = useMemo(() => ({ oilEff: calcStats(kpiHistory, 'oilEff'), solidsEff: calcStats(kpiHistory, 'solidsEff'), wq: calcStats(kpiHistory, 'wq'), flow: calcStats(kpiHistory, 'flow'), vib: calcStats(kpiHistory, 'vib'), pH: calcStats(kpiHistory, 'pH'), turbidity: calcStats(kpiHistory, 'turbidity') }), [kpiHistory]);
@@ -5973,6 +5773,210 @@ export default function CentrifugeProcessControl() {
             <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
               <h2 className="text-xl font-bold">📋 Operations Report</h2>
               <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    // Phase report print function
+                    const avg = (stats: { sum: number; count: number }) => stats.count > 0 ? stats.sum / stats.count : 0;
+                    const overallTotals = phaseData.reduce((acc, p) => ({
+                      feed: acc.feed + p.totals.feed,
+                      water: acc.water + p.totals.water,
+                      oil: acc.oil + p.totals.oil,
+                      solids: acc.solids + p.totals.solids,
+                      energy: acc.energy + p.totals.energy,
+                      duration: acc.duration + p.totals.duration,
+                      costs: {
+                        energy: acc.costs.energy + p.costs.energy,
+                        chemicals: acc.costs.chemicals + p.costs.chemicals,
+                        disposal: acc.costs.disposal + p.costs.disposal,
+                        water: acc.costs.water + p.costs.water,
+                        labor: acc.costs.labor + p.costs.labor,
+                        filter: acc.costs.filter + p.costs.filter,
+                      }
+                    }), {
+                      feed: 0, water: 0, oil: 0, solids: 0, energy: 0, duration: 0,
+                      costs: { energy: 0, chemicals: 0, disposal: 0, water: 0, labor: 0, filter: 0 }
+                    });
+                    const totalCosts = overallTotals.costs.energy + overallTotals.costs.chemicals +
+                      overallTotals.costs.disposal + overallTotals.costs.water +
+                      overallTotals.costs.labor + overallTotals.costs.filter;
+                    const weightedQuality = phaseData.reduce((acc, p) => {
+                      const weight = p.totals.feed;
+                      return {
+                        oilEff: acc.oilEff + avg(p.quality.oilEfficiency) * weight,
+                        solidsEff: acc.solidsEff + avg(p.quality.solidsEfficiency) * weight,
+                        wq: acc.wq + avg(p.quality.waterQuality) * weight,
+                        totalWeight: acc.totalWeight + weight,
+                      };
+                    }, { oilEff: 0, solidsEff: 0, wq: 0, totalWeight: 0 });
+                    const avgOilEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.oilEff / weightedQuality.totalWeight : 0;
+                    const avgSolidsEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.solidsEff / weightedQuality.totalWeight : 0;
+                    const avgWQOverall = weightedQuality.totalWeight > 0 ? weightedQuality.wq / weightedQuality.totalWeight : 0;
+                    const overallMassBalance = overallTotals.feed > 0
+                      ? ((overallTotals.water + overallTotals.oil + overallTotals.solids) / overallTotals.feed) * 100
+                      : 100;
+
+                    const phaseRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-right">${formatTime(p.startTime)} - ${formatTime(p.endTime || p.startTime)}</td>
+                        <td class="py-2 px-3 text-right">${formatTime(p.totals.duration)}</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed.toFixed(3)} m³</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.water * 1000).toFixed(0)} L</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.oil * 1000).toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.solids * 1000).toFixed(1)} L</td>
+                      </tr>
+                    `).join('');
+                    const phaseCostRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.energy.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.chemicals.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.disposal.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.water.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.labor.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right font-bold">$${(p.costs.energy + p.costs.chemicals + p.costs.disposal + p.costs.water + p.costs.labor + p.costs.filter).toFixed(2)}</td>
+                      </tr>
+                    `).join('');
+                    const fractionQualityRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium" rowspan="3">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-blue-600 font-medium">Water</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.water * 1000).toFixed(0)} L</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed > 0 ? ((p.totals.water / p.totals.feed) * 100).toFixed(1) : 0}%</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.water.oilContent).toFixed(0)} ppm OiW</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.water.tss).toFixed(0)} mg/L TSS</td>
+                        <td class="py-2 px-3 text-center">${avg(p.fractions.water.oilContent) < 500 ? '✅' : '⚠️'}</td>
+                      </tr>
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 text-amber-600 font-medium">Oil</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.oil * 1000).toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed > 0 ? ((p.totals.oil / p.totals.feed) * 100).toFixed(2) : 0}%</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.oil.waterContent).toFixed(1)}% H₂O</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.oil.recovery).toFixed(1)}% recovery</td>
+                        <td class="py-2 px-3 text-center">${avg(p.fractions.oil.recovery) >= 95 ? '✅' : '⚠️'}</td>
+                      </tr>
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''} border-b-2 border-gray-300">
+                        <td class="py-2 px-3 text-orange-600 font-medium">Solids</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.solids * 1000).toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed > 0 ? ((p.totals.solids / p.totals.feed) * 100).toFixed(2) : 0}%</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.solids.moisture).toFixed(1)}% moisture</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.solids.recovery).toFixed(1)}% recovery</td>
+                        <td class="py-2 px-3 text-center">${avg(p.fractions.solids.moisture) <= 20 ? '✅' : '⚠️'}</td>
+                      </tr>
+                    `).join('');
+                    const massBalanceRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-right">${p.massBalance.totalIn.toFixed(4)} m³</td>
+                        <td class="py-2 px-3 text-right">${p.massBalance.totalOut.toFixed(4)} m³</td>
+                        <td class="py-2 px-3 text-right font-bold ${Math.abs(avg(p.massBalance.closurePct) - 100) < 2 ? 'text-green-600' : 'text-red-600'}">${avg(p.massBalance.closurePct).toFixed(1)}%</td>
+                        <td class="py-2 px-3 text-center">${Math.abs(avg(p.massBalance.closurePct) - 100) < 2 ? '✅ Valid' : '⚠️ Check'}</td>
+                        <td class="py-2 px-3 text-right text-gray-500">${p.dataQuality.samplesCollected}</td>
+                      </tr>
+                    `).join('');
+                    const anomalySummary = phaseData.flatMap(p =>
+                      p.dataQuality.anomalies.map(a => `<li>${p.phaseName}: ${a}</li>`)
+                    ).slice(0, 15).join('');
+
+                    const printContent = `
+                      <html>
+                      <head>
+                        <title>Phase Cost & Three-Fraction Quality Report - Karratha WTP</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 30px; color: #333; font-size: 11px; }
+                          h1 { color: #0d9488; border-bottom: 2px solid #0d9488; padding-bottom: 10px; font-size: 20px; }
+                          h2 { color: #1e40af; margin-top: 25px; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+                          table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
+                          th { background: #1e40af; color: white; padding: 8px 6px; text-align: left; }
+                          td { border: 1px solid #e5e7eb; padding: 6px; }
+                          .bg-gray-50 { background: #f9fafb; }
+                          .positive { color: #16a34a; font-weight: bold; }
+                          .negative { color: #dc2626; }
+                          .highlight { background: #fef3c7; }
+                          .metric-box { display: inline-block; padding: 12px; margin: 5px; border: 2px solid #ddd; border-radius: 8px; text-align: center; min-width: 120px; }
+                          .metric-value { font-size: 18px; font-weight: bold; }
+                          .metric-label { font-size: 9px; color: #666; margin-top: 3px; }
+                          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 9px; color: #666; }
+                          .text-right { text-align: right; }
+                          .text-center { text-align: center; }
+                          .text-blue-600 { color: #2563eb; }
+                          .text-amber-600 { color: #d97706; }
+                          .text-orange-600 { color: #ea580c; }
+                          .text-green-600 { color: #16a34a; }
+                          .text-red-600 { color: #dc2626; }
+                          .text-gray-500 { color: #6b7280; }
+                          .font-bold { font-weight: bold; }
+                          .font-medium { font-weight: 500; }
+                          @media print { body { padding: 15px; } }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>📊 Simulation Phase Cost & Three-Fraction Quality Report</h1>
+                        <p><strong>Equipment:</strong> SACOR Delta-Canter 20-843A Three-Phase Tricanter</p>
+                        <p><strong>Feedstock:</strong> ${feedstockTypes[selectedFeedstock].name} | <strong>Destination:</strong> ${transportDestinations[selectedDestination].name}</p>
+                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
+                          <div class="metric-box"><div class="metric-value">${phaseData.length}</div><div class="metric-label">Phases Completed</div></div>
+                          <div class="metric-box"><div class="metric-value">${formatTime(overallTotals.duration)}</div><div class="metric-label">Total Run Time</div></div>
+                          <div class="metric-box"><div class="metric-value">${overallTotals.feed.toFixed(2)} m³</div><div class="metric-label">Feed Processed</div></div>
+                          <div class="metric-box" style="border-color: #16a34a;"><div class="metric-value positive">${(overallTotals.oil * 1000).toFixed(1)} L</div><div class="metric-label">Oil Recovered</div></div>
+                          <div class="metric-box"><div class="metric-value">${avgOilEffOverall.toFixed(1)}%</div><div class="metric-label">Avg Oil Recovery</div></div>
+                          <div class="metric-box" style="border-color: ${Math.abs(overallMassBalance - 100) < 2 ? '#16a34a' : '#dc2626'};"><div class="metric-value ${Math.abs(overallMassBalance - 100) < 2 ? 'positive' : 'negative'}">${overallMassBalance.toFixed(1)}%</div><div class="metric-label">Mass Balance</div></div>
+                          <div class="metric-box" style="border-color: #dc2626;"><div class="metric-value negative">$${totalCosts.toFixed(2)}</div><div class="metric-label">Total Cost</div></div>
+                        </div>
+
+                        <h2>📦 Phase Volume Summary</h2>
+                        <table><thead><tr><th>Phase</th><th class="text-right">Time Window</th><th class="text-right">Duration</th><th class="text-right">Feed In</th><th class="text-right">Water Out</th><th class="text-right">Oil Out</th><th class="text-right">Solids Out</th></tr></thead>
+                        <tbody>${phaseRows}<tr class="highlight font-bold"><td>TOTAL</td><td class="text-right">-</td><td class="text-right">${formatTime(overallTotals.duration)}</td><td class="text-right">${overallTotals.feed.toFixed(3)} m³</td><td class="text-right">${(overallTotals.water * 1000).toFixed(0)} L</td><td class="text-right">${(overallTotals.oil * 1000).toFixed(1)} L</td><td class="text-right">${(overallTotals.solids * 1000).toFixed(1)} L</td></tr></tbody></table>
+
+                        <h2>💰 Phase Cost Breakdown</h2>
+                        <table><thead><tr><th>Phase</th><th class="text-right">Energy</th><th class="text-right">Chemicals</th><th class="text-right">Disposal</th><th class="text-right">Water</th><th class="text-right">Labor</th><th class="text-right">Total</th></tr></thead>
+                        <tbody>${phaseCostRows}<tr class="highlight font-bold"><td>TOTAL</td><td class="text-right">$${overallTotals.costs.energy.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.chemicals.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.disposal.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.water.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.labor.toFixed(2)}</td><td class="text-right">$${totalCosts.toFixed(2)}</td></tr></tbody></table>
+
+                        <h2>🔬 Three-Fraction Quality Report</h2>
+                        <table><thead><tr><th>Phase</th><th>Fraction</th><th class="text-right">Volume</th><th class="text-right">Yield %</th><th class="text-right">Primary</th><th class="text-right">Secondary</th><th class="text-center">Status</th></tr></thead>
+                        <tbody>${fractionQualityRows}</tbody></table>
+
+                        <h2>⚖️ Mass Balance Validation</h2>
+                        <table><thead><tr><th>Phase</th><th class="text-right">Mass In</th><th class="text-right">Mass Out</th><th class="text-right">Closure %</th><th class="text-center">Validation</th><th class="text-right">Samples</th></tr></thead>
+                        <tbody>${massBalanceRows}<tr class="highlight font-bold"><td>OVERALL</td><td class="text-right">${overallTotals.feed.toFixed(4)} m³</td><td class="text-right">${(overallTotals.water + overallTotals.oil + overallTotals.solids).toFixed(4)} m³</td><td class="text-right ${Math.abs(overallMassBalance - 100) < 2 ? 'text-green-600' : 'text-red-600'}">${overallMassBalance.toFixed(1)}%</td><td class="text-center">${Math.abs(overallMassBalance - 100) < 2 ? '✅' : '⚠️'}</td><td class="text-right">-</td></tr></tbody></table>
+
+                        ${anomalySummary ? `<h2>🚨 Anomalies</h2><ul style="margin-left: 20px; color: #dc2626;">${anomalySummary}</ul>` : ''}
+
+                        <h2>📈 Overall Performance</h2>
+                        <table><thead><tr><th>Metric</th><th class="text-right">Value</th><th class="text-right">Target</th><th class="text-center">Status</th></tr></thead>
+                        <tbody>
+                          <tr><td>Oil Recovery</td><td class="text-right font-bold">${avgOilEffOverall.toFixed(1)}%</td><td class="text-right">≥95%</td><td class="text-center">${avgOilEffOverall >= 95 ? '✅' : '⚠️'}</td></tr>
+                          <tr class="bg-gray-50"><td>Solids Removal</td><td class="text-right font-bold">${avgSolidsEffOverall.toFixed(1)}%</td><td class="text-right">≥95%</td><td class="text-center">${avgSolidsEffOverall >= 95 ? '✅' : '⚠️'}</td></tr>
+                          <tr><td>Water Quality</td><td class="text-right font-bold">${avgWQOverall.toFixed(0)} ppm</td><td class="text-right">≤500 ppm</td><td class="text-center">${avgWQOverall <= 500 ? '✅' : '⚠️'}</td></tr>
+                          <tr class="bg-gray-50"><td>Specific Energy</td><td class="text-right font-bold">${overallTotals.feed > 0 ? (overallTotals.energy / overallTotals.feed).toFixed(2) : 0} kWh/m³</td><td class="text-right">≤5 kWh/m³</td><td class="text-center">${overallTotals.feed > 0 && (overallTotals.energy / overallTotals.feed) <= 5 ? '✅' : '⚠️'}</td></tr>
+                          <tr><td>Cost per m³</td><td class="text-right font-bold">$${overallTotals.feed > 0 ? (totalCosts / overallTotals.feed).toFixed(2) : 0}</td><td class="text-right">-</td><td class="text-center">📊</td></tr>
+                          <tr class="highlight"><td class="font-bold">Mass Balance</td><td class="text-right font-bold">${overallMassBalance.toFixed(1)}%</td><td class="text-right">98-102%</td><td class="text-center">${Math.abs(overallMassBalance - 100) < 2 ? '✅' : '⚠️'}</td></tr>
+                        </tbody></table>
+
+                        <div class="footer">
+                          <p><strong>Karratha WTP Simulator v15</strong> | SACOR Delta-Canter 20-843A | ${new Date().toISOString()}</p>
+                        </div>
+                      </body></html>
+                    `;
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(printContent);
+                      printWindow.document.close();
+                      printWindow.print();
+                    }
+                  }}
+                  disabled={phaseData.length === 0}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                    phaseData.length > 0
+                      ? 'bg-purple-600 hover:bg-purple-500'
+                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                  }`}
+                  title={phaseData.length === 0 ? 'Run a batch first' : `${phaseData.length} phases recorded`}
+                >
+                  📊 Phase Report {phaseData.length > 0 && `(${phaseData.length})`}
+                </button>
                 <button onClick={() => addEvent('NOTE', 'Manual checkpoint')} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium">➕ Add Note</button>
                 <button onClick={() => window.print()} className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium">🖨️ Print</button>
                 <button onClick={() => { if (window.confirm('Reset all data?')) dailyReset(); }} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium">🔄 Reset</button>
