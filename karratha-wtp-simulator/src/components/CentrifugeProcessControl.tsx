@@ -5973,6 +5973,210 @@ export default function CentrifugeProcessControl() {
             <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
               <h2 className="text-xl font-bold">📋 Operations Report</h2>
               <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    // Phase report print function
+                    const avg = (stats: { sum: number; count: number }) => stats.count > 0 ? stats.sum / stats.count : 0;
+                    const overallTotals = phaseData.reduce((acc, p) => ({
+                      feed: acc.feed + p.totals.feed,
+                      water: acc.water + p.totals.water,
+                      oil: acc.oil + p.totals.oil,
+                      solids: acc.solids + p.totals.solids,
+                      energy: acc.energy + p.totals.energy,
+                      duration: acc.duration + p.totals.duration,
+                      costs: {
+                        energy: acc.costs.energy + p.costs.energy,
+                        chemicals: acc.costs.chemicals + p.costs.chemicals,
+                        disposal: acc.costs.disposal + p.costs.disposal,
+                        water: acc.costs.water + p.costs.water,
+                        labor: acc.costs.labor + p.costs.labor,
+                        filter: acc.costs.filter + p.costs.filter,
+                      }
+                    }), {
+                      feed: 0, water: 0, oil: 0, solids: 0, energy: 0, duration: 0,
+                      costs: { energy: 0, chemicals: 0, disposal: 0, water: 0, labor: 0, filter: 0 }
+                    });
+                    const totalCosts = overallTotals.costs.energy + overallTotals.costs.chemicals +
+                      overallTotals.costs.disposal + overallTotals.costs.water +
+                      overallTotals.costs.labor + overallTotals.costs.filter;
+                    const weightedQuality = phaseData.reduce((acc, p) => {
+                      const weight = p.totals.feed;
+                      return {
+                        oilEff: acc.oilEff + avg(p.quality.oilEfficiency) * weight,
+                        solidsEff: acc.solidsEff + avg(p.quality.solidsEfficiency) * weight,
+                        wq: acc.wq + avg(p.quality.waterQuality) * weight,
+                        totalWeight: acc.totalWeight + weight,
+                      };
+                    }, { oilEff: 0, solidsEff: 0, wq: 0, totalWeight: 0 });
+                    const avgOilEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.oilEff / weightedQuality.totalWeight : 0;
+                    const avgSolidsEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.solidsEff / weightedQuality.totalWeight : 0;
+                    const avgWQOverall = weightedQuality.totalWeight > 0 ? weightedQuality.wq / weightedQuality.totalWeight : 0;
+                    const overallMassBalance = overallTotals.feed > 0
+                      ? ((overallTotals.water + overallTotals.oil + overallTotals.solids) / overallTotals.feed) * 100
+                      : 100;
+
+                    const phaseRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-right">${formatTime(p.startTime)} - ${formatTime(p.endTime || p.startTime)}</td>
+                        <td class="py-2 px-3 text-right">${formatTime(p.totals.duration)}</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed.toFixed(3)} m³</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.water * 1000).toFixed(0)} L</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.oil * 1000).toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.solids * 1000).toFixed(1)} L</td>
+                      </tr>
+                    `).join('');
+                    const phaseCostRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.energy.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.chemicals.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.disposal.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.water.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">$${p.costs.labor.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right font-bold">$${(p.costs.energy + p.costs.chemicals + p.costs.disposal + p.costs.water + p.costs.labor + p.costs.filter).toFixed(2)}</td>
+                      </tr>
+                    `).join('');
+                    const fractionQualityRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium" rowspan="3">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-blue-600 font-medium">Water</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.water * 1000).toFixed(0)} L</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed > 0 ? ((p.totals.water / p.totals.feed) * 100).toFixed(1) : 0}%</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.water.oilContent).toFixed(0)} ppm OiW</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.water.tss).toFixed(0)} mg/L TSS</td>
+                        <td class="py-2 px-3 text-center">${avg(p.fractions.water.oilContent) < 500 ? '✅' : '⚠️'}</td>
+                      </tr>
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 text-amber-600 font-medium">Oil</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.oil * 1000).toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed > 0 ? ((p.totals.oil / p.totals.feed) * 100).toFixed(2) : 0}%</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.oil.waterContent).toFixed(1)}% H₂O</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.oil.recovery).toFixed(1)}% recovery</td>
+                        <td class="py-2 px-3 text-center">${avg(p.fractions.oil.recovery) >= 95 ? '✅' : '⚠️'}</td>
+                      </tr>
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''} border-b-2 border-gray-300">
+                        <td class="py-2 px-3 text-orange-600 font-medium">Solids</td>
+                        <td class="py-2 px-3 text-right">${(p.totals.solids * 1000).toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">${p.totals.feed > 0 ? ((p.totals.solids / p.totals.feed) * 100).toFixed(2) : 0}%</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.solids.moisture).toFixed(1)}% moisture</td>
+                        <td class="py-2 px-3 text-right">${avg(p.fractions.solids.recovery).toFixed(1)}% recovery</td>
+                        <td class="py-2 px-3 text-center">${avg(p.fractions.solids.moisture) <= 20 ? '✅' : '⚠️'}</td>
+                      </tr>
+                    `).join('');
+                    const massBalanceRows = phaseData.map((p, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                        <td class="py-2 px-3 font-medium">${p.phaseName}</td>
+                        <td class="py-2 px-3 text-right">${p.massBalance.totalIn.toFixed(4)} m³</td>
+                        <td class="py-2 px-3 text-right">${p.massBalance.totalOut.toFixed(4)} m³</td>
+                        <td class="py-2 px-3 text-right font-bold ${Math.abs(avg(p.massBalance.closurePct) - 100) < 2 ? 'text-green-600' : 'text-red-600'}">${avg(p.massBalance.closurePct).toFixed(1)}%</td>
+                        <td class="py-2 px-3 text-center">${Math.abs(avg(p.massBalance.closurePct) - 100) < 2 ? '✅ Valid' : '⚠️ Check'}</td>
+                        <td class="py-2 px-3 text-right text-gray-500">${p.dataQuality.samplesCollected}</td>
+                      </tr>
+                    `).join('');
+                    const anomalySummary = phaseData.flatMap(p =>
+                      p.dataQuality.anomalies.map(a => `<li>${p.phaseName}: ${a}</li>`)
+                    ).slice(0, 15).join('');
+
+                    const printContent = `
+                      <html>
+                      <head>
+                        <title>Phase Cost & Three-Fraction Quality Report - Karratha WTP</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 30px; color: #333; font-size: 11px; }
+                          h1 { color: #0d9488; border-bottom: 2px solid #0d9488; padding-bottom: 10px; font-size: 20px; }
+                          h2 { color: #1e40af; margin-top: 25px; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+                          table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
+                          th { background: #1e40af; color: white; padding: 8px 6px; text-align: left; }
+                          td { border: 1px solid #e5e7eb; padding: 6px; }
+                          .bg-gray-50 { background: #f9fafb; }
+                          .positive { color: #16a34a; font-weight: bold; }
+                          .negative { color: #dc2626; }
+                          .highlight { background: #fef3c7; }
+                          .metric-box { display: inline-block; padding: 12px; margin: 5px; border: 2px solid #ddd; border-radius: 8px; text-align: center; min-width: 120px; }
+                          .metric-value { font-size: 18px; font-weight: bold; }
+                          .metric-label { font-size: 9px; color: #666; margin-top: 3px; }
+                          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 9px; color: #666; }
+                          .text-right { text-align: right; }
+                          .text-center { text-align: center; }
+                          .text-blue-600 { color: #2563eb; }
+                          .text-amber-600 { color: #d97706; }
+                          .text-orange-600 { color: #ea580c; }
+                          .text-green-600 { color: #16a34a; }
+                          .text-red-600 { color: #dc2626; }
+                          .text-gray-500 { color: #6b7280; }
+                          .font-bold { font-weight: bold; }
+                          .font-medium { font-weight: 500; }
+                          @media print { body { padding: 15px; } }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>📊 Simulation Phase Cost & Three-Fraction Quality Report</h1>
+                        <p><strong>Equipment:</strong> SACOR Delta-Canter 20-843A Three-Phase Tricanter</p>
+                        <p><strong>Feedstock:</strong> ${feedstockTypes[selectedFeedstock].name} | <strong>Destination:</strong> ${transportDestinations[selectedDestination].name}</p>
+                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
+                          <div class="metric-box"><div class="metric-value">${phaseData.length}</div><div class="metric-label">Phases Completed</div></div>
+                          <div class="metric-box"><div class="metric-value">${formatTime(overallTotals.duration)}</div><div class="metric-label">Total Run Time</div></div>
+                          <div class="metric-box"><div class="metric-value">${overallTotals.feed.toFixed(2)} m³</div><div class="metric-label">Feed Processed</div></div>
+                          <div class="metric-box" style="border-color: #16a34a;"><div class="metric-value positive">${(overallTotals.oil * 1000).toFixed(1)} L</div><div class="metric-label">Oil Recovered</div></div>
+                          <div class="metric-box"><div class="metric-value">${avgOilEffOverall.toFixed(1)}%</div><div class="metric-label">Avg Oil Recovery</div></div>
+                          <div class="metric-box" style="border-color: ${Math.abs(overallMassBalance - 100) < 2 ? '#16a34a' : '#dc2626'};"><div class="metric-value ${Math.abs(overallMassBalance - 100) < 2 ? 'positive' : 'negative'}">${overallMassBalance.toFixed(1)}%</div><div class="metric-label">Mass Balance</div></div>
+                          <div class="metric-box" style="border-color: #dc2626;"><div class="metric-value negative">$${totalCosts.toFixed(2)}</div><div class="metric-label">Total Cost</div></div>
+                        </div>
+
+                        <h2>📦 Phase Volume Summary</h2>
+                        <table><thead><tr><th>Phase</th><th class="text-right">Time Window</th><th class="text-right">Duration</th><th class="text-right">Feed In</th><th class="text-right">Water Out</th><th class="text-right">Oil Out</th><th class="text-right">Solids Out</th></tr></thead>
+                        <tbody>${phaseRows}<tr class="highlight font-bold"><td>TOTAL</td><td class="text-right">-</td><td class="text-right">${formatTime(overallTotals.duration)}</td><td class="text-right">${overallTotals.feed.toFixed(3)} m³</td><td class="text-right">${(overallTotals.water * 1000).toFixed(0)} L</td><td class="text-right">${(overallTotals.oil * 1000).toFixed(1)} L</td><td class="text-right">${(overallTotals.solids * 1000).toFixed(1)} L</td></tr></tbody></table>
+
+                        <h2>💰 Phase Cost Breakdown</h2>
+                        <table><thead><tr><th>Phase</th><th class="text-right">Energy</th><th class="text-right">Chemicals</th><th class="text-right">Disposal</th><th class="text-right">Water</th><th class="text-right">Labor</th><th class="text-right">Total</th></tr></thead>
+                        <tbody>${phaseCostRows}<tr class="highlight font-bold"><td>TOTAL</td><td class="text-right">$${overallTotals.costs.energy.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.chemicals.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.disposal.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.water.toFixed(2)}</td><td class="text-right">$${overallTotals.costs.labor.toFixed(2)}</td><td class="text-right">$${totalCosts.toFixed(2)}</td></tr></tbody></table>
+
+                        <h2>🔬 Three-Fraction Quality Report</h2>
+                        <table><thead><tr><th>Phase</th><th>Fraction</th><th class="text-right">Volume</th><th class="text-right">Yield %</th><th class="text-right">Primary</th><th class="text-right">Secondary</th><th class="text-center">Status</th></tr></thead>
+                        <tbody>${fractionQualityRows}</tbody></table>
+
+                        <h2>⚖️ Mass Balance Validation</h2>
+                        <table><thead><tr><th>Phase</th><th class="text-right">Mass In</th><th class="text-right">Mass Out</th><th class="text-right">Closure %</th><th class="text-center">Validation</th><th class="text-right">Samples</th></tr></thead>
+                        <tbody>${massBalanceRows}<tr class="highlight font-bold"><td>OVERALL</td><td class="text-right">${overallTotals.feed.toFixed(4)} m³</td><td class="text-right">${(overallTotals.water + overallTotals.oil + overallTotals.solids).toFixed(4)} m³</td><td class="text-right ${Math.abs(overallMassBalance - 100) < 2 ? 'text-green-600' : 'text-red-600'}">${overallMassBalance.toFixed(1)}%</td><td class="text-center">${Math.abs(overallMassBalance - 100) < 2 ? '✅' : '⚠️'}</td><td class="text-right">-</td></tr></tbody></table>
+
+                        ${anomalySummary ? `<h2>🚨 Anomalies</h2><ul style="margin-left: 20px; color: #dc2626;">${anomalySummary}</ul>` : ''}
+
+                        <h2>📈 Overall Performance</h2>
+                        <table><thead><tr><th>Metric</th><th class="text-right">Value</th><th class="text-right">Target</th><th class="text-center">Status</th></tr></thead>
+                        <tbody>
+                          <tr><td>Oil Recovery</td><td class="text-right font-bold">${avgOilEffOverall.toFixed(1)}%</td><td class="text-right">≥95%</td><td class="text-center">${avgOilEffOverall >= 95 ? '✅' : '⚠️'}</td></tr>
+                          <tr class="bg-gray-50"><td>Solids Removal</td><td class="text-right font-bold">${avgSolidsEffOverall.toFixed(1)}%</td><td class="text-right">≥95%</td><td class="text-center">${avgSolidsEffOverall >= 95 ? '✅' : '⚠️'}</td></tr>
+                          <tr><td>Water Quality</td><td class="text-right font-bold">${avgWQOverall.toFixed(0)} ppm</td><td class="text-right">≤500 ppm</td><td class="text-center">${avgWQOverall <= 500 ? '✅' : '⚠️'}</td></tr>
+                          <tr class="bg-gray-50"><td>Specific Energy</td><td class="text-right font-bold">${overallTotals.feed > 0 ? (overallTotals.energy / overallTotals.feed).toFixed(2) : 0} kWh/m³</td><td class="text-right">≤5 kWh/m³</td><td class="text-center">${overallTotals.feed > 0 && (overallTotals.energy / overallTotals.feed) <= 5 ? '✅' : '⚠️'}</td></tr>
+                          <tr><td>Cost per m³</td><td class="text-right font-bold">$${overallTotals.feed > 0 ? (totalCosts / overallTotals.feed).toFixed(2) : 0}</td><td class="text-right">-</td><td class="text-center">📊</td></tr>
+                          <tr class="highlight"><td class="font-bold">Mass Balance</td><td class="text-right font-bold">${overallMassBalance.toFixed(1)}%</td><td class="text-right">98-102%</td><td class="text-center">${Math.abs(overallMassBalance - 100) < 2 ? '✅' : '⚠️'}</td></tr>
+                        </tbody></table>
+
+                        <div class="footer">
+                          <p><strong>Karratha WTP Simulator v15</strong> | SACOR Delta-Canter 20-843A | ${new Date().toISOString()}</p>
+                        </div>
+                      </body></html>
+                    `;
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(printContent);
+                      printWindow.document.close();
+                      printWindow.print();
+                    }
+                  }}
+                  disabled={phaseData.length === 0}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                    phaseData.length > 0
+                      ? 'bg-purple-600 hover:bg-purple-500'
+                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                  }`}
+                  title={phaseData.length === 0 ? 'Run a batch first' : `${phaseData.length} phases recorded`}
+                >
+                  📊 Phase Report {phaseData.length > 0 && `(${phaseData.length})`}
+                </button>
                 <button onClick={() => addEvent('NOTE', 'Manual checkpoint')} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium">➕ Add Note</button>
                 <button onClick={() => window.print()} className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium">🖨️ Print</button>
                 <button onClick={() => { if (window.confirm('Reset all data?')) dailyReset(); }} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium">🔄 Reset</button>
