@@ -18,6 +18,17 @@ export interface BatchPhaseConfig {
 
 export const BATCH_PHASES: BatchPhaseConfig[] = [
   {
+    name: 'Heavy Sediment',
+    icon: '🪨',
+    water: 60,
+    oil: 10,
+    sediment: 30,
+    volume: 2.75,
+    temp: 55,
+    flow: 6,
+    rpm: 4200
+  },
+  {
     name: 'Mixed Sludge',
     icon: '🌊',
     water: 65,
