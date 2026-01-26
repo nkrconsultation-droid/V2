@@ -12,8 +12,9 @@ import { useState, useCallback } from 'react';
 import FrontPage from './components/FrontPage';
 import CentrifugeProcessControl from './components/CentrifugeProcessControl';
 import ProcessOverview from './components/ProcessOverview';
+import PFDViewer from './components/PFDViewer';
 
-type Page = 'home' | 'process-overview' | 'simulator';
+type Page = 'home' | 'process-overview' | 'pfd-viewer' | 'simulator';
 
 // Map FrontPage tile IDs to simulator tab IDs
 const TILE_TO_TAB_MAP: Record<string, string> = {
@@ -48,6 +49,9 @@ export default function App() {
     } else if (page === 'process-overview') {
       // Navigate to Process Overview page
       setCurrentPage('process-overview');
+    } else if (page === 'pfd-viewer') {
+      // Navigate to Canonical PFD Viewer page
+      setCurrentPage('pfd-viewer');
     } else {
       // Map tile ID to tab ID and navigate to simulator
       const tabId = TILE_TO_TAB_MAP[page] || 'feed';
@@ -92,6 +96,15 @@ export default function App() {
           oilEff: plantStatus.oilEfficiency,
           isRunning: plantStatus.isRunning,
         }}
+      />
+    );
+  }
+
+  // PFD Viewer page
+  if (currentPage === 'pfd-viewer') {
+    return (
+      <PFDViewer
+        onBackToHome={handleBackToHome}
       />
     );
   }
