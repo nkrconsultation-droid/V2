@@ -6413,7 +6413,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
           const annualWaterCost = annualWater * costs.waterTreatment;
           const annualPondCost = annualWater * costs.pondDisposal; // $3.5/1000L = $3.5/m³
           const annualLaborCost = capitalModel.operatingHours * costs.laborRate * 0.5; // 0.5 FTE
-          const annualChemicalCost = annualFeed * 2.5; // ~$2.50/m³ for chemicals
+          // Chemical usage based on typical dosing rates for oily water treatment
+          const chemicalDosageRate = 100; // mg/L (combined demulsifier, scale inhibitor, antifoam)
+          const chemicalCostPerKg = 25; // $/kg blended rate for specialty process chemicals
+          const annualChemicalKg = annualFeed * 1000 * chemicalDosageRate / 1e6; // Convert m³→L, mg→kg
+          const annualChemicalCost = annualChemicalKg * chemicalCostPerKg;
           const annualInsurance = capitalModel.totalInvestment * (capitalModel.insurancePct / 100);
           const subtotalOpex = annualEnergyCost + annualSludgeCost + annualWaterCost + annualPondCost + annualLaborCost +
                                annualChemicalCost + capitalModel.maintenanceCost + annualInsurance;
@@ -6548,7 +6552,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <tr><td>Water Treatment</td><td>${annualWater.toFixed(0)} m³ @ $${costs.waterTreatment}/m³</td><td class="negative">-${formatCurrency(annualWaterCost, 0)}</td></tr>
                   <tr><td>Pond Disposal</td><td>${annualWater.toFixed(0)} m³ @ $${costs.pondDisposal}/m³</td><td class="negative">-${formatCurrency(annualPondCost, 0)}</td></tr>
                   <tr><td>Labor</td><td>0.5 FTE @ $${costs.laborRate}/h</td><td class="negative">-${formatCurrency(annualLaborCost, 0)}</td></tr>
-                  <tr><td>Chemicals</td><td>${annualFeed.toFixed(0)} m³ @ $2.50/m³</td><td class="negative">-${formatCurrency(annualChemicalCost, 0)}</td></tr>
+                  <tr><td>Chemicals</td><td>${annualChemicalKg.toFixed(0)} kg @ $${chemicalCostPerKg}/kg</td><td class="negative">-${formatCurrency(annualChemicalCost, 0)}</td></tr>
                   <tr><td>Maintenance Contract</td><td>Annual</td><td class="negative">-${formatCurrency(capitalModel.maintenanceCost, 0)}</td></tr>
                   <tr><td>Insurance</td><td>${capitalModel.insurancePct}% of capital</td><td class="negative">-${formatCurrency(annualInsurance, 0)}</td></tr>
                   <tr><td>Overhead</td><td>${capitalModel.overheadPct}% of OPEX</td><td class="negative">-${formatCurrency(annualOverhead, 0)}</td></tr>
@@ -7193,7 +7197,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualLaborCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
-                        <td className="py-2">Chemicals (~$2.50/m³)</td>
+                        <td className="py-2">Chemicals ({annualChemicalKg.toFixed(0)} kg @ ${chemicalCostPerKg}/kg)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualChemicalCost, 0)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
