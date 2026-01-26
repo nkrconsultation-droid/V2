@@ -858,6 +858,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     oilPriceEscalation: 2.0,  // % per year above inflation
     carbonCredits: 0,         // $/tonne CO2 avoided
 
+    // Gate fee (revenue for accepting input feed material)
+    gateFee: 500,             // $/m³ ($0.50/L default)
+
     // Optional items (from SACOR proposal)
     extendedWarrantyY2: false,
     extendedWarrantyY3: false,
@@ -6391,11 +6394,17 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
           const annualSolids = annualFeed * (capitalModel.feedSolidsContent / 100) * (avgSolidsEff / 100);
           const annualWater = annualFeed - annualOilRecovered - annualSolids;
 
-          // Annual revenue (oil value minus transport to Kalgoorlie)
+          // Annual revenue - TWO SOURCES:
+          // 1. Gate fee (revenue for accepting input feed material)
+          const annualGateFeeRevenue = annualFeed * capitalModel.gateFee;
+
+          // 2. Oil sale revenue (value minus transport to destination)
           const annualOilGrossRevenue = annualOilRecovered * costs.oilValue;
           const annualOilTransportCost = annualOilRecovered * costs.oilTransport; // $0.22/L = $220/m³
           const annualOilNetRevenue = annualOilGrossRevenue - annualOilTransportCost;
-          const totalAnnualRevenue = annualOilNetRevenue;
+
+          // Total revenue = Gate fee + Net oil revenue
+          const totalAnnualRevenue = annualGateFeeRevenue + annualOilNetRevenue;
 
           // Annual operating costs
           const avgPowerKW = 56 * 0.7; // 70% of installed power
@@ -6521,12 +6530,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 </table>
 
                 <h2>📈 Annual Revenue (Mass Balance)</h2>
-                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">Feedstock: <strong>${feedstockTypes[selectedFeedstock].name}</strong> | Destination: <strong>${transportDestinations[selectedDestination].name}</strong></p>
+                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">Feedstock: <strong>${feedstockTypes[selectedFeedstock].name}</strong> | Destination: <strong>${transportDestinations[selectedDestination].name}</strong> | Gate Fee: <strong>$${(capitalModel.gateFee / 1000).toFixed(2)}/L</strong></p>
                 <table>
                   <tr><th>Item</th><th>Volume</th><th>Amount</th></tr>
+                  <tr style="background: rgba(147, 51, 234, 0.15);"><td style="color: #c084fc;"><strong>💰 Gate Fee (Feed Collection)</strong></td><td>${annualFeed.toLocaleString()} m³ @ $${(capitalModel.gateFee / 1000).toFixed(2)}/L</td><td class="positive" style="color: #c084fc;"><strong>+${formatCurrency(annualGateFeeRevenue, 2)}</strong></td></tr>
                   <tr><td>${feedstockTypes[selectedFeedstock].name} Oil Value</td><td>${annualOilRecovered.toFixed(0)} m³ @ $${costs.oilValue}/m³</td><td class="positive">+${formatCurrency(annualOilGrossRevenue, 2)}</td></tr>
                   <tr><td>Transport → ${transportDestinations[selectedDestination].name}</td><td>${Math.round(annualOilRecovered).toLocaleString()} kL @ $${(costs.oilTransport / 1000).toFixed(2)}/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
-                  <tr class="highlight"><td><strong>Net Oil Revenue</strong></td><td></td><td class="positive"><strong>+${formatCurrency(annualOilNetRevenue, 2)}</strong></td></tr>
+                  <tr style="background: rgba(34, 197, 94, 0.15);"><td>Net Oil Revenue</td><td></td><td class="positive">+${formatCurrency(annualOilNetRevenue, 2)}</td></tr>
+                  <tr class="highlight"><td><strong>Total Annual Revenue</strong></td><td></td><td class="positive"><strong>+${formatCurrency(totalAnnualRevenue, 2)}</strong></td></tr>
                 </table>
 
                 <h2>📉 Annual Operating Costs</h2>
@@ -7238,8 +7249,44 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       </div>
                     </div>
                   </div>
+
+                  {/* Gate Fee Slider */}
+                  <div className="mb-4 p-3 bg-purple-900/20 rounded-lg border border-purple-700/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium text-purple-300">
+                        💰 Input Feed Collection Fee (Gate Fee)
+                      </label>
+                      <span className="text-lg font-bold text-purple-400 font-mono">
+                        ${(capitalModel.gateFee / 1000).toFixed(2)}/L
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2000"
+                      step="50"
+                      value={capitalModel.gateFee}
+                      onChange={e => setCapitalModel(p => ({ ...p, gateFee: Number(e.target.value) }))}
+                      className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>$0/L</span>
+                      <span className="text-purple-400">${(capitalModel.gateFee).toLocaleString()}/m³</span>
+                      <span>$2/L</span>
+                    </div>
+                  </div>
+
                   <table className="w-full text-sm">
                     <tbody>
+                      {/* Gate Fee Revenue */}
+                      <tr className="border-b border-purple-700/50 bg-purple-900/10">
+                        <td className="py-2">
+                          <span className="text-purple-400">💰 Gate Fee</span> ({annualFeed.toLocaleString()} m³ @ ${(capitalModel.gateFee / 1000).toFixed(2)}/L)
+                        </td>
+                        <td className="py-2 text-right text-purple-400 font-mono font-bold">+{formatCurrency(annualGateFeeRevenue, 2)}</td>
+                      </tr>
+
+                      {/* Oil Sale Revenue */}
                       <tr className="border-b border-slate-700">
                         <td className="py-2">
                           <span className={feedstockTypes[selectedFeedstock].color}>{feedstockTypes[selectedFeedstock].name}</span> oil ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)
@@ -7252,9 +7299,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         </td>
                         <td className="py-2 text-right text-amber-400 font-mono">-{formatCurrency(annualOilTransportCost, 2)}</td>
                       </tr>
-                      <tr className="bg-green-900/30">
-                        <td className="py-2 font-bold">Net Oil Revenue</td>
-                        <td className="py-2 text-right text-green-400 font-bold text-lg">+{formatCurrency(annualOilNetRevenue, 2)}</td>
+                      <tr className="bg-green-900/20 border-b border-slate-700">
+                        <td className="py-2 font-medium text-slate-300">Net Oil Revenue</td>
+                        <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilNetRevenue, 2)}</td>
+                      </tr>
+
+                      {/* Total Revenue */}
+                      <tr className="bg-green-900/40">
+                        <td className="py-2 font-bold text-white">Total Annual Revenue</td>
+                        <td className="py-2 text-right text-green-400 font-bold text-lg">+{formatCurrency(totalAnnualRevenue, 2)}</td>
                       </tr>
                     </tbody>
                   </table>
