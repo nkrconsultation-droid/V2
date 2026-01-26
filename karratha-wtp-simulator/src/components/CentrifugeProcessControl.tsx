@@ -813,16 +813,16 @@ export default function CentrifugeProcessControl() {
 
   // Australian market rates (WA commercial)
   const [costs, setCosts] = useState({
-    elec: 0.28,              // $/kWh
-    sludgeDisposal: 180,     // $/m³
-    waterTreatment: 2.5,     // $/m³
+    elec: 0.34,              // $/kWh
+    sludgeDisposal: 270,     // $/m³
+    waterTreatment: 3.5,     // $/m³
     oilValue: 450,           // $/m³ (value at destination) - updated by feedstock
     oilTransport: 220,       // $/m³ ($0.22/L) - updated by destination
     pondDisposal: 3.5,       // $/m³ ($3.5/1000L evaporation pond)
-    laborRate: 85,           // $/hour
+    laborRate: 140,          // $/hour
   });
 
-  // Update costs when feedstock or destination changes
+  // Update costs and capital model when feedstock or destination changes
   useEffect(() => {
     const feedstock = feedstockTypes[selectedFeedstock];
     const destination = transportDestinations[selectedDestination];
@@ -830,6 +830,12 @@ export default function CentrifugeProcessControl() {
       ...prev,
       oilValue: feedstock.oilValue,
       oilTransport: destination.cost,
+    }));
+    // Update capital model feed composition to match feedstock type
+    setCapitalModel(prev => ({
+      ...prev,
+      feedOilContent: feedstock.oilContent,
+      feedSolidsContent: feedstock.solidsContent,
     }));
   }, [selectedFeedstock, selectedDestination]);
 
@@ -856,10 +862,10 @@ export default function CentrifugeProcessControl() {
     discountRate: 10.0,       // % WACC for NPV
     projectLife: 15,          // years
 
-    // Feed assumptions (annual)
+    // Feed assumptions (annual) - defaults from selected feedstock type
     annualFeedVolume: 90000,  // m³/year (15 m³/h × 6000 hours)
-    feedOilContent: 20,       // % oil in feed
-    feedSolidsContent: 5,     // % solids in feed
+    feedOilContent: 8,        // % oil in feed (default: Refinery Slop)
+    feedSolidsContent: 3,     // % solids in feed (default: Refinery Slop)
 
     // Maintenance & overhead
     maintenanceCost: 28500,   // $/year (SACOR annual maintenance contract)
