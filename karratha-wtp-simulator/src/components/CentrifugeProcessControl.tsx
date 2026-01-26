@@ -5811,6 +5811,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     const avgOilEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.oilEff / weightedQuality.totalWeight : 0;
                     const avgSolidsEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.solidsEff / weightedQuality.totalWeight : 0;
                     const avgWQOverall = weightedQuality.totalWeight > 0 ? weightedQuality.wq / weightedQuality.totalWeight : 0;
+                    // TPH (Total Petroleum Hydrocarbons) - same as OiW but regulatory term
+                    const avgTPH = avgWQOverall; // ppm in water discharge
+                    // TRH (Total Recoverable Hydrocarbons) - oil recovered as volume
+                    const totalTRH = overallTotals.oil * 1000; // Liters of hydrocarbons recovered
                     const overallMassBalance = overallTotals.feed > 0
                       ? ((overallTotals.water + overallTotals.oil + overallTotals.solids) / overallTotals.feed) * 100
                       : 100;
@@ -5949,7 +5953,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <tbody>
                           <tr><td>Oil Recovery</td><td class="text-right font-bold">${avgOilEffOverall.toFixed(1)}%</td><td class="text-right">≥95%</td><td class="text-center">${avgOilEffOverall >= 95 ? '✅' : '⚠️'}</td></tr>
                           <tr class="bg-gray-50"><td>Solids Removal</td><td class="text-right font-bold">${avgSolidsEffOverall.toFixed(1)}%</td><td class="text-right">≥95%</td><td class="text-center">${avgSolidsEffOverall >= 95 ? '✅' : '⚠️'}</td></tr>
-                          <tr><td>Water Quality</td><td class="text-right font-bold">${avgWQOverall.toFixed(0)} ppm</td><td class="text-right">≤500 ppm</td><td class="text-center">${avgWQOverall <= 500 ? '✅' : '⚠️'}</td></tr>
+                          <tr><td>TPH (Water Discharge)</td><td class="text-right font-bold">${avgTPH.toFixed(0)} mg/L</td><td class="text-right">≤500 mg/L</td><td class="text-center">${avgTPH <= 500 ? '✅' : '⚠️'}</td></tr>
+                          <tr class="bg-gray-50"><td>TRH (Oil Recovered)</td><td class="text-right font-bold">${totalTRH.toFixed(1)} L</td><td class="text-right">-</td><td class="text-center">📊</td></tr>
                           <tr class="bg-gray-50"><td>Specific Energy</td><td class="text-right font-bold">${overallTotals.feed > 0 ? (overallTotals.energy / overallTotals.feed).toFixed(2) : 0} kWh/m³</td><td class="text-right">≤5 kWh/m³</td><td class="text-center">${overallTotals.feed > 0 && (overallTotals.energy / overallTotals.feed) <= 5 ? '✅' : '⚠️'}</td></tr>
                           <tr><td>Cost per m³</td><td class="text-right font-bold">$${overallTotals.feed > 0 ? (totalCosts / overallTotals.feed).toFixed(2) : 0}</td><td class="text-right">-</td><td class="text-center">📊</td></tr>
                           <tr class="highlight"><td class="font-bold">Mass Balance</td><td class="text-right font-bold">${overallMassBalance.toFixed(1)}%</td><td class="text-right">98-102%</td><td class="text-center">${Math.abs(overallMassBalance - 100) < 2 ? '✅' : '⚠️'}</td></tr>
@@ -6620,6 +6625,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             const avgOilEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.oilEff / weightedQuality.totalWeight : 0;
             const avgSolidsEffOverall = weightedQuality.totalWeight > 0 ? weightedQuality.solidsEff / weightedQuality.totalWeight : 0;
             const avgWQOverall = weightedQuality.totalWeight > 0 ? weightedQuality.wq / weightedQuality.totalWeight : 0;
+            // TPH (Total Petroleum Hydrocarbons) - concentration in water discharge
+            const avgTPH = avgWQOverall; // mg/L (ppm) in water discharge
+            // TRH (Total Recoverable Hydrocarbons) - total oil volume recovered
+            const totalTRH = overallTotals.oil * 1000; // Liters of hydrocarbons recovered
 
             // Overall mass balance
             const overallMassBalance = overallTotals.feed > 0
@@ -6941,12 +6950,18 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <td class="py-2 px-3 text-center">${avgSolidsEffOverall >= 95 ? '✅' : '⚠️'}</td>
                       </tr>
                       <tr>
-                        <td class="py-2 px-3">Water Quality (OiW)</td>
-                        <td class="py-2 px-3 text-right font-bold">${avgWQOverall.toFixed(0)} ppm</td>
-                        <td class="py-2 px-3 text-right">≤500 ppm</td>
-                        <td class="py-2 px-3 text-center">${avgWQOverall <= 500 ? '✅' : '⚠️'}</td>
+                        <td class="py-2 px-3">TPH (Water Discharge)</td>
+                        <td class="py-2 px-3 text-right font-bold">${avgTPH.toFixed(0)} mg/L</td>
+                        <td class="py-2 px-3 text-right">≤500 mg/L</td>
+                        <td class="py-2 px-3 text-center">${avgTPH <= 500 ? '✅' : '⚠️'}</td>
                       </tr>
                       <tr class="bg-gray-50">
+                        <td class="py-2 px-3">TRH (Oil Recovered)</td>
+                        <td class="py-2 px-3 text-right font-bold">${totalTRH.toFixed(1)} L</td>
+                        <td class="py-2 px-3 text-right">-</td>
+                        <td class="py-2 px-3 text-center">📊</td>
+                      </tr>
+                      <tr>
                         <td class="py-2 px-3">Specific Energy</td>
                         <td class="py-2 px-3 text-right font-bold">${overallTotals.feed > 0 ? (overallTotals.energy / overallTotals.feed).toFixed(2) : 0} kWh/m³</td>
                         <td class="py-2 px-3 text-right">≤5 kWh/m³</td>

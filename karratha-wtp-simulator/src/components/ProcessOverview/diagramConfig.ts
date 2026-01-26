@@ -1,68 +1,92 @@
 /**
  * PROCESS OVERVIEW DIAGRAM CONFIGURATION
  * =======================================
- * Block definitions, positions, colors, and flow connections
- * matching the reference block flow diagram.
- *
- * Layout uses a scalable coordinate system for responsive sizing.
+ * Modern, refined block definitions with updated color scheme
+ * and responsive layout system.
  */
 
 // ═══════════════════════════════════════════════════════════════
 // LAYOUT CONSTANTS (scalable base units)
 // ═══════════════════════════════════════════════════════════════
 const GRID = {
-  // Base spacing unit - all positions are multiples of this
   unit: 20,
-  // Standard block sizes
-  blockWidth: 130,
-  blockHeight: 70,
-  smallBlockWidth: 100,
-  smallBlockHeight: 55,
-  // Spacing between elements
+  blockWidth: 140,
+  blockHeight: 72,
+  smallBlockWidth: 110,
+  smallBlockHeight: 58,
   horizontalGap: 50,
   verticalGap: 30,
   // Row positions (Y coordinates)
-  row1: 50,   // Chemical dosing
-  row2: 150,  // Primary separation path
-  row3: 260,  // Secondary separation
-  row4: 370,  // Polishing / Recirculation
-  row5: 480,  // Clean water discharge
+  row1: 50,
+  row2: 150,
+  row3: 260,
+  row4: 370,
+  row5: 480,
   // Column positions (X coordinates)
-  col1: 40,   // Feed section
-  col2: 220,  // Inlet manifold
-  col3: 400,  // Primary/Mech separation
-  col4: 580,  // Bypass / Outlet
-  col5: 760,  // Output handling
-  col6: 960,  // Final products
-  col7: 1160, // Cost boxes / DWER
+  col1: 40,
+  col2: 230,
+  col3: 420,
+  col4: 600,
+  col5: 790,
+  col6: 990,
+  col7: 1200,
 };
 
 // ═══════════════════════════════════════════════════════════════
-// COLOR PALETTE (matching reference diagram)
+// MODERN COLOR PALETTE
 // ═══════════════════════════════════════════════════════════════
 export const DIAGRAM_COLORS = {
+  // Feed section - warm orange tones
   feed: {
-    primary: '#E07050',      // Feed/Pre-treatment blocks (coral/salmon)
-    secondary: '#F4A460',    // Suction block (sandy brown)
+    primary: '#F97316',     // Vibrant orange
+    secondary: '#FB923C',   // Light orange
+    gradient: ['#F97316', '#EA580C'],
   },
+  // Process section - teal/cyan tones
   process: {
-    main: '#2E8B8B',         // Core separation equipment (dark teal)
-    aux: '#5F9EA0',          // Chemical dosing, Bypass (cadet blue)
+    main: '#0D9488',        // Teal
+    aux: '#14B8A6',         // Light teal
+    gradient: ['#0D9488', '#0F766E'],
   },
+  // Output section - slate/gray tones
   output: {
-    primary: '#708090',      // Output handling (slate gray)
-    secondary: '#B8C4CE',    // Final products (light blue-gray)
+    primary: '#64748B',     // Slate
+    secondary: '#94A3B8',   // Light slate
+    gradient: ['#64748B', '#475569'],
   },
+  // Utility - blue tones
   utility: {
-    flush: '#87CEEB',        // Fresh water flush (sky blue)
-    recirculation: '#DC143C', // Recirculation boundary (crimson)
+    flush: '#38BDF8',       // Sky blue
+    recirculation: '#EF4444', // Red
+    gradient: ['#38BDF8', '#0EA5E9'],
   },
+  // Storage/final products - emerald
+  storage: {
+    primary: '#10B981',     // Emerald
+    secondary: '#34D399',   // Light emerald
+    gradient: ['#10B981', '#059669'],
+  },
+  // Stream flow colors
   streams: {
-    oil: '#CD853F',          // Oil stream lines (peru/tan)
-    water: '#4169E1',        // Water stream lines (royal blue)
-    solids: '#808080',       // Solids stream lines (gray)
-    chemical: '#9370DB',     // Chemical dosing lines (medium purple)
-    main: '#40E0D0',         // Main process flow (turquoise)
+    oil: '#D97706',         // Amber
+    water: '#3B82F6',       // Blue
+    solids: '#6B7280',      // Gray
+    chemical: '#8B5CF6',    // Violet
+    main: '#06B6D4',        // Cyan
+  },
+  // UI colors
+  ui: {
+    background: '#0F172A',
+    surface: '#1E293B',
+    border: '#334155',
+    borderLight: '#475569',
+    text: '#F8FAFC',
+    textMuted: '#94A3B8',
+    accent: '#06B6D4',
+    accentHover: '#22D3EE',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
   },
 };
 
@@ -75,6 +99,7 @@ export interface EquipmentBlock {
   shortName?: string;
   description?: string;
   color: string;
+  gradientColors?: string[];
   textColor?: string;
   borderColor?: string;
   x: number;
@@ -96,9 +121,10 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
   // ═══════════════════════════════════════════════════════════════
   {
     id: 'FEED-01',
-    name: 'Suction and Feed',
-    shortName: 'Suction and Feed',
+    name: 'Suction & Feed',
+    shortName: 'Suction & Feed',
     color: DIAGRAM_COLORS.feed.secondary,
+    gradientColors: ['#FB923C', '#F97316'],
     x: GRID.col1,
     y: GRID.row1,
     width: GRID.blockWidth,
@@ -110,13 +136,15 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
   },
   {
     id: 'PRE-01',
-    name: 'Feed Conditioning / Pre-Treatment',
-    shortName: 'Feed Conditioning / Pre-Treatment',
+    name: 'Feed Conditioning',
+    shortName: 'Feed Conditioning',
+    description: 'Pre-Treatment',
     color: DIAGRAM_COLORS.feed.primary,
+    gradientColors: DIAGRAM_COLORS.feed.gradient,
     x: GRID.col1,
     y: GRID.row2,
     width: GRID.blockWidth,
-    height: GRID.blockHeight + 10,
+    height: GRID.blockHeight + 8,
     category: 'feed',
   },
   {
@@ -124,7 +152,8 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Fresh Water Flush',
     shortName: 'Fresh Water Flush',
     color: DIAGRAM_COLORS.utility.flush,
-    textColor: '#1a1a1a',
+    gradientColors: DIAGRAM_COLORS.utility.gradient,
+    textColor: '#0F172A',
     x: GRID.col1,
     y: GRID.row3,
     width: GRID.blockWidth,
@@ -140,6 +169,7 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Inlet Manifold',
     shortName: 'Inlet Manifold',
     color: DIAGRAM_COLORS.process.main,
+    gradientColors: DIAGRAM_COLORS.process.gradient,
     x: GRID.col2,
     y: GRID.row2,
     width: GRID.smallBlockWidth + 20,
@@ -150,7 +180,8 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     id: 'CHEM-01',
     name: 'Chemical Dosing',
     shortName: 'Chemical Dosing',
-    color: DIAGRAM_COLORS.process.aux,
+    color: '#8B5CF6',
+    gradientColors: ['#8B5CF6', '#7C3AED'],
     x: GRID.col3,
     y: GRID.row1,
     width: GRID.blockWidth,
@@ -169,10 +200,11 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Primary Separation',
     shortName: 'Primary Separation',
     color: DIAGRAM_COLORS.process.main,
+    gradientColors: DIAGRAM_COLORS.process.gradient,
     x: GRID.col3,
     y: GRID.row2,
     width: GRID.blockWidth,
-    height: GRID.blockHeight + 10,
+    height: GRID.blockHeight + 8,
     category: 'process',
     parameters: [
       { label: 'Efficiency', key: 'oilEff', unit: '%' },
@@ -183,6 +215,7 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Bypass',
     shortName: 'Bypass',
     color: DIAGRAM_COLORS.process.aux,
+    gradientColors: ['#14B8A6', '#0D9488'],
     x: GRID.col4,
     y: GRID.row2,
     width: GRID.smallBlockWidth,
@@ -192,23 +225,25 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
   {
     id: 'MECH-01',
     name: 'Mechanical Separation',
-    shortName: 'Mechanical Separation',
+    shortName: 'Mech. Separation',
     color: DIAGRAM_COLORS.process.main,
+    gradientColors: DIAGRAM_COLORS.process.gradient,
     x: GRID.col3,
     y: GRID.row3,
     width: GRID.blockWidth,
-    height: GRID.blockHeight + 10,
+    height: GRID.blockHeight + 8,
     category: 'process',
   },
   {
     id: 'POLISH-01',
     name: 'Polishing Separation',
-    shortName: 'Polishing Separation',
+    shortName: 'Polishing Sep.',
     color: DIAGRAM_COLORS.process.main,
+    gradientColors: DIAGRAM_COLORS.process.gradient,
     x: GRID.col3,
     y: GRID.row4,
     width: GRID.blockWidth,
-    height: GRID.blockHeight + 10,
+    height: GRID.blockHeight + 8,
     category: 'process',
   },
 
@@ -217,8 +252,8 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
   // ═══════════════════════════════════════════════════════════════
   {
     id: 'RECIRC',
-    name: 'Recirculation Loop',
-    shortName: 'Recirculation Loop',
+    name: 'Recirculation',
+    shortName: 'Recirculation',
     color: 'transparent',
     borderColor: DIAGRAM_COLORS.utility.recirculation,
     x: GRID.col2,
@@ -236,6 +271,7 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Outlet Manifold',
     shortName: 'Outlet Manifold',
     color: DIAGRAM_COLORS.process.main,
+    gradientColors: DIAGRAM_COLORS.process.gradient,
     x: GRID.col4,
     y: GRID.row3 + 40,
     width: GRID.smallBlockWidth + 20,
@@ -251,6 +287,7 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Fixation Pad',
     shortName: 'Fixation Pad',
     color: DIAGRAM_COLORS.output.primary,
+    gradientColors: DIAGRAM_COLORS.output.gradient,
     x: GRID.col5,
     y: GRID.row2,
     width: GRID.blockWidth,
@@ -261,9 +298,10 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     id: 'SLUDGE-01',
     name: 'Dewatered Sludge',
     shortName: 'Dewatered Sludge',
-    description: 'Dryness 20-35% w/w',
+    description: '20-35% w/w',
     color: DIAGRAM_COLORS.output.secondary,
-    textColor: '#1a1a1a',
+    gradientColors: ['#94A3B8', '#64748B'],
+    textColor: '#0F172A',
     x: GRID.col6,
     y: GRID.row2,
     width: GRID.blockWidth + 10,
@@ -279,6 +317,7 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Horizontal Tanks',
     shortName: 'Horizontal Tanks',
     color: DIAGRAM_COLORS.output.primary,
+    gradientColors: DIAGRAM_COLORS.output.gradient,
     x: GRID.col5,
     y: GRID.row3,
     width: GRID.blockWidth,
@@ -289,9 +328,9 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     id: 'OIL-01',
     name: 'Recovered Oil',
     shortName: 'Recovered Oil',
-    description: 'Water content <5%',
-    color: DIAGRAM_COLORS.output.secondary,
-    textColor: '#1a1a1a',
+    description: '<5% water',
+    color: '#D97706',
+    gradientColors: ['#F59E0B', '#D97706'],
     x: GRID.col6,
     y: GRID.row3,
     width: GRID.blockWidth + 10,
@@ -307,6 +346,7 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Evaporation Pond',
     shortName: 'Evaporation Pond',
     color: DIAGRAM_COLORS.output.primary,
+    gradientColors: DIAGRAM_COLORS.output.gradient,
     x: GRID.col5,
     y: GRID.row4,
     width: GRID.blockWidth,
@@ -318,8 +358,8 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Treated Water',
     shortName: 'Treated Water',
     description: '<500 mg/L TPH',
-    color: DIAGRAM_COLORS.output.secondary,
-    textColor: '#1a1a1a',
+    color: DIAGRAM_COLORS.streams.water,
+    gradientColors: ['#60A5FA', '#3B82F6'],
     x: GRID.col6,
     y: GRID.row4,
     width: GRID.blockWidth + 10,
@@ -335,7 +375,8 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Clean Water Storage',
     shortName: 'Clean Water Storage',
     color: DIAGRAM_COLORS.utility.flush,
-    textColor: '#1a1a1a',
+    gradientColors: DIAGRAM_COLORS.utility.gradient,
+    textColor: '#0F172A',
     x: GRID.col5,
     y: GRID.row5,
     width: GRID.blockWidth,
@@ -347,8 +388,9 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Treated Water',
     shortName: 'Treated Water',
     description: '<5 mg/L TPH',
-    color: DIAGRAM_COLORS.output.secondary,
-    textColor: '#1a1a1a',
+    color: '#60A5FA',
+    gradientColors: ['#93C5FD', '#60A5FA'],
+    textColor: '#0F172A',
     x: GRID.col6,
     y: GRID.row5,
     width: GRID.blockWidth + 10,
@@ -357,15 +399,15 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
   },
   {
     id: 'DWER-01',
-    name: 'Discharged to land per DWER license',
+    name: 'DWER Licensed Discharge',
     shortName: 'DWER Discharge',
-    color: '#228B22',
+    color: DIAGRAM_COLORS.storage.primary,
+    gradientColors: DIAGRAM_COLORS.storage.gradient,
     x: GRID.col7,
     y: GRID.row5,
     width: GRID.blockWidth + 30,
     height: GRID.blockHeight,
     category: 'output',
-    borderColor: '#DC143C',
   },
 ];
 
@@ -380,7 +422,7 @@ export interface FlowConnection {
   style?: 'solid' | 'dashed' | 'dotted';
   animated?: boolean;
   label?: string;
-  path?: string; // Custom SVG path if needed
+  path?: string;
 }
 
 export const FLOW_CONNECTIONS: FlowConnection[] = [
@@ -426,7 +468,7 @@ export const FLOW_CONNECTIONS: FlowConnection[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// OUTPUT COST/VALUE BOXES
+// OUTPUT INFO BOXES
 // ═══════════════════════════════════════════════════════════════
 export interface OutputBox {
   id: string;
@@ -441,8 +483,8 @@ export const OUTPUT_BOXES: OutputBox[] = [
     id: 'cost-sludge',
     parentId: 'SLUDGE-01',
     lines: [
-      { label: 'Disposal Cost:' },
-      { label: 'Recoverable Cost:' },
+      { label: 'Disposal Cost' },
+      { label: 'Recoverable Value' },
     ],
     x: GRID.col7,
     y: GRID.row2,
@@ -451,8 +493,8 @@ export const OUTPUT_BOXES: OutputBox[] = [
     id: 'cost-oil',
     parentId: 'OIL-01',
     lines: [
-      { label: 'Disposal Cost:' },
-      { label: 'Recoverable Cost:' },
+      { label: 'Recovery Value' },
+      { label: 'Market Price' },
     ],
     x: GRID.col7,
     y: GRID.row3,
@@ -461,8 +503,8 @@ export const OUTPUT_BOXES: OutputBox[] = [
     id: 'evap-rate',
     parentId: 'WATER-01',
     lines: [
-      { label: 'Possible evaporation' },
-      { label: 'rate: 6-8ML/yr' },
+      { label: 'Evaporation Rate' },
+      { label: '6-8 ML/yr' },
     ],
     x: GRID.col7,
     y: GRID.row4,
@@ -508,5 +550,4 @@ export function getConnectionWidth(type: FlowConnection['type']): number {
   }
 }
 
-// Export grid configuration for responsive calculations
 export const LAYOUT_CONFIG = GRID;
