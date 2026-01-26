@@ -144,10 +144,20 @@ export function usePhaseTracking(batchPhases: BatchPhaseConfig[] = BATCH_PHASES)
   }, []);
 
   // Finalize phase data and store
+  // Minimum phase duration of 60 seconds to avoid capturing brief transitional phases
+  const MIN_PHASE_DURATION_SECONDS = 60;
+
   const finalizePhaseData = useCallback((endTime: number) => {
     if (!currentPhaseDataRef.current) return;
 
     const ref = currentPhaseDataRef.current;
+    const duration = endTime - ref.startTime;
+
+    // Skip recording phases that lasted less than 60 seconds - these are transitional artifacts
+    if (duration < MIN_PHASE_DURATION_SECONDS) {
+      currentPhaseDataRef.current = null;
+      return;
+    }
 
     const phaseRecord: PhaseDataRecord = {
       phaseIndex: ref.phaseIndex,
@@ -156,7 +166,7 @@ export function usePhaseTracking(batchPhases: BatchPhaseConfig[] = BATCH_PHASES)
       endTime: endTime,
       totals: {
         ...ref.totals,
-        duration: endTime - ref.startTime,
+        duration: duration,
       },
       quality: {
         oilEfficiency: calcStats(ref.qualitySamples.oilEff),
