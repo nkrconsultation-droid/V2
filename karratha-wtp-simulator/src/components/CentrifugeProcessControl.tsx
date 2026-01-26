@@ -399,11 +399,20 @@ const NumInput = ({ value, onChange, className = '', min, max, step = 1 }) => {
   );
 };
 
-export default function CentrifugeProcessControl() {
+interface CentrifugeProcessControlProps {
+  initialTab?: string;
+}
+
+export default function CentrifugeProcessControl({ initialTab = 'feed' }: CentrifugeProcessControlProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [simSpeed, setSimSpeed] = useState(10);
   const [simTime, setSimTime] = useState(0);
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync activeTab when initialTab changes (user navigates from home with different tile)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // ═══════════════════════════════════════════════════════════════
   //                   EQUIPMENT & FEED PROPERTIES
