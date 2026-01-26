@@ -51,17 +51,6 @@ export const BATCH_PHASES: BatchPhaseConfig[] = [
     rpm: 3800
   },
   {
-    name: 'Oil-Rich',
-    icon: '🛢️',
-    water: 30,
-    oil: 65,
-    sediment: 5,
-    volume: 11.0,
-    temp: 68,
-    flow: 12,
-    rpm: 3500
-  },
-  {
     name: 'Water-Rich',
     icon: '💧',
     water: 85,
@@ -71,6 +60,17 @@ export const BATCH_PHASES: BatchPhaseConfig[] = [
     temp: 62,
     flow: 14,
     rpm: 3200
+  },
+  {
+    name: 'Oil-Rich',
+    icon: '🛢️',
+    water: 30,
+    oil: 65,
+    sediment: 5,
+    volume: 11.0,
+    temp: 68,
+    flow: 12,
+    rpm: 3500
   },
   {
     name: 'Final Rinse',

@@ -44,7 +44,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine, Legend } from 'recharts';
 
 // Extracted modules
 import { usePhaseTracking, ProcessDataSnapshot } from '../hooks/usePhaseTracking';
@@ -400,7 +400,7 @@ const NumInput = ({ value, onChange, className = '', min, max, step = 1 }) => {
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
-      className={`bg-slate-700 border border-slate-600 rounded px-2 py-1 text-center focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 ${className}`}
+      className={`bg-white border border-gray-300 rounded px-2 py-1 text-center text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 ${className}`}
     />
   );
 };
@@ -2660,11 +2660,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
       <div className={`relative overflow-hidden rounded-2xl p-4 transition-all duration-300 ${
         isAlarm
           ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 ring-1 ring-red-500/50'
-          : 'bg-white/5 hover:bg-white/10'
+          : 'bg-gray-100 hover:bg-gray-200'
       }`}>
         <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{tag}</div>
         <div className="flex items-baseline gap-1">
-          <span className={`text-2xl font-semibold ${isAlarm ? 'text-red-400' : 'text-white'}`}>
+          <span className={`text-2xl font-semibold ${isAlarm ? 'text-red-400' : 'text-gray-800'}`}>
             {val?.toFixed(dec)}
           </span>
           <span className="text-sm text-gray-500">{unit}</span>
@@ -2695,7 +2695,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             : 'bg-gradient-to-br from-amber-500/10 via-transparent to-orange-500/5'
         }`} />
 
-        <div className="relative backdrop-blur-xl bg-white/5 p-6">
+        <div className="relative backdrop-blur-xl bg-gray-100 p-6">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             <div>
@@ -2718,7 +2718,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
           {/* Big PV Display */}
           <div className="text-center mb-6">
-            <div className="text-5xl font-light text-white tracking-tight">{displayPV?.toFixed(1)}</div>
+            <div className="text-5xl font-light text-gray-800 tracking-tight">{displayPV?.toFixed(1)}</div>
             <div className="text-sm text-gray-500 mt-1">{loop.unit}</div>
           </div>
 
@@ -2728,7 +2728,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             <NumInput
               value={loop.sp}
               onChange={v => onUp({ sp: v })}
-              className="w-20 text-lg font-medium text-center bg-white/10 border-0 rounded-xl text-emerald-400"
+              className="w-20 text-lg font-medium text-center bg-gray-200 border-0 rounded-xl text-emerald-400"
             />
             <span className="text-xs text-gray-500">{loop.unit}</span>
           </div>
@@ -2739,7 +2739,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <span className="text-gray-500 uppercase tracking-wider">Output</span>
               <span className={`font-semibold ${isAuto ? 'text-emerald-400' : 'text-amber-400'}`}>{loop.op?.toFixed(0)}%</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ease-out ${
                   isAuto ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-amber-500 to-orange-400'
@@ -2793,7 +2793,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     <div className="space-y-2">
       <label className="flex justify-between items-center">
         <span className="text-sm font-medium text-gray-300">{label}</span>
-        {unit && <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded">{unit}</span>}
+        {unit && <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{unit}</span>}
       </label>
       <NumInput
         value={value}
@@ -2801,18 +2801,18 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
         min={min}
         max={max}
         step={step}
-        className="w-full text-sm bg-white/5 border-0 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 transition-all"
+        className="w-full text-sm bg-gray-100 border-0 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-blue-500/50 transition-all"
       />
     </div>
   );
 
   // Section Card wrapper - Glass morphism container
   const Card = ({ children, className = '', title, subtitle, action }) => (
-    <div className={`relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 ${className}`}>
+    <div className={`relative overflow-hidden rounded-3xl backdrop-blur-xl bg-gray-100 border border-gray-200 ${className}`}>
       {title && (
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div>
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
             {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
           {action}
@@ -2861,12 +2861,12 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white">
+    <div className="min-h-screen bg-gray-100 text-gray-900">
       {/* Ambient background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/10 pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-200/50 via-transparent to-gray-200/30 pointer-events-none" />
 
       {/* Header */}
-      <header className="relative z-10 backdrop-blur-xl bg-white/5 border-b border-white/10">
+      <header className="relative z-10 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6">
           {/* Top bar */}
           <div className="flex items-center justify-between h-16">
@@ -2877,7 +2877,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <span className="text-xl">⟳</span>
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-white">Centrifuge Control</h1>
+                  <h1 className="text-lg font-semibold text-gray-900">Centrifuge Control</h1>
                   <div className="text-xs text-gray-500">Delta-Canter 20-843A</div>
                 </div>
               </div>
@@ -2885,25 +2885,25 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               {/* Status pill */}
               <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                 isRunning
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'bg-gray-500/20 text-gray-400'
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  : 'bg-gray-100 text-gray-600 border border-gray-200'
               }`}>
-                <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-gray-500'}`} />
+                <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
                 <span className="text-sm font-medium">{isRunning ? 'Running' : 'Stopped'}</span>
               </div>
 
               {/* Batch mode indicator */}
               {isBatchMode && (
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-purple-500/20">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-purple-100 border border-purple-200">
                   <span className="text-lg">{batchPhases[batchPhase]?.icon}</span>
                   <div>
-                    <div className="text-sm font-medium text-purple-300">{batchPhases[batchPhase]?.name}</div>
-                    <div className="text-xs text-purple-400">Phase {batchPhase + 1}/{batchPhases.length} · {batchProgress.pct.toFixed(0)}%</div>
+                    <div className="text-sm font-medium text-purple-700">{batchPhases[batchPhase]?.name}</div>
+                    <div className="text-xs text-purple-600">Phase {batchPhase + 1}/{batchPhases.length} · {batchProgress.pct.toFixed(0)}%</div>
                   </div>
                 </div>
               )}
               {!isBatchMode && isRunning && (
-                <div className="px-4 py-2 rounded-full bg-blue-500/20 text-blue-400 text-sm font-medium">
+                <div className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium">
                   Manual Mode
                 </div>
               )}
@@ -2912,16 +2912,16 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* Controls */}
             <div className="flex items-center gap-4">
               {/* Time display */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 border border-gray-200">
                 <span className="text-gray-500 text-sm">⏱</span>
-                <span className="font-mono text-white text-sm">{formatTime(simTime)}</span>
+                <span className="font-mono text-gray-800 text-sm">{formatTime(simTime)}</span>
               </div>
 
               {/* Speed selector */}
               <select
                 value={simSpeed}
                 onChange={e => setSimSpeed(+e.target.value)}
-                className="px-4 py-2 rounded-xl bg-white/5 border-0 text-sm text-white focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-gray-100 border border-gray-200 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
               >
                 <option value={1}>1× Real</option>
                 <option value={10}>10× Fast</option>
@@ -2934,8 +2934,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 onClick={() => setIsRunning(!isRunning)}
                 className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all ${
                   isRunning
-                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                    : 'bg-emerald-500 text-white hover:bg-emerald-400'
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                    : 'bg-emerald-500 text-gray-800 hover:bg-emerald-400'
                 }`}
               >
                 {isRunning ? '⏹ Stop' : '▶ Start'}
@@ -2943,7 +2943,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
               <button
                 onClick={() => { if (window.confirm('Reset entire session? This will clear all data, trends, chemical usage, and filter statistics.')) dailyReset(); }}
-                className="px-4 py-2.5 rounded-xl bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all text-sm"
+                className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all text-sm border border-gray-200"
                 title="Reset all simulation data"
               >
                 ↺ Reset
@@ -2958,14 +2958,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                   activeTab === tab.id
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                } ${tab.id === 'alarms' && alarms.length ? 'text-red-400' : ''}`}
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                } ${tab.id === 'alarms' && alarms.length ? 'text-red-600' : ''}`}
               >
                 <span className={`text-base ${activeTab === tab.id ? 'opacity-100' : 'opacity-50'}`}>{tab.icon}</span>
                 <span>{tab.label}</span>
                 {activeTab === tab.id && (
-                  <div className="w-1 h-1 rounded-full bg-blue-400" />
+                  <div className="w-1 h-1 rounded-full bg-blue-500" />
                 )}
               </button>
             ))}
@@ -2985,7 +2985,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* Page header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-white">Feed Characterization</h2>
+                <h2 className="text-2xl font-semibold text-gray-800">Feed Characterization</h2>
                 <p className="text-gray-500 mt-1">Configure feed properties and flow parameters</p>
               </div>
               <div className="flex gap-3">
@@ -2994,7 +2994,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     const preset = CONFIG.feedPresets[e.target.value];
                     if (preset) setFeedProps(p => ({ ...p, ...preset }));
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-white/5 border-0 text-sm text-gray-300 focus:ring-2 focus:ring-blue-500/50"
+                  className="px-4 py-2.5 rounded-xl bg-gray-100 border-0 text-sm text-gray-300 focus:ring-2 focus:ring-blue-500/50"
                   defaultValue=""
                 >
                   <option value="" disabled>Load Preset...</option>
@@ -3015,7 +3015,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     maxPackingFraction: 0.64, hinderedSettlingExp: 4.65,
                     oilDropletSphericity: 1.0, solidsSphericity: 0.8,
                   })}
-                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all text-sm"
+                  className="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-900 transition-all text-sm"
                 >
                   ↺ Reset Defaults
                 </button>
@@ -3031,7 +3031,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <span className="text-blue-400">◉</span>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white">Feed Flow Rate</h3>
+                      <h3 className="text-lg font-semibold text-gray-800">Feed Flow Rate</h3>
                       <div className="text-sm text-gray-500">FIC-001 Setpoint Control</div>
                     </div>
                   </div>
@@ -3052,7 +3052,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         step="0.5"
                         value={loops.FIC.sp}
                         onChange={(e) => setLoops(p => ({ ...p, FIC: { ...p.FIC, sp: parseFloat(e.target.value) } }))}
-                        className="w-40 h-2 bg-white/10 rounded-full cursor-pointer accent-emerald-500"
+                        className="w-40 h-2 bg-gray-200 rounded-full cursor-pointer accent-emerald-500"
                       />
                       <NumInput
                         value={loops.FIC.sp}
@@ -3060,7 +3060,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         min={1}
                         max={equipment.maxFlow}
                         step={0.5}
-                        className="w-20 text-xl text-center bg-white/10 border-0 rounded-xl text-emerald-400 font-medium"
+                        className="w-20 text-xl text-center bg-gray-200 border-0 rounded-xl text-emerald-400 font-medium"
                       />
                     </div>
                   </div>
@@ -3098,9 +3098,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         solidsFraction: remaining * (1 - oilRatio)
                       }));
                     }}
-                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-cyan-500"
+                    className="w-full h-2 bg-gray-200 rounded-full cursor-pointer accent-cyan-500"
                   />
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full transition-all duration-300" style={{ width: `${feedProps.waterFraction * 100}%` }} />
                   </div>
                 </div>
@@ -3126,9 +3126,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         waterFraction: 1 - clampedOil - p.solidsFraction
                       }));
                     }}
-                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-amber-500"
+                    className="w-full h-2 bg-gray-200 rounded-full cursor-pointer accent-amber-500"
                   />
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-300" style={{ width: `${feedProps.oilFraction * 100}%` }} />
                   </div>
                 </div>
@@ -3154,15 +3154,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         waterFraction: 1 - p.oilFraction - clampedSolids
                       }));
                     }}
-                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-orange-500"
+                    className="w-full h-2 bg-gray-200 rounded-full cursor-pointer accent-orange-500"
                   />
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-300" style={{ width: `${feedProps.solidsFraction * 100}%` }} />
                   </div>
                 </div>
               </div>
               {/* Total indicator */}
-              <div className="mt-6 p-4 bg-white/5 rounded-2xl flex items-center justify-center gap-6">
+              <div className="mt-6 p-4 bg-gray-100 rounded-2xl flex items-center justify-center gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-cyan-500 rounded-full" />
                   <span className="text-sm text-gray-400">Water {(feedProps.waterFraction * 100).toFixed(1)}%</span>
@@ -3192,7 +3192,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <input type="range" min="990" max="1100" step="1"
                     value={feedProps.waterDensity}
                     onChange={(e) => setFeedProps(p => ({ ...p, waterDensity: parseFloat(e.target.value) }))}
-                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-cyan-500"
+                    className="w-full h-2 bg-gray-200 rounded-full cursor-pointer accent-cyan-500"
                   />
                   <div className="text-xs text-gray-500">Affected by salinity</div>
                 </div>
@@ -3204,7 +3204,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <input type="range" min="700" max="1000" step="5"
                     value={feedProps.oilDensity}
                     onChange={(e) => setFeedProps(p => ({ ...p, oilDensity: parseFloat(e.target.value) }))}
-                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-amber-500"
+                    className="w-full h-2 bg-gray-200 rounded-full cursor-pointer accent-amber-500"
                   />
                   <div className="text-xs text-gray-500">Δρ = {Math.abs(feedProps.waterDensity - feedProps.oilDensity)} kg/m³ (oil-water)</div>
                 </div>
@@ -3216,7 +3216,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <input type="range" min="1500" max="4000" step="50"
                     value={feedProps.solidsDensity}
                     onChange={(e) => setFeedProps(p => ({ ...p, solidsDensity: parseFloat(e.target.value) }))}
-                    className="w-full h-2 bg-white/10 rounded-full cursor-pointer accent-orange-500"
+                    className="w-full h-2 bg-gray-200 rounded-full cursor-pointer accent-orange-500"
                   />
                   <div className="text-xs text-gray-500">Δρ = {feedProps.solidsDensity - feedProps.waterDensity} kg/m³ (solids-water)</div>
                 </div>
@@ -3228,14 +3228,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Oil Droplets */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
                     <div className="w-2 h-2 rounded-full bg-amber-500" />
                     <h4 className="text-sm font-medium text-amber-400">Oil Droplets</h4>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">D10 (Fine)</label>
-                      <NumInput value={feedProps.oilDropletD10} onChange={v => setFeedProps(p => ({ ...p, oilDropletD10: v }))} min={1} max={100} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
+                      <NumInput value={feedProps.oilDropletD10} onChange={v => setFeedProps(p => ({ ...p, oilDropletD10: v }))} min={1} max={100} className="w-full bg-gray-100 border-0 rounded-xl px-3 py-2 text-center text-gray-800" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">D50 (Median)</label>
@@ -3243,7 +3243,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">D90 (Coarse)</label>
-                      <NumInput value={feedProps.oilDropletD90} onChange={v => setFeedProps(p => ({ ...p, oilDropletD90: v }))} min={1} max={500} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
+                      <NumInput value={feedProps.oilDropletD90} onChange={v => setFeedProps(p => ({ ...p, oilDropletD90: v }))} min={1} max={500} className="w-full bg-gray-100 border-0 rounded-xl px-3 py-2 text-center text-gray-800" />
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
@@ -3252,22 +3252,22 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <span>Sphericity:</span>
                       <input type="range" min="0.4" max="1" step="0.05" value={feedProps.oilDropletSphericity}
                         onChange={(e) => setFeedProps(p => ({ ...p, oilDropletSphericity: parseFloat(e.target.value) }))}
-                        className="w-16 h-1 bg-white/10 rounded-full cursor-pointer" />
-                      <span className="text-white">{feedProps.oilDropletSphericity.toFixed(2)}</span>
+                        className="w-16 h-1 bg-gray-200 rounded-full cursor-pointer" />
+                      <span className="text-gray-800">{feedProps.oilDropletSphericity.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Solid Particles */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
                     <div className="w-2 h-2 rounded-full bg-orange-500" />
                     <h4 className="text-sm font-medium text-orange-400">Solid Particles</h4>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">D10 (Fine)</label>
-                      <NumInput value={feedProps.solidsD10} onChange={v => setFeedProps(p => ({ ...p, solidsD10: v }))} min={1} max={200} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
+                      <NumInput value={feedProps.solidsD10} onChange={v => setFeedProps(p => ({ ...p, solidsD10: v }))} min={1} max={200} className="w-full bg-gray-100 border-0 rounded-xl px-3 py-2 text-center text-gray-800" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">D50 (Median)</label>
@@ -3275,7 +3275,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">D90 (Coarse)</label>
-                      <NumInput value={feedProps.solidsD90} onChange={v => setFeedProps(p => ({ ...p, solidsD90: v }))} min={1} max={1000} className="w-full bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
+                      <NumInput value={feedProps.solidsD90} onChange={v => setFeedProps(p => ({ ...p, solidsD90: v }))} min={1} max={1000} className="w-full bg-gray-100 border-0 rounded-xl px-3 py-2 text-center text-gray-800" />
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
@@ -3284,8 +3284,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <span>Sphericity:</span>
                       <input type="range" min="0.4" max="1" step="0.05" value={feedProps.solidsSphericity}
                         onChange={(e) => setFeedProps(p => ({ ...p, solidsSphericity: parseFloat(e.target.value) }))}
-                        className="w-16 h-1 bg-white/10 rounded-full cursor-pointer" />
-                      <span className="text-white">{feedProps.solidsSphericity.toFixed(2)}</span>
+                        className="w-16 h-1 bg-gray-200 rounded-full cursor-pointer" />
+                      <span className="text-gray-800">{feedProps.solidsSphericity.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -3297,7 +3297,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <div className="grid md:grid-cols-4 gap-6">
                 <div className="space-y-3">
                   <label className="text-sm text-gray-400">Oil Viscosity @ 25°C</label>
-                  <NumInput value={feedProps.oilViscosity} onChange={v => setFeedProps(p => ({ ...p, oilViscosity: v }))} min={1} max={10000} className="w-full bg-white/5 border-0 rounded-xl px-4 py-3 text-center text-xl text-white" />
+                  <NumInput value={feedProps.oilViscosity} onChange={v => setFeedProps(p => ({ ...p, oilViscosity: v }))} min={1} max={10000} className="w-full bg-gray-100 border-0 rounded-xl px-4 py-3 text-center text-xl text-gray-800" />
                   <div className="text-xs text-gray-500">Light: 5-50 · Medium: 50-200 · Heavy: 200+ mPa·s</div>
                 </div>
                 <div className="space-y-3">
@@ -3306,9 +3306,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <input type="range" min="0.01" max="0.05" step="0.001"
                       value={feedProps.viscosityTempCoeff}
                       onChange={(e) => setFeedProps(p => ({ ...p, viscosityTempCoeff: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                      className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                     />
-                    <span className="w-14 text-right font-mono text-white">{feedProps.viscosityTempCoeff.toFixed(3)}</span>
+                    <span className="w-14 text-right font-mono text-gray-800">{feedProps.viscosityTempCoeff.toFixed(3)}</span>
                   </div>
                   <div className="text-xs text-gray-500">Higher = more temp sensitive</div>
                 </div>
@@ -3318,9 +3318,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <input type="range" min="0" max="100" step="1"
                       value={feedProps.yieldStress}
                       onChange={(e) => setFeedProps(p => ({ ...p, yieldStress: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                      className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                     />
-                    <span className="w-14 text-right font-mono text-white">{feedProps.yieldStress}</span>
+                    <span className="w-14 text-right font-mono text-gray-800">{feedProps.yieldStress}</span>
                   </div>
                   <div className="text-xs text-gray-500">0 = Newtonian fluid</div>
                 </div>
@@ -3330,9 +3330,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <input type="range" min="0.3" max="1.5" step="0.05"
                       value={feedProps.flowBehaviorIndex}
                       onChange={(e) => setFeedProps(p => ({ ...p, flowBehaviorIndex: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                      className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                     />
-                    <span className="w-14 text-right font-mono text-white">{feedProps.flowBehaviorIndex.toFixed(2)}</span>
+                    <span className="w-14 text-right font-mono text-gray-800">{feedProps.flowBehaviorIndex.toFixed(2)}</span>
                   </div>
                   <div className="text-xs text-gray-500">&lt;1: shear-thin · 1: Newtonian · &gt;1: shear-thick</div>
                 </div>
@@ -3355,7 +3355,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <div className="absolute top-0 left-0 h-full bg-white/80 rounded-full transition-all" style={{ width: `${feedProps.emulsionStability * 100}%` }} />
                     </div>
                     <span className="text-xs text-red-400">Stable</span>
-                    <span className="w-12 text-right font-semibold text-white">{feedProps.emulsionStability.toFixed(2)}</span>
+                    <span className="w-12 text-right font-semibold text-gray-800">{feedProps.emulsionStability.toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -3365,10 +3365,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <input type="range" min="1" max="50" step="0.5"
                       value={feedProps.interfacialTension}
                       onChange={(e) => setFeedProps(p => ({ ...p, interfacialTension: parseFloat(e.target.value) }))}
-                      className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                      className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                     />
                     <span className="text-xs text-emerald-400">High</span>
-                    <span className="w-12 text-right font-semibold text-white">{feedProps.interfacialTension.toFixed(1)}</span>
+                    <span className="w-12 text-right font-semibold text-gray-800">{feedProps.interfacialTension.toFixed(1)}</span>
                   </div>
                   <div className="text-xs text-gray-500">Low IFT = harder to coalesce droplets</div>
                 </div>
@@ -3406,9 +3406,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <input type="range" min="0" max="200000" step="1000"
                         value={feedProps.salinity}
                         onChange={(e) => setFeedProps(p => ({ ...p, salinity: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                        className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                       />
-                      <NumInput value={feedProps.salinity} onChange={v => setFeedProps(p => ({ ...p, salinity: v }))} min={0} max={200000} className="w-24 bg-white/5 border-0 rounded-xl px-3 py-2 text-center text-white" />
+                      <NumInput value={feedProps.salinity} onChange={v => setFeedProps(p => ({ ...p, salinity: v }))} min={0} max={200000} className="w-24 bg-gray-100 border-0 rounded-xl px-3 py-2 text-center text-gray-800" />
                     </div>
                     <div className="text-xs text-gray-500">Freshwater &lt;1000 · Seawater ~35000 · Brine 50000+</div>
                   </div>
@@ -3418,9 +3418,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <input type="range" min="0" max="20" step="0.5"
                         value={feedProps.dissolvedGas}
                         onChange={(e) => setFeedProps(p => ({ ...p, dissolvedGas: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                        className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                       />
-                      <span className="w-14 text-right font-mono text-white">{feedProps.dissolvedGas.toFixed(1)}%</span>
+                      <span className="w-14 text-right font-mono text-gray-800">{feedProps.dissolvedGas.toFixed(1)}%</span>
                     </div>
                     <div className="text-xs text-gray-500">High gas content can cause cavitation</div>
                   </div>
@@ -3435,9 +3435,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <input type="range" min="0.5" max="0.74" step="0.01"
                         value={feedProps.maxPackingFraction}
                         onChange={(e) => setFeedProps(p => ({ ...p, maxPackingFraction: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                        className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                       />
-                      <span className="w-14 text-right font-mono text-white">{feedProps.maxPackingFraction.toFixed(2)}</span>
+                      <span className="w-14 text-right font-mono text-gray-800">{feedProps.maxPackingFraction.toFixed(2)}</span>
                     </div>
                     <div className="text-xs text-gray-500">Random close packing ~0.64</div>
                   </div>
@@ -3447,9 +3447,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <input type="range" min="2.5" max="6" step="0.1"
                         value={feedProps.hinderedSettlingExp}
                         onChange={(e) => setFeedProps(p => ({ ...p, hinderedSettlingExp: parseFloat(e.target.value) }))}
-                        className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer"
+                        className="flex-1 h-2 bg-gray-200 rounded-full cursor-pointer"
                       />
-                      <span className="w-14 text-right font-mono text-white">{feedProps.hinderedSettlingExp.toFixed(1)}</span>
+                      <span className="w-14 text-right font-mono text-gray-800">{feedProps.hinderedSettlingExp.toFixed(1)}</span>
                     </div>
                     <div className="text-xs text-gray-500">Spheres ~4.65, irregular particles higher</div>
                   </div>
@@ -3458,9 +3458,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             </div>
 
             {/* Feed Impact Summary */}
-            <div className="rounded-2xl p-5 bg-gradient-to-r from-white/5 to-transparent border border-white/10">
+            <div className="rounded-2xl p-5 bg-gradient-to-r from-white/5 to-transparent border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white">Feed Impact on Separation</h3>
+                <h3 className="text-sm font-semibold text-gray-800">Feed Impact on Separation</h3>
                 <button
                   onClick={() => setActiveTab('centrifuge')}
                   className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
@@ -3469,25 +3469,25 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 </button>
               </div>
               <div className="grid grid-cols-4 gap-4">
-                <div className="text-center p-3 rounded-xl bg-white/5">
+                <div className="text-center p-3 rounded-xl bg-gray-100">
                   <div className="text-xs text-gray-500 mb-1">Separation</div>
                   <div className={`text-lg font-semibold ${feedProps.emulsionStability < 0.3 ? 'text-emerald-400' : feedProps.emulsionStability < 0.6 ? 'text-amber-400' : 'text-red-400'}`}>
                     {feedProps.emulsionStability < 0.3 ? 'Easy' : feedProps.emulsionStability < 0.6 ? 'Moderate' : 'Difficult'}
                   </div>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-white/5">
+                <div className="text-center p-3 rounded-xl bg-gray-100">
                   <div className="text-xs text-gray-500 mb-1">Viscosity</div>
                   <div className={`text-lg font-semibold ${feedProps.oilViscosity < 30 ? 'text-emerald-400' : feedProps.oilViscosity < 100 ? 'text-amber-400' : 'text-red-400'}`}>
                     {feedProps.oilViscosity} mPa·s
                   </div>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-white/5">
+                <div className="text-center p-3 rounded-xl bg-gray-100">
                   <div className="text-xs text-gray-500 mb-1">Solids Load</div>
                   <div className={`text-lg font-semibold ${feedProps.solidsFraction < 0.03 ? 'text-emerald-400' : feedProps.solidsFraction < 0.08 ? 'text-amber-400' : 'text-red-400'}`}>
                     {(feedProps.solidsFraction * 100).toFixed(1)}%
                   </div>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-white/5">
+                <div className="text-center p-3 rounded-xl bg-gray-100">
                   <div className="text-xs text-gray-500 mb-1">Recovery</div>
                   <div className={`text-lg font-semibold ${smoothedProc.oilEff >= 90 ? 'text-emerald-400' : smoothedProc.oilEff >= 80 ? 'text-amber-400' : 'text-red-400'}`}>
                     {smoothedProc.oilEff.toFixed(0)}%
@@ -3505,7 +3505,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <span className="text-2xl">🧮</span>
                   <div>
                     <h3 className="text-lg font-bold text-purple-300">Setpoint Calculator</h3>
-                    <p className="text-xs text-slate-400">Calculate optimal setpoints based on Stokes Law separation theory</p>
+                    <p className="text-xs text-gray-500">Calculate optimal setpoints based on Stokes Law separation theory</p>
                   </div>
                 </div>
                 <button
@@ -3521,71 +3521,71 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   {/* Recommended Setpoints with Toggle Controls */}
                   <div className="grid grid-cols-4 gap-3">
                     {/* Temperature */}
-                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applyTemp ? 'bg-slate-800/70 border-orange-500/50' : 'bg-slate-900/50 border-slate-700 opacity-60'}`}>
+                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applyTemp ? 'bg-white border-orange-500/50' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-slate-400">Temperature</span>
+                        <span className="text-xs text-gray-500">Temperature</span>
                         <button
                           onClick={() => setSetpointCalc(p => ({ ...p, applyTemp: !p.applyTemp }))}
-                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applyTemp ? 'bg-orange-500' : 'bg-slate-600'}`}
+                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applyTemp ? 'bg-orange-500' : 'bg-gray-300'}`}
                         >
                           <div className={`w-4 h-4 bg-white rounded-full transition-transform ${setpointCalc.applyTemp ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                       </div>
-                      <div className={`text-2xl font-bold ${setpointCalc.applyTemp ? 'text-orange-400' : 'text-slate-500'}`}>{setpointCalc.temperature}°C</div>
-                      <div className="text-xs text-slate-500">Current: {loops.TIC.sp}°C</div>
+                      <div className={`text-2xl font-bold ${setpointCalc.applyTemp ? 'text-orange-400' : 'text-gray-500'}`}>{setpointCalc.temperature}°C</div>
+                      <div className="text-xs text-gray-500">Current: {loops.TIC.sp}°C</div>
                     </div>
                     {/* Flow Rate */}
-                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applyFlow ? 'bg-slate-800/70 border-cyan-500/50' : 'bg-slate-900/50 border-slate-700 opacity-60'}`}>
+                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applyFlow ? 'bg-white border-cyan-500/50' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-slate-400">Flow Rate</span>
+                        <span className="text-xs text-gray-500">Flow Rate</span>
                         <button
                           onClick={() => setSetpointCalc(p => ({ ...p, applyFlow: !p.applyFlow }))}
-                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applyFlow ? 'bg-cyan-500' : 'bg-slate-600'}`}
+                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applyFlow ? 'bg-cyan-500' : 'bg-gray-300'}`}
                         >
                           <div className={`w-4 h-4 bg-white rounded-full transition-transform ${setpointCalc.applyFlow ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                       </div>
-                      <div className={`text-2xl font-bold ${setpointCalc.applyFlow ? 'text-cyan-400' : 'text-slate-500'}`}>{setpointCalc.flowRate} m³/h</div>
-                      <div className="text-xs text-slate-500">Current: {loops.FIC.sp} m³/h</div>
+                      <div className={`text-2xl font-bold ${setpointCalc.applyFlow ? 'text-cyan-400' : 'text-gray-500'}`}>{setpointCalc.flowRate} m³/h</div>
+                      <div className="text-xs text-gray-500">Current: {loops.FIC.sp} m³/h</div>
                     </div>
                     {/* Bowl Speed */}
-                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applySpeed ? 'bg-slate-800/70 border-green-500/50' : 'bg-slate-900/50 border-slate-700 opacity-60'}`}>
+                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applySpeed ? 'bg-white border-green-500/50' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-slate-400">Bowl Speed</span>
+                        <span className="text-xs text-gray-500">Bowl Speed</span>
                         <button
                           onClick={() => setSetpointCalc(p => ({ ...p, applySpeed: !p.applySpeed }))}
-                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applySpeed ? 'bg-green-500' : 'bg-slate-600'}`}
+                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applySpeed ? 'bg-green-500' : 'bg-gray-300'}`}
                         >
                           <div className={`w-4 h-4 bg-white rounded-full transition-transform ${setpointCalc.applySpeed ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                       </div>
-                      <div className={`text-2xl font-bold ${setpointCalc.applySpeed ? 'text-green-400' : 'text-slate-500'}`}>{setpointCalc.bowlSpeed} RPM</div>
-                      <div className="text-xs text-slate-500">Current: {loops.SIC.sp} RPM</div>
+                      <div className={`text-2xl font-bold ${setpointCalc.applySpeed ? 'text-green-400' : 'text-gray-500'}`}>{setpointCalc.bowlSpeed} RPM</div>
+                      <div className="text-xs text-gray-500">Current: {loops.SIC.sp} RPM</div>
                     </div>
                     {/* Demulsifier */}
-                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applyDemul ? 'bg-slate-800/70 border-pink-500/50' : 'bg-slate-900/50 border-slate-700 opacity-60'}`}>
+                    <div className={`rounded-lg p-3 border transition-all ${setpointCalc.applyDemul ? 'bg-white border-pink-500/50' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-slate-400">Demulsifier</span>
+                        <span className="text-xs text-gray-500">Demulsifier</span>
                         <button
                           onClick={() => setSetpointCalc(p => ({ ...p, applyDemul: !p.applyDemul }))}
-                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applyDemul ? 'bg-pink-500' : 'bg-slate-600'}`}
+                          className={`w-10 h-5 rounded-full transition-colors ${setpointCalc.applyDemul ? 'bg-pink-500' : 'bg-gray-300'}`}
                         >
                           <div className={`w-4 h-4 bg-white rounded-full transition-transform ${setpointCalc.applyDemul ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                       </div>
-                      <div className={`text-2xl font-bold ${setpointCalc.applyDemul ? 'text-pink-400' : 'text-slate-500'}`}>{setpointCalc.demulsifierDose} ppm</div>
-                      <div className="text-xs text-slate-500">Current: {chemDosing.demulsifier.sp} ppm</div>
+                      <div className={`text-2xl font-bold ${setpointCalc.applyDemul ? 'text-pink-400' : 'text-gray-500'}`}>{setpointCalc.demulsifierDose} ppm</div>
+                      <div className="text-xs text-gray-500">Current: {chemDosing.demulsifier.sp} ppm</div>
                     </div>
                   </div>
 
                   {/* Predicted Performance - Compact */}
-                  <div className="bg-slate-800/30 rounded-lg p-3">
+                  <div className="bg-gray-100 rounded-lg p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex gap-6">
-                        <div><span className="text-xs text-slate-500">Oil:</span> <span className={`font-bold ${setpointCalc.predictedOilEfficiency >= 90 ? 'text-green-400' : 'text-yellow-400'}`}>{setpointCalc.predictedOilEfficiency}%</span></div>
-                        <div><span className="text-xs text-slate-500">Solids:</span> <span className={`font-bold ${setpointCalc.predictedSolidsEfficiency >= 95 ? 'text-green-400' : 'text-yellow-400'}`}>{setpointCalc.predictedSolidsEfficiency}%</span></div>
-                        <div><span className="text-xs text-slate-500">OiW:</span> <span className={`font-bold ${setpointCalc.predictedWaterQuality <= 15 ? 'text-green-400' : 'text-yellow-400'}`}>{setpointCalc.predictedWaterQuality} ppm</span></div>
-                        <div><span className="text-xs text-slate-500">G:</span> <span className="font-bold text-blue-400">{setpointCalc.predictedGForce}</span></div>
+                        <div><span className="text-xs text-gray-500">Oil:</span> <span className={`font-bold ${setpointCalc.predictedOilEfficiency >= 90 ? 'text-green-400' : 'text-yellow-400'}`}>{setpointCalc.predictedOilEfficiency}%</span></div>
+                        <div><span className="text-xs text-gray-500">Solids:</span> <span className={`font-bold ${setpointCalc.predictedSolidsEfficiency >= 95 ? 'text-green-400' : 'text-yellow-400'}`}>{setpointCalc.predictedSolidsEfficiency}%</span></div>
+                        <div><span className="text-xs text-gray-500">OiW:</span> <span className={`font-bold ${setpointCalc.predictedWaterQuality <= 15 ? 'text-green-400' : 'text-yellow-400'}`}>{setpointCalc.predictedWaterQuality} ppm</span></div>
+                        <div><span className="text-xs text-gray-500">G:</span> <span className="font-bold text-blue-400">{setpointCalc.predictedGForce}</span></div>
                       </div>
                       <div className={`px-2 py-1 rounded text-xs font-bold ${setpointCalc.confidence === 'High' ? 'bg-green-900/50 text-green-400' : setpointCalc.confidence === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-red-900/50 text-red-400'}`}>
                         {setpointCalc.confidence} Confidence
@@ -3595,13 +3595,13 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
                   {/* Notes - Collapsible */}
                   {setpointCalc.notes.length > 0 && (
-                    <details className="bg-slate-800/30 rounded-lg">
-                      <summary className="px-3 py-2 cursor-pointer text-xs text-slate-400 hover:text-slate-300">
+                    <details className="bg-gray-100 rounded-lg">
+                      <summary className="px-3 py-2 cursor-pointer text-xs text-gray-500 hover:text-gray-600">
                         {setpointCalc.notes.length} recommendation{setpointCalc.notes.length > 1 ? 's' : ''}
                       </summary>
                       <ul className="px-3 pb-2 space-y-1">
                         {setpointCalc.notes.map((note, i) => (
-                          <li key={i} className="text-xs text-slate-300">• {note}</li>
+                          <li key={i} className="text-xs text-gray-600">• {note}</li>
                         ))}
                       </ul>
                     </details>
@@ -3609,21 +3609,21 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
                   {/* Action Buttons */}
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-gray-500">
                       {[setpointCalc.applyTemp, setpointCalc.applyFlow, setpointCalc.applySpeed, setpointCalc.applyDemul].filter(Boolean).length}/4 enabled
-                      <span className="ml-2 text-slate-600">• 10s debounce</span>
+                      <span className="ml-2 text-gray-400">• 10s debounce</span>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSetpointCalc(p => ({ ...p, calculated: false }))}
-                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-sm transition-colors"
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
                       >
                         Dismiss
                       </button>
                       <button
                         onClick={() => { applyRecommendedSetpoints(true); setActiveTab('centrifuge'); }}
                         disabled={![setpointCalc.applyTemp, setpointCalc.applyFlow, setpointCalc.applySpeed, setpointCalc.applyDemul].some(Boolean)}
-                        className="px-4 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:text-slate-500 rounded font-semibold transition-colors"
+                        className="px-4 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-gray-100 disabled:text-gray-500 rounded font-semibold transition-colors"
                       >
                         Apply Selected →
                       </button>
@@ -3633,7 +3633,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               )}
 
               {!setpointCalc.calculated && (
-                <div className="text-center py-4 text-slate-400 text-sm">
+                <div className="text-center py-4 text-gray-500 text-sm">
                   Adjust feed properties above, then click "Calculate Optimal Setpoints" to get recommendations based on Stokes Law separation theory.
                 </div>
               )}
@@ -3648,7 +3648,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">⚙️ Centrifuge Separation & GAC Polishing</h2>
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-gray-500">
                 Process: Feed → Centrifuge → GAC Filter → Evaporation Pond
               </div>
             </div>
@@ -3676,34 +3676,34 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <div className={`font-bold text-lg ${allPass ? 'text-green-400' : 'text-red-400'}`}>
                           WATER DISCHARGE {allPass ? 'COMPLIANT' : 'NON-COMPLIANT'}
                         </div>
-                        <div className="text-xs text-slate-400">Water quality after GAC filter → Evaporation Pond (License conditions)</div>
+                        <div className="text-xs text-gray-500">Water quality after GAC filter → Evaporation Pond (License conditions)</div>
                       </div>
                     </div>
                     <div className="flex gap-2 text-sm flex-wrap">
                       <div className={`px-2 py-1 rounded-lg ${trhPass ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
-                        <div className="text-xs text-slate-400">TRH</div>
+                        <div className="text-xs text-gray-500">TRH</div>
                         <div className={`font-bold ${trhPass ? 'text-green-400' : 'text-red-400'}`}>{trhVal.toFixed(0)} mg/L</div>
-                        <div className="text-xs text-slate-500">≤{dischargeLimits.trh}</div>
+                        <div className="text-xs text-gray-500">≤{dischargeLimits.trh}</div>
                       </div>
                       <div className={`px-2 py-1 rounded-lg ${codPass ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
-                        <div className="text-xs text-slate-400">COD</div>
+                        <div className="text-xs text-gray-500">COD</div>
                         <div className={`font-bold ${codPass ? 'text-green-400' : 'text-red-400'}`}>{codVal.toFixed(0)} mg/L</div>
-                        <div className="text-xs text-slate-500">≤{dischargeLimits.cod}</div>
+                        <div className="text-xs text-gray-500">≤{dischargeLimits.cod}</div>
                       </div>
                       <div className={`px-2 py-1 rounded-lg ${phPass ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
-                        <div className="text-xs text-slate-400">pH</div>
+                        <div className="text-xs text-gray-500">pH</div>
                         <div className={`font-bold ${phPass ? 'text-green-400' : 'text-red-400'}`}>{phVal.toFixed(1)}</div>
-                        <div className="text-xs text-slate-500">{dischargeLimits.pH.min}-{dischargeLimits.pH.max}</div>
+                        <div className="text-xs text-gray-500">{dischargeLimits.pH.min}-{dischargeLimits.pH.max}</div>
                       </div>
                       <div className={`px-2 py-1 rounded-lg ${oiwPass ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
-                        <div className="text-xs text-slate-400">OiW</div>
+                        <div className="text-xs text-gray-500">OiW</div>
                         <div className={`font-bold ${oiwPass ? 'text-green-400' : 'text-red-400'}`}>{oiwVal.toFixed(0)} ppm</div>
-                        <div className="text-xs text-slate-500">≤{dischargeLimits.oilInWater}</div>
+                        <div className="text-xs text-gray-500">≤{dischargeLimits.oilInWater}</div>
                       </div>
                       <div className={`px-2 py-1 rounded-lg ${turbPass ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
-                        <div className="text-xs text-slate-400">Turbidity</div>
+                        <div className="text-xs text-gray-500">Turbidity</div>
                         <div className={`font-bold ${turbPass ? 'text-green-400' : 'text-red-400'}`}>{turbVal.toFixed(1)} NTU</div>
-                        <div className="text-xs text-slate-500">≤{dischargeLimits.turbidity}</div>
+                        <div className="text-xs text-gray-500">≤{dischargeLimits.turbidity}</div>
                       </div>
                     </div>
                   </div>
@@ -3727,19 +3727,19 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <div className={`font-bold text-lg ${allPass ? 'text-amber-400' : 'text-orange-400'}`}>
                           PRODUCT QUALITY {allPass ? 'ON-SPEC' : 'OFF-SPEC'}
                         </div>
-                        <div className="text-xs text-slate-400">Oil and Sludge/CF Cake moisture content</div>
+                        <div className="text-xs text-gray-500">Oil and Sludge/CF Cake moisture content</div>
                       </div>
                     </div>
                     <div className="flex gap-4 text-sm">
                       <div className={`px-4 py-2 rounded-lg ${oilPass ? 'bg-amber-900/50 border border-amber-500/50' : 'bg-orange-900/50 border border-orange-500/50'}`}>
-                        <div className="text-xs text-slate-400">Oil Moisture</div>
+                        <div className="text-xs text-gray-500">Oil Moisture</div>
                         <div className={`font-bold text-xl ${oilPass ? 'text-amber-400' : 'text-orange-400'}`}>{oilMoistureVal.toFixed(1)}%</div>
-                        <div className="text-xs text-slate-500">Target: &lt;{productLimits.oilMoisture}% v/v</div>
+                        <div className="text-xs text-gray-500">Target: &lt;{productLimits.oilMoisture}% v/v</div>
                       </div>
                       <div className={`px-4 py-2 rounded-lg ${sludgePass ? 'bg-amber-900/50 border border-amber-500/50' : 'bg-orange-900/50 border border-orange-500/50'}`}>
-                        <div className="text-xs text-slate-400">Sludge/CF Cake Moisture</div>
+                        <div className="text-xs text-gray-500">Sludge/CF Cake Moisture</div>
                         <div className={`font-bold text-xl ${sludgePass ? 'text-amber-400' : 'text-orange-400'}`}>{sludgeMoistureVal.toFixed(1)}%</div>
-                        <div className="text-xs text-slate-500">Target: &lt;{productLimits.sludgeMoisture}% v/v</div>
+                        <div className="text-xs text-gray-500">Target: &lt;{productLimits.sludgeMoisture}% v/v</div>
                       </div>
                     </div>
                   </div>
@@ -3767,15 +3767,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <span className="text-3xl">{batchPhases[batchPhase]?.icon}</span>
                     <div>
                       <div className="font-bold text-purple-300">{batchPhases[batchPhase]?.name}</div>
-                      <div className="text-xs text-slate-400">Phase {batchPhase + 1} of {batchPhases.length}</div>
+                      <div className="text-xs text-gray-500">Phase {batchPhase + 1} of {batchPhases.length}</div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-purple-400">{batchProgress.pct.toFixed(1)}%</div>
-                    <div className="text-xs text-slate-400">{(batchProgress.remain * 1000).toFixed(0)} L remaining</div>
+                    <div className="text-xs text-gray-500">{(batchProgress.remain * 1000).toFixed(0)} L remaining</div>
                   </div>
                 </div>
-                <div className="h-4 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all" style={{ width: `${batchProgress.pct}%` }} />
                 </div>
               </div>
@@ -3791,44 +3791,44 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
             {/* Summary Cards - Updated with post-filter values */}
             <div className="grid md:grid-cols-4 gap-4">
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
                 <h4 className="text-sm font-semibold text-green-400 mb-3">📊 Centrifuge</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Oil Recovery</span><span className={smoothedProc.oilEff > 90 ? 'text-green-400' : 'text-yellow-400'}>{smoothedProc.oilEff.toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Solids Removal</span><span className={smoothedProc.solidsEff > 95 ? 'text-green-400' : 'text-yellow-400'}>{smoothedProc.solidsEff.toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pre-filter OiW</span><span className="text-slate-300">{smoothedProc.waterQuality.toFixed(0)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Oil Recovery</span><span className={smoothedProc.oilEff > 90 ? 'text-green-400' : 'text-yellow-400'}>{smoothedProc.oilEff.toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Solids Removal</span><span className={smoothedProc.solidsEff > 95 ? 'text-green-400' : 'text-yellow-400'}>{smoothedProc.solidsEff.toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Pre-filter OiW</span><span className="text-gray-600">{smoothedProc.waterQuality.toFixed(0)} ppm</span></div>
                 </div>
               </div>
               <div className="bg-slate-800 rounded-lg p-4 border border-teal-900/50">
                 <h4 className="text-sm font-semibold text-teal-400 mb-3">🔵 GAC Filter</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Final OiW</span><span className={polishingFilter.outletOiW <= dischargeLimits.oilInWater ? 'text-green-400' : 'text-red-400'}>{polishingFilter.outletOiW.toFixed(0)} ppm</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Final Turbidity</span><span className={polishingFilter.outletTurbidity <= dischargeLimits.turbidity ? 'text-green-400' : 'text-red-400'}>{polishingFilter.outletTurbidity.toFixed(1)} NTU</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Bed Saturation</span><span className={polishingFilter.bedSaturation < 80 ? 'text-green-400' : 'text-yellow-400'}>{polishingFilter.bedSaturation.toFixed(0)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Final OiW</span><span className={polishingFilter.outletOiW <= dischargeLimits.oilInWater ? 'text-green-400' : 'text-red-400'}>{polishingFilter.outletOiW.toFixed(0)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Final Turbidity</span><span className={polishingFilter.outletTurbidity <= dischargeLimits.turbidity ? 'text-green-400' : 'text-red-400'}>{polishingFilter.outletTurbidity.toFixed(1)} NTU</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Bed Saturation</span><span className={polishingFilter.bedSaturation < 80 ? 'text-green-400' : 'text-yellow-400'}>{polishingFilter.bedSaturation.toFixed(0)}%</span></div>
                 </div>
               </div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
                 <h4 className="text-sm font-semibold text-amber-400 mb-3">⚡ Energy</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Total Power</span><span>{smoothedProc.totalPower.toFixed(1)} kW</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Specific Energy</span><span>{computed.specificEnergy.toFixed(1)} kWh/m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Cost Rate</span><span className="text-red-400">${computed.hourly.energyCost.toFixed(2)}/h</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Total Power</span><span>{smoothedProc.totalPower.toFixed(1)} kW</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Specific Energy</span><span>{computed.specificEnergy.toFixed(1)} kWh/m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Cost Rate</span><span className="text-red-400">${computed.hourly.energyCost.toFixed(2)}/h</span></div>
                 </div>
               </div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
                 <h4 className="text-sm font-semibold text-cyan-400 mb-3">📈 Session Totals</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Feed Processed</span><span>{totals.feed.toFixed(2)} m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Oil Recovered</span><span className="text-amber-400">{(totals.oil * 1000).toFixed(1)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Water Discharged</span><span className="text-cyan-400">{totals.water.toFixed(2)} m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Sludge Disposal</span><span className="text-orange-400">{(totals.solids * 1000).toFixed(1)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Energy Used</span><span className="text-yellow-400">{totals.energy.toFixed(1)} kWh</span></div>
-                  <div className="flex justify-between border-t border-slate-600 pt-2 mt-2"><span className="text-slate-400">Run Time</span><span>{formatTime(totals.runTime)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Feed Processed</span><span>{totals.feed.toFixed(2)} m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Oil Recovered</span><span className="text-amber-400">{(totals.oil * 1000).toFixed(1)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Water Discharged</span><span className="text-cyan-400">{totals.water.toFixed(2)} m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Sludge Disposal</span><span className="text-orange-400">{(totals.solids * 1000).toFixed(1)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Energy Used</span><span className="text-yellow-400">{totals.energy.toFixed(1)} kWh</span></div>
+                  <div className="flex justify-between border-t border-slate-600 pt-2 mt-2"><span className="text-gray-500">Run Time</span><span>{formatTime(totals.runTime)}</span></div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-600">
-                  <div className="text-xs text-slate-500 mb-1">Sludge Disposal Cost</div>
+                  <div className="text-xs text-gray-500 mb-1">Sludge Disposal Cost</div>
                   <div className="text-lg font-bold text-orange-400">${(totals.solids * costs.sludgeDisposal).toFixed(2)}</div>
-                  <div className="text-xs text-slate-500">@ ${costs.sludgeDisposal}/m³</div>
+                  <div className="text-xs text-gray-500">@ ${costs.sludgeDisposal}/m³</div>
                 </div>
               </div>
             </div>
@@ -3851,49 +3851,49 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   setDisturbances(p => ({ ...p, compVar: 0.05, tempVar: 0.03, flowVar: 0.02 }));
                 }} className="p-3 bg-green-900/30 hover:bg-green-900/50 border border-green-600 rounded-lg transition-colors">
                   <div className="text-green-400 font-bold text-sm">✅ Normal Feed</div>
-                  <div className="text-xs text-slate-400 mt-1">20% oil, low variability</div>
+                  <div className="text-xs text-gray-500 mt-1">20% oil, low variability</div>
                 </button>
                 <button onClick={() => {
                   setFeedProps(p => ({ ...p, waterFraction: 0.45, oilFraction: 0.45, solidsFraction: 0.10, emulsionStability: 0.7, oilDropletD50: 15 }));
                   setDisturbances(p => ({ ...p, compVar: 0.15, tempVar: 0.08 }));
                 }} className="p-3 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-600 rounded-lg transition-colors">
                   <div className="text-amber-400 font-bold text-sm">🧴 Difficult Emulsion</div>
-                  <div className="text-xs text-slate-400 mt-1">High oil, tight emulsion</div>
+                  <div className="text-xs text-gray-500 mt-1">High oil, tight emulsion</div>
                 </button>
                 <button onClick={() => {
                   setFeedProps(p => ({ ...p, waterFraction: 0.65, oilFraction: 0.15, solidsFraction: 0.20, solidsD50: 120 }));
                   setDisturbances(p => ({ ...p, compVar: 0.20, flowVar: 0.05 }));
                 }} className="p-3 bg-orange-900/30 hover:bg-orange-900/50 border border-orange-600 rounded-lg transition-colors">
                   <div className="text-orange-400 font-bold text-sm">🪨 High Solids</div>
-                  <div className="text-xs text-slate-400 mt-1">20% solids, coarse</div>
+                  <div className="text-xs text-gray-500 mt-1">20% solids, coarse</div>
                 </button>
                 <button onClick={() => {
                   setFeedProps(p => ({ ...p, waterFraction: 0.88, oilFraction: 0.10, solidsFraction: 0.02, oilDropletD50: 35 }));
                   setDisturbances(p => ({ ...p, compVar: 0.03, tempVar: 0.02, flowVar: 0.01 }));
                 }} className="p-3 bg-blue-900/30 hover:bg-blue-900/50 border border-blue-600 rounded-lg transition-colors">
                   <div className="text-blue-400 font-bold text-sm">💧 Water-Rich</div>
-                  <div className="text-xs text-slate-400 mt-1">Low oil, easy separation</div>
+                  <div className="text-xs text-gray-500 mt-1">Low oil, easy separation</div>
                 </button>
                 <button onClick={() => {
                   setFeedProps(p => ({ ...p, waterFraction: 0.50, oilFraction: 0.35, solidsFraction: 0.15, emulsionStability: 0.5 }));
                   setDisturbances(p => ({ ...p, compVar: 0.25, tempVar: 0.10, flowVar: 0.08, pumpCavitation: false }));
                 }} className="p-3 bg-red-900/30 hover:bg-red-900/50 border border-red-600 rounded-lg transition-colors">
                   <div className="text-red-400 font-bold text-sm">⚠️ Upset Conditions</div>
-                  <div className="text-xs text-slate-400 mt-1">High variability</div>
+                  <div className="text-xs text-gray-500 mt-1">High variability</div>
                 </button>
                 <button onClick={() => {
                   setEquipment(p => ({ ...p, bearingCondition: 65 }));
                   setDisturbances(p => ({ ...p, compVar: 0.08, tempVar: 0.05 }));
                 }} className="p-3 bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-600 rounded-lg transition-colors">
                   <div className="text-yellow-400 font-bold text-sm">🔧 Worn Bearings</div>
-                  <div className="text-xs text-slate-400 mt-1">65% condition, high vib</div>
+                  <div className="text-xs text-gray-500 mt-1">65% condition, high vib</div>
                 </button>
                 <button onClick={() => {
                   setFeedProps(p => ({ ...p, waterFraction: 0.30, oilFraction: 0.65, solidsFraction: 0.05, oilDropletD50: 40 }));
                   setDisturbances(p => ({ ...p, compVar: 0.05 }));
                 }} className="p-3 bg-cyan-900/30 hover:bg-cyan-900/50 border border-cyan-600 rounded-lg transition-colors">
                   <div className="text-cyan-400 font-bold text-sm">🛢️ Oil-Rich Slop</div>
-                  <div className="text-xs text-slate-400 mt-1">65% oil content</div>
+                  <div className="text-xs text-gray-500 mt-1">65% oil content</div>
                 </button>
                 <button onClick={() => {
                   // Delta-Canter 20-843A defaults (SACOR)
@@ -3901,21 +3901,21 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   setFeedProps(p => ({ ...p, waterFraction: 0.75, oilFraction: 0.20, solidsFraction: 0.05, oilDensity: 890, solidsDensity: 2650, oilDropletD50: 25, solidsD50: 80, emulsionStability: 0.3, demulsifierEff: 0.7 }));
                   setDisturbances(p => ({ ...p, compVar: 0.10, tempVar: 0.05, flowVar: 0.03, pumpCavitation: false }));
                   setLoops(p => ({ ...p, FIC: { ...p.FIC, sp: 15 }, SIC: { ...p.SIC, sp: 3200 } }));
-                }} className="p-3 bg-slate-700 hover:bg-slate-600 border border-slate-500 rounded-lg transition-colors">
-                  <div className="text-slate-300 font-bold text-sm">🔄 Reset Defaults</div>
-                  <div className="text-xs text-slate-400 mt-1">Delta-Canter 20-843A</div>
+                }} className="p-3 bg-gray-100 hover:bg-gray-200 border border-slate-500 rounded-lg transition-colors">
+                  <div className="text-gray-600 font-bold text-sm">🔄 Reset Defaults</div>
+                  <div className="text-xs text-gray-500 mt-1">Delta-Canter 20-843A</div>
                 </button>
               </div>
             </div>
             
-            <p className="text-slate-400 text-sm">Click any input field and type directly to change values.</p>
+            <p className="text-gray-500 text-sm">Click any input field and type directly to change values.</p>
             
             {/* Equipment */}
             <div className="bg-slate-800 rounded-lg p-5 border border-cyan-900/50">
               <h3 className="text-lg font-semibold text-cyan-400 mb-4">🔧 Equipment Specifications</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Heater</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Heater</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <Field label="Capacity" value={equipment.heaterCapacity} onChange={v => setEquipment(p => ({ ...p, heaterCapacity: v }))} unit="kW" />
                     <Field label="Efficiency" value={equipment.heaterEfficiency} onChange={v => setEquipment(p => ({ ...p, heaterEfficiency: v }))} unit="%" />
@@ -3924,7 +3924,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Centrifuge</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Centrifuge</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <Field label="Motor Capacity" value={equipment.centrifugeCapacity} onChange={v => setEquipment(p => ({ ...p, centrifugeCapacity: v }))} unit="kW" />
                     <Field label="Max RPM" value={equipment.maxRPM} onChange={v => setEquipment(p => ({ ...p, maxRPM: v }))} unit="RPM" />
@@ -3942,7 +3942,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <h3 className="text-lg font-semibold text-amber-400 mb-4">🛢️ Feed Properties</h3>
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Composition</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Composition</h4>
                   <div className="space-y-3">
                     <Field label="Water Fraction" value={feedProps.waterFraction} onChange={v => setFeedProps(p => ({ ...p, waterFraction: v }))} min={0} max={1} />
                     <Field label="Oil Fraction" value={feedProps.oilFraction} onChange={v => setFeedProps(p => ({ ...p, oilFraction: v }))} min={0} max={1} />
@@ -3950,14 +3950,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Physical</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Physical</h4>
                   <div className="space-y-3">
                     <Field label="Oil Density" value={feedProps.oilDensity} onChange={v => setFeedProps(p => ({ ...p, oilDensity: v }))} unit="kg/m³" />
                     <Field label="Solids Density" value={feedProps.solidsDensity} onChange={v => setFeedProps(p => ({ ...p, solidsDensity: v }))} unit="kg/m³" />
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Particle Size</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Particle Size</h4>
                   <div className="space-y-3">
                     <Field label="Oil Droplet D50" value={feedProps.oilDropletD50} onChange={v => setFeedProps(p => ({ ...p, oilDropletD50: v }))} unit="μm" />
                     <Field label="Solids D50" value={feedProps.solidsD50} onChange={v => setFeedProps(p => ({ ...p, solidsD50: v }))} unit="μm" />
@@ -3972,40 +3972,40 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <h3 className="text-lg font-semibold text-orange-400 mb-4">⚠️ Process Disturbances</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Variability</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Variability</h4>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs text-slate-400 flex justify-between mb-1">
+                      <label className="text-xs text-gray-500 flex justify-between mb-1">
                         <span>Composition Variability</span>
                         <span className="text-orange-400 font-bold">{(disturbances.compVar * 100).toFixed(0)}%</span>
                       </label>
-                      <input type="range" min="0" max="0.3" step="0.01" value={disturbances.compVar} onChange={e => setDisturbances(p => ({ ...p, compVar: +e.target.value }))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" />
+                      <input type="range" min="0" max="0.3" step="0.01" value={disturbances.compVar} onChange={e => setDisturbances(p => ({ ...p, compVar: +e.target.value }))} className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 flex justify-between mb-1">
+                      <label className="text-xs text-gray-500 flex justify-between mb-1">
                         <span>Temperature Variability</span>
                         <span className="text-orange-400 font-bold">{(disturbances.tempVar * 100).toFixed(0)}%</span>
                       </label>
-                      <input type="range" min="0" max="0.2" step="0.01" value={disturbances.tempVar} onChange={e => setDisturbances(p => ({ ...p, tempVar: +e.target.value }))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" />
+                      <input type="range" min="0" max="0.2" step="0.01" value={disturbances.tempVar} onChange={e => setDisturbances(p => ({ ...p, tempVar: +e.target.value }))} className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 flex justify-between mb-1">
+                      <label className="text-xs text-gray-500 flex justify-between mb-1">
                         <span>Flow Variability</span>
                         <span className="text-orange-400 font-bold">{(disturbances.flowVar * 100).toFixed(1)}%</span>
                       </label>
-                      <input type="range" min="0" max="0.1" step="0.005" value={disturbances.flowVar} onChange={e => setDisturbances(p => ({ ...p, flowVar: +e.target.value }))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" />
+                      <input type="range" min="0" max="0.1" step="0.005" value={disturbances.flowVar} onChange={e => setDisturbances(p => ({ ...p, flowVar: +e.target.value }))} className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
                     </div>
                     <Field label="Ambient Temp" value={disturbances.ambientTemp} onChange={v => setDisturbances(p => ({ ...p, ambientTemp: v }))} unit="°C" />
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Step Disturbances</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Step Disturbances</h4>
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <button 
                         onClick={() => setDisturbances(p => ({ ...p, slugEnabled: true, slugRemain: p.slugDur }))} 
                         disabled={disturbances.slugRemain > 0}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-slate-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
                       >
                         🌊 Inject Slug
                       </button>
@@ -4018,7 +4018,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <Field label="Slug Duration" value={disturbances.slugDur} onChange={v => setDisturbances(p => ({ ...p, slugDur: v }))} unit="s" />
                     </div>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={disturbances.pumpCavitation} onChange={e => setDisturbances(p => ({ ...p, pumpCavitation: e.target.checked }))} className="w-5 h-5 rounded bg-slate-700 border-slate-600" />
+                      <input type="checkbox" checked={disturbances.pumpCavitation} onChange={e => setDisturbances(p => ({ ...p, pumpCavitation: e.target.checked }))} className="w-5 h-5 rounded bg-gray-100 border-slate-600" />
                       <span className="text-sm">Pump Cavitation</span>
                     </label>
                   </div>
@@ -4033,41 +4033,41 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
                 {/* Feedstock Selector */}
                 <div className="mb-4">
-                  <label className="block text-sm text-slate-400 mb-2">Feed Material</label>
+                  <label className="block text-sm text-gray-500 mb-2">Feed Material</label>
                   <select
                     value={selectedFeedstock}
                     onChange={(e) => setSelectedFeedstock(e.target.value as keyof typeof feedstockTypes)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-gray-100 border border-slate-600 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
                     {Object.entries(feedstockTypes).map(([key, type]) => (
                       <option key={key} value={key}>{type.name} - ${type.oilValue}/m³</option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-500 mt-1">{feedstockTypes[selectedFeedstock].description}</p>
+                  <p className="text-xs text-gray-500 mt-1">{feedstockTypes[selectedFeedstock].description}</p>
                 </div>
 
                 {/* Feedstock Characteristics */}
-                <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-slate-700/50 rounded-lg">
+                <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-100/50 rounded-lg">
                   <div>
-                    <span className="text-xs text-slate-500">Typical Oil Content</span>
+                    <span className="text-xs text-gray-500">Typical Oil Content</span>
                     <div className={`font-mono font-bold ${feedstockTypes[selectedFeedstock].color}`}>
                       {feedstockTypes[selectedFeedstock].oilContent}%
                     </div>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500">Typical Solids</span>
+                    <span className="text-xs text-gray-500">Typical Solids</span>
                     <div className="font-mono font-bold text-amber-400">
                       {feedstockTypes[selectedFeedstock].solidsContent}%
                     </div>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500">Oil Value</span>
+                    <span className="text-xs text-gray-500">Oil Value</span>
                     <div className="font-mono font-bold text-green-400">
                       ${feedstockTypes[selectedFeedstock].oilValue}/m³
                     </div>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500">Per Liter</span>
+                    <span className="text-xs text-gray-500">Per Liter</span>
                     <div className="font-mono font-bold text-green-400">
                       ${(feedstockTypes[selectedFeedstock].oilValue / 1000).toFixed(2)}/L
                     </div>
@@ -4076,11 +4076,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
                 {/* Transport Destination */}
                 <div className="mb-4">
-                  <label className="block text-sm text-slate-400 mb-2">Transport Destination</label>
+                  <label className="block text-sm text-gray-500 mb-2">Transport Destination</label>
                   <select
                     value={selectedDestination}
                     onChange={(e) => setSelectedDestination(e.target.value as keyof typeof transportDestinations)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-gray-100 border border-slate-600 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
                     {Object.entries(transportDestinations).map(([key, dest]) => (
                       <option key={key} value={key}>{dest.name} - ${dest.cost}/m³ ({dest.distance})</option>
@@ -4091,12 +4091,12 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 {/* Net Oil Value Summary */}
                 <div className="p-3 bg-green-900/30 border border-green-700 rounded-lg">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-300">Net Oil Value (after transport)</span>
+                    <span className="text-sm text-gray-600">Net Oil Value (after transport)</span>
                     <span className="text-xl font-bold text-green-400">
                       ${(costs.oilValue - costs.oilTransport).toLocaleString()}/m³
                     </span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">
+                  <div className="text-xs text-gray-500 mt-1">
                     ${costs.oilValue}/m³ value − ${costs.oilTransport}/m³ transport = ${((costs.oilValue - costs.oilTransport) / 1000).toFixed(2)}/L net
                   </div>
                 </div>
@@ -4114,23 +4114,23 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 </div>
 
                 {/* Price Reference */}
-                <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
-                  <h4 className="text-xs font-semibold text-slate-400 mb-2">📊 Oil Price Reference (Brent ~$75/bbl)</h4>
+                <div className="mt-4 p-3 bg-gray-100/50 rounded-lg">
+                  <h4 className="text-xs font-semibold text-gray-500 mb-2">📊 Oil Price Reference (Brent ~$75/bbl)</h4>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Light Sweet:</span>
+                      <span className="text-gray-500">Light Sweet:</span>
                       <span className="text-green-400">$400-520/m³</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Heavy Sour:</span>
+                      <span className="text-gray-500">Heavy Sour:</span>
                       <span className="text-orange-400">$280-380/m³</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Slop Oil:</span>
+                      <span className="text-gray-500">Slop Oil:</span>
                       <span className="text-purple-400">$350-450/m³</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Tank Bottoms:</span>
+                      <span className="text-gray-500">Tank Bottoms:</span>
                       <span className="text-amber-400">$200-300/m³</span>
                     </div>
                   </div>
@@ -4156,47 +4156,47 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     type="checkbox"
                     checked={dischargeLimits.enabled}
                     onChange={e => setDischargeLimits(p => ({ ...p, enabled: e.target.checked }))}
-                    className="w-5 h-5 rounded bg-slate-700 border-slate-600"
+                    className="w-5 h-5 rounded bg-gray-100 border-slate-600"
                   />
-                  <span className="text-sm text-slate-300">Enable Limit Checking</span>
+                  <span className="text-sm text-gray-600">Enable Limit Checking</span>
                 </label>
               </div>
 
               {/* Current Compliance Status */}
               {dischargeLimits.enabled && (
-                <div className="mb-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
-                  <div className="text-xs text-slate-400 mb-2 font-semibold">CURRENT DISCHARGE STATUS (Post-GAC Filter)</div>
+                <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                  <div className="text-xs text-gray-500 mb-2 font-semibold">CURRENT DISCHARGE STATUS (Post-GAC Filter)</div>
                   <div className="grid grid-cols-5 gap-3 text-center text-sm">
                     <div className={`p-2 rounded ${polishingFilter.outletOiW <= dischargeLimits.oilInWater ? 'bg-green-900/30 border border-green-500/50' : 'bg-red-900/30 border border-red-500/50'}`}>
-                      <div className="text-xs text-slate-400">OiW</div>
+                      <div className="text-xs text-gray-500">OiW</div>
                       <div className={`font-bold ${polishingFilter.outletOiW <= dischargeLimits.oilInWater ? 'text-green-400' : 'text-red-400'}`}>
                         {polishingFilter.outletOiW.toFixed(0)} / {dischargeLimits.oilInWater} ppm
                       </div>
                       <div className="text-xs">{polishingFilter.outletOiW <= dischargeLimits.oilInWater ? '✓ PASS' : '✗ FAIL'}</div>
                     </div>
                     <div className={`p-2 rounded ${(pond.oilInWater || polishingFilter.outletOiW) <= dischargeLimits.tph ? 'bg-green-900/30 border border-green-500/50' : 'bg-red-900/30 border border-red-500/50'}`}>
-                      <div className="text-xs text-slate-400">Pond TPH</div>
+                      <div className="text-xs text-gray-500">Pond TPH</div>
                       <div className={`font-bold ${(pond.oilInWater || polishingFilter.outletOiW) <= dischargeLimits.tph ? 'text-green-400' : 'text-red-400'}`}>
                         {(pond.oilInWater || polishingFilter.outletOiW).toFixed(0)} / {dischargeLimits.tph} ppm
                       </div>
                       <div className="text-xs">{(pond.oilInWater || polishingFilter.outletOiW) <= dischargeLimits.tph ? '✓ PASS' : '✗ FAIL'}</div>
                     </div>
                     <div className={`p-2 rounded ${polishingFilter.outletTurbidity <= dischargeLimits.turbidity ? 'bg-green-900/30 border border-green-500/50' : 'bg-red-900/30 border border-red-500/50'}`}>
-                      <div className="text-xs text-slate-400">Turbidity</div>
+                      <div className="text-xs text-gray-500">Turbidity</div>
                       <div className={`font-bold ${polishingFilter.outletTurbidity <= dischargeLimits.turbidity ? 'text-green-400' : 'text-red-400'}`}>
                         {polishingFilter.outletTurbidity.toFixed(1)} / {dischargeLimits.turbidity} NTU
                       </div>
                       <div className="text-xs">{polishingFilter.outletTurbidity <= dischargeLimits.turbidity ? '✓ PASS' : '✗ FAIL'}</div>
                     </div>
                     <div className={`p-2 rounded ${(pond.pH >= dischargeLimits.pH.min && pond.pH <= dischargeLimits.pH.max) ? 'bg-green-900/30 border border-green-500/50' : 'bg-red-900/30 border border-red-500/50'}`}>
-                      <div className="text-xs text-slate-400">pH</div>
+                      <div className="text-xs text-gray-500">pH</div>
                       <div className={`font-bold ${(pond.pH >= dischargeLimits.pH.min && pond.pH <= dischargeLimits.pH.max) ? 'text-green-400' : 'text-red-400'}`}>
                         {pond.pH.toFixed(1)} ({dischargeLimits.pH.min}-{dischargeLimits.pH.max})
                       </div>
                       <div className="text-xs">{(pond.pH >= dischargeLimits.pH.min && pond.pH <= dischargeLimits.pH.max) ? '✓ PASS' : '✗ FAIL'}</div>
                     </div>
                     <div className={`p-2 rounded ${smoothedProc.bowlTemp <= dischargeLimits.temperature ? 'bg-green-900/30 border border-green-500/50' : 'bg-yellow-900/30 border border-yellow-500/50'}`}>
-                      <div className="text-xs text-slate-400">Temp</div>
+                      <div className="text-xs text-gray-500">Temp</div>
                       <div className={`font-bold ${smoothedProc.bowlTemp <= dischargeLimits.temperature ? 'text-green-400' : 'text-yellow-400'}`}>
                         {smoothedProc.bowlTemp.toFixed(0)} / {dischargeLimits.temperature} °C
                       </div>
@@ -4223,7 +4223,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Operational Limits</h4>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Operational Limits</h4>
                   <div className="space-y-3">
                     <Field label="Max Oil-in-Water" value={dischargeLimits.oilInWater} onChange={v => setDischargeLimits(p => ({ ...p, oilInWater: v }))} unit="ppm" min={1} max={100} />
                     <Field label="Pond TPH (internal)" value={dischargeLimits.tph} onChange={v => setDischargeLimits(p => ({ ...p, tph: v }))} unit="ppm" min={50} max={1000} />
@@ -4233,19 +4233,19 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Scientific Basis</h4>
-                  <div className="space-y-2 text-xs text-slate-400">
-                    <div className="p-2 bg-slate-700/30 rounded">
+                  <h4 className="text-sm font-semibold text-gray-600 mb-3 border-b border-gray-200 pb-2">Scientific Basis</h4>
+                  <div className="space-y-2 text-xs text-gray-500">
+                    <div className="p-2 bg-gray-100/30 rounded">
                       <div className="font-semibold text-amber-400">TRH (Total Recoverable HC)</div>
                       <div>TRH = OiW + Dissolved HC (~30%)</div>
                       <div>GAC removes dissolved fraction</div>
                     </div>
-                    <div className="p-2 bg-slate-700/30 rounded">
+                    <div className="p-2 bg-gray-100/30 rounded">
                       <div className="font-semibold text-purple-400">COD (Chemical Oxygen Demand)</div>
                       <div>COD ≈ 3.5 × Oil(mg/L) + organics</div>
                       <div>Stoichiometric O₂ for oxidation</div>
                     </div>
-                    <div className="p-2 bg-slate-700/30 rounded">
+                    <div className="p-2 bg-gray-100/30 rounded">
                       <div className="font-semibold text-green-400">pH 6-9</div>
                       <div>Aquatic life protection range</div>
                       <div>Controlled via acid/caustic dosing</div>
@@ -4285,16 +4285,16 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${isTracking ? 'bg-green-400' : 'bg-amber-400 animate-pulse'}`}></span>
-                        <span className="font-bold text-slate-300">{l.tag}</span>
+                        <span className="font-bold text-gray-600">{l.tag}</span>
                         <span className={`text-xs px-1.5 py-0.5 rounded ${l.mode === 'AUTO' ? 'bg-green-600' : 'bg-amber-600'}`}>{l.mode}</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-slate-500">PV / SP</div>
+                        <div className="text-xs text-gray-500">PV / SP</div>
                         <div className="font-mono">
                           <span className={isTracking ? 'text-green-400' : 'text-amber-400'}>{pv?.toFixed(1)}</span>
-                          <span className="text-slate-500"> / </span>
-                          <span className="text-slate-300">{l.sp?.toFixed(1)}</span>
-                          <span className="text-xs text-slate-500 ml-1">{units[k]}</span>
+                          <span className="text-gray-500"> / </span>
+                          <span className="text-gray-600">{l.sp?.toFixed(1)}</span>
+                          <span className="text-xs text-gray-500 ml-1">{units[k]}</span>
                         </div>
                       </div>
                     </div>
@@ -4304,24 +4304,24 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             </div>
 
             {/* Detailed Controller Cards */}
-            <h3 className="text-lg font-semibold text-slate-400 border-b border-slate-700 pb-2">PID Controller Tuning</h3>
+            <h3 className="text-lg font-semibold text-gray-500 border-b border-gray-200 pb-2">PID Controller Tuning</h3>
             <div className="grid md:grid-cols-3 gap-6">
               {Object.entries(loops).map(([k, l]) => {
                 const smoothedPVMap = { TIC: smoothedProc.heaterTemp, FIC: smoothedProc.feedFlow, SIC: smoothedProc.bowlSpeed };
                 const displayPV = smoothedPVMap[k] || l.pv;
                 return (
-                <div key={k} className="bg-slate-800 rounded-xl p-5 border border-slate-700">
+                <div key={k} className="bg-slate-800 rounded-xl p-5 border border-gray-200">
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <h3 className="font-bold text-cyan-400 text-lg">{l.tag}</h3>
-                      <div className="text-sm text-slate-400">{l.desc}</div>
+                      <div className="text-sm text-gray-500">{l.desc}</div>
                     </div>
                     <div className="flex gap-2">
                       {['AUTO', 'MAN'].map(m => (
                         <button 
                           key={m} 
                           onClick={() => setLoops(p => ({ ...p, [k]: { ...p[k], mode: m } }))} 
-                          className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${l.mode === m ? (m === 'AUTO' ? 'bg-green-600' : 'bg-amber-600') : 'bg-slate-600 hover:bg-slate-500'}`}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${l.mode === m ? (m === 'AUTO' ? 'bg-green-600' : 'bg-amber-600') : 'bg-gray-300 hover:bg-slate-500'}`}
                         >
                           {m}
                         </button>
@@ -4331,20 +4331,20 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   
                   {/* PV/SP/OP Display */}
                   <div className="grid grid-cols-4 gap-3 mb-4 text-center">
-                    <div className="bg-slate-700/50 rounded-lg p-2">
-                      <div className="text-xs text-slate-500 mb-1">PV</div>
+                    <div className="bg-gray-100/50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500 mb-1">PV</div>
                       <div className="text-2xl font-bold">{displayPV?.toFixed(1)}</div>
                     </div>
-                    <div className="bg-slate-700/50 rounded-lg p-2">
-                      <div className="text-xs text-slate-500 mb-1">SP</div>
+                    <div className="bg-gray-100/50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500 mb-1">SP</div>
                       <NumInput value={l.sp} onChange={v => setLoops(p => ({ ...p, [k]: { ...p[k], sp: v } }))} className="w-full text-xl text-green-400 font-bold" />
                     </div>
-                    <div className="bg-slate-700/50 rounded-lg p-2">
-                      <div className="text-xs text-slate-500 mb-1">OP%</div>
+                    <div className="bg-gray-100/50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500 mb-1">OP%</div>
                       <div className="text-2xl font-bold text-blue-400">{l.op?.toFixed(1)}</div>
                     </div>
-                    <div className="bg-slate-700/50 rounded-lg p-2">
-                      <div className="text-xs text-slate-500 mb-1">ERR</div>
+                    <div className="bg-gray-100/50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500 mb-1">ERR</div>
                       <div className={`text-2xl font-bold ${Math.abs(displayPV - l.sp) > 1 ? 'text-yellow-400' : 'text-green-400'}`}>
                         {(displayPV - l.sp)?.toFixed(1)}
                       </div>
@@ -4354,15 +4354,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   {/* PID Gains */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-xs text-slate-500">Kp</label>
+                      <label className="text-xs text-gray-500">Kp</label>
                       <NumInput value={l.kp} onChange={v => setLoops(p => ({ ...p, [k]: { ...p[k], kp: v } }))} className="w-full text-sm" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500">Ki</label>
+                      <label className="text-xs text-gray-500">Ki</label>
                       <NumInput value={l.ki} onChange={v => setLoops(p => ({ ...p, [k]: { ...p[k], ki: v } }))} className="w-full text-sm" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500">Kd</label>
+                      <label className="text-xs text-gray-500">Kd</label>
                       <NumInput value={l.kd} onChange={v => setLoops(p => ({ ...p, [k]: { ...p[k], kd: v } }))} className="w-full text-sm" />
                     </div>
                   </div>
@@ -4375,7 +4375,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/*           AUTOMATIC QUALITY CONTROL (AQC) PANEL                */}
             {/* ═══════════════════════════════════════════════════════════════ */}
             <div className="mt-6">
-              <h3 className="text-lg font-semibold text-slate-400 border-b border-slate-700 pb-2 mb-4">🤖 Automatic Quality Control (AQC)</h3>
+              <h3 className="text-lg font-semibold text-gray-500 border-b border-gray-200 pb-2 mb-4">🤖 Automatic Quality Control (AQC)</h3>
 
               {/* AQC Master Control */}
               <div className={`rounded-xl p-5 border-2 ${aqc.enabled ? (aqc.status === 'OK' ? 'bg-green-900/20 border-green-500' : aqc.status === 'WARNING' ? 'bg-amber-900/20 border-amber-500' : 'bg-red-900/20 border-red-500') : 'bg-slate-800 border-slate-600'}`}>
@@ -4386,7 +4386,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         type="checkbox"
                         checked={aqc.enabled}
                         onChange={e => setAqc(p => ({ ...p, enabled: e.target.checked }))}
-                        className="w-6 h-6 rounded bg-slate-700 border-slate-600 accent-green-500"
+                        className="w-6 h-6 rounded bg-gray-100 border-slate-600 accent-green-500"
                       />
                       <span className="font-bold text-lg">AQC {aqc.enabled ? 'ENABLED' : 'DISABLED'}</span>
                     </label>
@@ -4399,7 +4399,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                             className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
                               aqc.mode === m
                                 ? m === 'AUTO' ? 'bg-green-600' : m === 'ADVISORY' ? 'bg-blue-600' : 'bg-slate-500'
-                                : 'bg-slate-700 hover:bg-slate-600'
+                                : 'bg-gray-100 hover:bg-gray-200'
                             }`}
                           >
                             {m}
@@ -4411,7 +4411,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   {aqc.enabled && (
                     <div className="flex items-center gap-4">
                       <div className="text-center">
-                        <div className="text-xs text-slate-500">Quality Score</div>
+                        <div className="text-xs text-gray-500">Quality Score</div>
                         <div className={`text-3xl font-bold ${aqc.qualityScore >= 70 ? 'text-green-400' : aqc.qualityScore >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
                           {aqc.qualityScore.toFixed(0)}
                         </div>
@@ -4419,7 +4419,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <div className={`px-4 py-2 rounded-lg font-bold ${
                         aqc.status === 'OK' ? 'bg-green-600' :
                         aqc.status === 'WARNING' ? 'bg-amber-600' :
-                        aqc.status === 'ALARM' ? 'bg-red-600 animate-pulse' : 'bg-slate-600'
+                        aqc.status === 'ALARM' ? 'bg-red-600 animate-pulse' : 'bg-gray-300'
                       }`}>
                         {aqc.status}
                       </div>
@@ -4450,13 +4450,13 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                           : (pctOfLimit >= target?.criticalPct ? 'CRITICAL' : pctOfLimit >= target?.warningPct ? 'WARNING' : 'OK');
                         return (
                           <div key={param.key} className={`rounded-lg p-3 border ${status === 'OK' ? 'bg-green-900/20 border-green-500/50' : status === 'WARNING' ? 'bg-amber-900/20 border-amber-500/50' : 'bg-red-900/20 border-red-500/50'}`}>
-                            <div className="text-xs text-slate-400">{param.label}</div>
+                            <div className="text-xs text-gray-500">{param.label}</div>
                             <div className={`text-xl font-bold ${status === 'OK' ? 'text-green-400' : status === 'WARNING' ? 'text-amber-400' : 'text-red-400'}`}>
                               {value.toFixed(param.key === 'pH' ? 1 : 0)} {param.unit}
                             </div>
-                            <div className="text-xs text-slate-500">Limit: {param.limit}</div>
+                            <div className="text-xs text-gray-500">Limit: {param.limit}</div>
                             {param.key !== 'pH' && (
-                              <div className="h-1.5 bg-slate-700 rounded mt-1">
+                              <div className="h-1.5 bg-gray-100 rounded mt-1">
                                 <div
                                   className={`h-full rounded ${status === 'OK' ? 'bg-green-500' : status === 'WARNING' ? 'bg-amber-500' : 'bg-red-500'}`}
                                   style={{ width: `${Math.min(100, pctOfLimit)}%` }}
@@ -4469,7 +4469,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </div>
 
                     {/* Mode Description */}
-                    <div className="text-sm text-slate-400 mb-4 p-3 bg-slate-800/50 rounded-lg">
+                    <div className="text-sm text-gray-500 mb-4 p-3 bg-slate-800/50 rounded-lg">
                       {aqc.mode === 'MONITOR' && '📊 MONITOR: Quality parameters are tracked and displayed. No actions are taken or recommended.'}
                       {aqc.mode === 'ADVISORY' && '💡 ADVISORY: Recommended corrective actions are displayed below when quality degrades. Operator must apply manually.'}
                       {aqc.mode === 'AUTO' && '🤖 AUTO: System automatically adjusts process controls to maintain discharge quality within limits.'}
@@ -4483,10 +4483,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         </h4>
                         <div className="space-y-2">
                           {aqc.activeCorrections.slice(0, 3).map((action, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                            <div key={i} className="flex items-center justify-between p-3 bg-gray-100/50 rounded-lg">
                               <div>
                                 <div className="font-medium text-slate-200">{action.action}</div>
-                                <div className="text-xs text-slate-400">{action.reason}</div>
+                                <div className="text-xs text-gray-500">{action.reason}</div>
                               </div>
                               {aqc.mode === 'ADVISORY' && (
                                 <button
@@ -4510,13 +4510,13 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     {/* Recent Action History */}
                     {aqc.actionHistory.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-slate-400 mb-2">📜 Recent AQC Actions</h4>
+                        <h4 className="text-sm font-semibold text-gray-500 mb-2">📜 Recent AQC Actions</h4>
                         <div className="max-h-32 overflow-y-auto space-y-1">
                           {aqc.actionHistory.slice(0, 5).map((action, i) => (
                             <div key={i} className="flex items-center justify-between text-xs p-2 bg-slate-800/50 rounded">
-                              <span className="text-slate-500">{formatTime(action.time)}</span>
-                              <span className="text-slate-300">{action.action}</span>
-                              <span className="text-slate-500">{action.reason}</span>
+                              <span className="text-gray-500">{formatTime(action.time)}</span>
+                              <span className="text-gray-600">{action.action}</span>
+                              <span className="text-gray-500">{action.reason}</span>
                             </div>
                           ))}
                         </div>
@@ -4526,7 +4526,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 )}
 
                 {!aqc.enabled && (
-                  <div className="text-center text-slate-500 py-4">
+                  <div className="text-center text-gray-500 py-4">
                     <p>Enable AQC to automatically monitor and control discharge quality.</p>
                     <p className="text-xs mt-2">AQC adjusts feed flow, temperature, bowl speed, and chemical dosing to maintain compliance.</p>
                   </div>
@@ -4544,12 +4544,12 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">💉 Chemical Dosing Control System</h2>
               <div className="flex gap-4 items-center">
-                <div className="px-4 py-2 bg-slate-700 rounded-lg">
-                  <span className="text-slate-400 text-sm">Total Chemical Cost:</span>
+                <div className="px-4 py-2 bg-gray-100 rounded-lg">
+                  <span className="text-gray-500 text-sm">Total Chemical Cost:</span>
                   <span className="text-green-400 font-bold ml-2">${chemCosts.total.toFixed(2)}/session</span>
                 </div>
-                <div className="px-4 py-2 bg-slate-700 rounded-lg">
-                  <span className="text-slate-400 text-sm">Mixing Efficiency:</span>
+                <div className="px-4 py-2 bg-gray-100 rounded-lg">
+                  <span className="text-gray-500 text-sm">Mixing Efficiency:</span>
                   <span className={`font-bold ml-2 ${chemState.mixingEfficiency > 0.8 ? 'text-green-400' : chemState.mixingEfficiency > 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
                     {(chemState.mixingEfficiency * 100).toFixed(1)}%
                   </span>
@@ -4561,9 +4561,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             <div className="grid md:grid-cols-5 gap-4">
               <div className="bg-slate-800 rounded-xl p-4 border border-purple-900/50">
                 <div className="text-sm text-purple-400 mb-1">Zeta Potential</div>
-                <div className="text-2xl font-bold">{chemState.zetaPotential.toFixed(1)} <span className="text-sm text-slate-400">mV</span></div>
-                <div className="text-xs text-slate-500 mt-1">Target: 0 mV (isoelectric)</div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-2xl font-bold">{chemState.zetaPotential.toFixed(1)} <span className="text-sm text-gray-500">mV</span></div>
+                <div className="text-xs text-gray-500 mt-1">Target: 0 mV (isoelectric)</div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div
                     className={`h-full rounded ${Math.abs(chemState.zetaPotential) < 5 ? 'bg-green-500' : Math.abs(chemState.zetaPotential) < 15 ? 'bg-yellow-500' : 'bg-red-500'}`}
                     style={{ width: `${Math.max(5, 100 - Math.abs(chemState.zetaPotential) * 2)}%` }}
@@ -4572,33 +4572,33 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-amber-900/50">
                 <div className="text-sm text-amber-400 mb-1">Floc Diameter</div>
-                <div className="text-2xl font-bold">{chemState.flocDiameter.toFixed(0)} <span className="text-sm text-slate-400">μm</span></div>
-                <div className="text-xs text-slate-500 mt-1">Base: {feedProps.solidsD50} μm</div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-2xl font-bold">{chemState.flocDiameter.toFixed(0)} <span className="text-sm text-gray-500">μm</span></div>
+                <div className="text-xs text-gray-500 mt-1">Base: {feedProps.solidsD50} μm</div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className="h-full bg-amber-500 rounded" style={{ width: `${Math.min(100, chemState.flocDiameter / 3)}%` }} />
                 </div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-cyan-900/50">
                 <div className="text-sm text-cyan-400 mb-1">Emulsion Breaking</div>
-                <div className="text-2xl font-bold">{(chemState.emulsionBreaking * 100).toFixed(1)} <span className="text-sm text-slate-400">%</span></div>
-                <div className="text-xs text-slate-500 mt-1">Higher = better separation</div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-2xl font-bold">{(chemState.emulsionBreaking * 100).toFixed(1)} <span className="text-sm text-gray-500">%</span></div>
+                <div className="text-xs text-gray-500 mt-1">Higher = better separation</div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className={`h-full rounded ${chemState.emulsionBreaking > 0.7 ? 'bg-green-500' : chemState.emulsionBreaking > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${chemState.emulsionBreaking * 100}%` }} />
                 </div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-orange-900/50">
                 <div className="text-sm text-orange-400 mb-1">Foam Level</div>
-                <div className="text-2xl font-bold">{(chemState.foamHeight * 100).toFixed(1)} <span className="text-sm text-slate-400">%</span></div>
-                <div className="text-xs text-slate-500 mt-1">Target: {'<'}10%</div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-2xl font-bold">{(chemState.foamHeight * 100).toFixed(1)} <span className="text-sm text-gray-500">%</span></div>
+                <div className="text-xs text-gray-500 mt-1">Target: {'<'}10%</div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className={`h-full rounded ${chemState.foamHeight < 0.1 ? 'bg-green-500' : chemState.foamHeight < 0.3 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${chemState.foamHeight * 100}%` }} />
                 </div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-red-900/50">
                 <div className="text-sm text-red-400 mb-1">Scaling Risk</div>
-                <div className="text-2xl font-bold">{(chemState.scalingRisk * 100).toFixed(1)} <span className="text-sm text-slate-400">%</span></div>
-                <div className="text-xs text-slate-500 mt-1">LSI: {chemDosing.scaleInhibitor.scalingIndex?.toFixed(2) || '0.00'}</div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-2xl font-bold">{(chemState.scalingRisk * 100).toFixed(1)} <span className="text-sm text-gray-500">%</span></div>
+                <div className="text-xs text-gray-500 mt-1">LSI: {chemDosing.scaleInhibitor.scalingIndex?.toFixed(2) || '0.00'}</div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className={`h-full rounded ${chemState.scalingRisk < 0.3 ? 'bg-green-500' : chemState.scalingRisk < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${chemState.scalingRisk * 100}%` }} />
                 </div>
               </div>
@@ -4607,29 +4607,29 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* Chemical Dosing Cards */}
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
               {/* Demulsifier */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.demulsifier.enabled ? 'border-cyan-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.demulsifier.enabled ? 'border-cyan-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-cyan-900/50 flex items-center justify-center text-xl">🧪</div>
                     <div>
                       <h4 className="font-semibold text-cyan-400">{CONFIG.chemicals.demulsifier.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.demulsifier.tag}</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.demulsifier.tag}</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.demulsifier.enabled} onChange={(e) => setChemDosing(p => ({ ...p, demulsifier: { ...p.demulsifier, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Mode</div>
-                    <select value={chemDosing.demulsifier.mode} onChange={(e) => setChemDosing(p => ({ ...p, demulsifier: { ...p.demulsifier, mode: e.target.value } }))} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+                    <div className="text-xs text-gray-500 mb-1">Mode</div>
+                    <select value={chemDosing.demulsifier.mode} onChange={(e) => setChemDosing(p => ({ ...p, demulsifier: { ...p.demulsifier, mode: e.target.value } }))} className="w-full bg-gray-100 border border-slate-600 rounded px-2 py-1.5 text-sm">
                       {Object.keys(CONFIG.dosingModes).map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">
+                    <div className="text-xs text-gray-500 mb-1">
                       {chemDosing.demulsifier.mode === 'RATIO' ? 'Ratio (ppm/% oil)' : chemDosing.demulsifier.mode === 'MANUAL' ? 'Setpoint (ppm)' : 'Target (%)'}
                     </div>
                     <NumInput
@@ -4640,42 +4640,42 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Actual Dose:</span><span className="text-cyan-400 font-mono">{chemDosing.demulsifier.pv.toFixed(1)} ppm</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pump Rate:</span><span className="font-mono">{chemDosing.demulsifier.pumpRate.toFixed(2)} L/h</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pump Output:</span><span className="font-mono">{chemDosing.demulsifier.op.toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Surface Coverage:</span><span className="text-green-400 font-mono">{(chemDosing.demulsifier.surfaceCoverage * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.demulsifier.inventory < 100 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.demulsifier.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.demulsifier.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Actual Dose:</span><span className="text-cyan-400 font-mono">{chemDosing.demulsifier.pv.toFixed(1)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Pump Rate:</span><span className="font-mono">{chemDosing.demulsifier.pumpRate.toFixed(2)} L/h</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Pump Output:</span><span className="font-mono">{chemDosing.demulsifier.op.toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Surface Coverage:</span><span className="text-green-400 font-mono">{(chemDosing.demulsifier.surfaceCoverage * 100).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.demulsifier.inventory < 100 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.demulsifier.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.demulsifier.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Langmuir K: {CONFIG.chemicals.demulsifier.langmuirK} | Optimal: {CONFIG.chemicals.demulsifier.optimalRange.min}-{CONFIG.chemicals.demulsifier.optimalRange.max} ppm
                 </div>
               </div>
 
               {/* Flocculant */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.flocculant.enabled ? 'border-amber-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.flocculant.enabled ? 'border-amber-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-amber-900/50 flex items-center justify-center text-xl">🔗</div>
                     <div>
                       <h4 className="font-semibold text-amber-400">{CONFIG.chemicals.flocculant.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.flocculant.tag}</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.flocculant.tag}</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.flocculant.enabled} onChange={(e) => setChemDosing(p => ({ ...p, flocculant: { ...p.flocculant, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-amber-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-amber-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Mode</div>
-                    <select value={chemDosing.flocculant.mode} onChange={(e) => setChemDosing(p => ({ ...p, flocculant: { ...p.flocculant, mode: e.target.value } }))} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+                    <div className="text-xs text-gray-500 mb-1">Mode</div>
+                    <select value={chemDosing.flocculant.mode} onChange={(e) => setChemDosing(p => ({ ...p, flocculant: { ...p.flocculant, mode: e.target.value } }))} className="w-full bg-gray-100 border border-slate-600 rounded px-2 py-1.5 text-sm">
                       {Object.keys(CONFIG.dosingModes).map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">
+                    <div className="text-xs text-gray-500 mb-1">
                       {chemDosing.flocculant.mode === 'RATIO' ? 'Ratio (ppm/% solids)' : 'Setpoint (ppm)'}
                     </div>
                     <NumInput
@@ -4686,42 +4686,42 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Actual Dose:</span><span className="text-amber-400 font-mono">{chemDosing.flocculant.pv.toFixed(1)} ppm</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pump Rate:</span><span className="font-mono">{chemDosing.flocculant.pumpRate.toFixed(2)} L/h</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Floc Size Mult:</span><span className="text-green-400 font-mono">{chemDosing.flocculant.flocSize.toFixed(2)}×</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Effectiveness:</span><span className="font-mono">{(chemDosing.flocculant.effectiveness * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.flocculant.inventory < 50 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.flocculant.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.flocculant.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Actual Dose:</span><span className="text-amber-400 font-mono">{chemDosing.flocculant.pv.toFixed(1)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Pump Rate:</span><span className="font-mono">{chemDosing.flocculant.pumpRate.toFixed(2)} L/h</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Floc Size Mult:</span><span className="text-green-400 font-mono">{chemDosing.flocculant.flocSize.toFixed(2)}×</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Effectiveness:</span><span className="font-mono">{(chemDosing.flocculant.effectiveness * 100).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.flocculant.inventory < 50 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.flocculant.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.flocculant.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Bridging: {CONFIG.chemicals.flocculant.bridgingFactor}× | Overdose threshold: {CONFIG.chemicals.flocculant.overdoseThreshold} ppm
                 </div>
               </div>
 
               {/* Coagulant */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.coagulant.enabled ? 'border-purple-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.coagulant.enabled ? 'border-purple-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-900/50 flex items-center justify-center text-xl">⚡</div>
                     <div>
                       <h4 className="font-semibold text-purple-400">{CONFIG.chemicals.coagulant.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.coagulant.tag}</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.coagulant.tag}</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.coagulant.enabled} onChange={(e) => setChemDosing(p => ({ ...p, coagulant: { ...p.coagulant, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Mode</div>
-                    <select value={chemDosing.coagulant.mode} onChange={(e) => setChemDosing(p => ({ ...p, coagulant: { ...p.coagulant, mode: e.target.value } }))} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+                    <div className="text-xs text-gray-500 mb-1">Mode</div>
+                    <select value={chemDosing.coagulant.mode} onChange={(e) => setChemDosing(p => ({ ...p, coagulant: { ...p.coagulant, mode: e.target.value } }))} className="w-full bg-gray-100 border border-slate-600 rounded px-2 py-1.5 text-sm">
                       {Object.keys(CONFIG.dosingModes).map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">
+                    <div className="text-xs text-gray-500 mb-1">
                       {chemDosing.coagulant.mode === 'RATIO' ? 'Ratio (ppm/%)' : chemDosing.coagulant.mode === 'FEEDBACK' ? 'Target ζ (mV)' : 'Setpoint (ppm)'}
                     </div>
                     <NumInput
@@ -4732,197 +4732,197 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Actual Dose:</span><span className="text-purple-400 font-mono">{chemDosing.coagulant.pv.toFixed(1)} ppm</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Zeta Potential:</span><span className={`font-mono ${Math.abs(chemDosing.coagulant.zetaPotential || 0) < 10 ? 'text-green-400' : 'text-yellow-400'}`}>{(chemDosing.coagulant.zetaPotential || -25).toFixed(1)} mV</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Effectiveness:</span><span className="font-mono">{(chemDosing.coagulant.effectiveness * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.coagulant.inventory < 200 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.coagulant.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.coagulant.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Actual Dose:</span><span className="text-purple-400 font-mono">{chemDosing.coagulant.pv.toFixed(1)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Zeta Potential:</span><span className={`font-mono ${Math.abs(chemDosing.coagulant.zetaPotential || 0) < 10 ? 'text-green-400' : 'text-yellow-400'}`}>{(chemDosing.coagulant.zetaPotential || -25).toFixed(1)} mV</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Effectiveness:</span><span className="font-mono">{(chemDosing.coagulant.effectiveness * 100).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.coagulant.inventory < 200 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.coagulant.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.coagulant.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Fe³⁺ valence: {CONFIG.chemicals.coagulant.chargeValence} | Schulze-Hardy Rule
                 </div>
               </div>
 
               {/* pH Control (Acid) */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.acid.enabled ? 'border-red-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.acid.enabled ? 'border-red-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-red-900/50 flex items-center justify-center text-xl">🔴</div>
                     <div>
                       <h4 className="font-semibold text-red-400">{CONFIG.chemicals.acid.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.acid.tag} - pH Control</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.acid.tag} - pH Control</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.acid.enabled} onChange={(e) => setChemDosing(p => ({ ...p, acid: { ...p.acid, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-red-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-red-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">pH Setpoint</div>
+                    <div className="text-xs text-gray-500 mb-1">pH Setpoint</div>
                     <NumInput value={chemDosing.acid.sp} onChange={(v) => setChemDosing(p => ({ ...p, acid: { ...p.acid, sp: v }, caustic: { ...p.caustic, sp: v } }))} min={4} max={10} step={0.1} className="w-full text-sm" />
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Current pH</div>
+                    <div className="text-xs text-gray-500 mb-1">Current pH</div>
                     <div className={`text-xl font-bold ${smoothedProc.pH < 6.5 || smoothedProc.pH > 8.5 ? 'text-red-400' : 'text-green-400'}`}>{smoothedProc.pH.toFixed(2)}</div>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Dose Rate:</span><span className="text-red-400 font-mono">{chemDosing.acid.pv.toFixed(1)} mL/m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pump Rate:</span><span className="font-mono">{chemDosing.acid.pumpRate.toFixed(3)} L/h</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.acid.inventory < 50 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.acid.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.acid.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Dose Rate:</span><span className="text-red-400 font-mono">{chemDosing.acid.pv.toFixed(1)} mL/m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Pump Rate:</span><span className="font-mono">{chemDosing.acid.pumpRate.toFixed(3)} L/h</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.acid.inventory < 50 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.acid.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.acid.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Henderson-Hasselbalch | Buffer: {CONFIG.chemicals.acid.bufferCapacity} mol/L/pH
                 </div>
               </div>
 
               {/* pH Control (Caustic) */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.caustic.enabled ? 'border-blue-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.caustic.enabled ? 'border-blue-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-blue-900/50 flex items-center justify-center text-xl">🔵</div>
                     <div>
                       <h4 className="font-semibold text-blue-400">{CONFIG.chemicals.caustic.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.caustic.tag} - pH Control</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.caustic.tag} - pH Control</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.caustic.enabled} onChange={(e) => setChemDosing(p => ({ ...p, caustic: { ...p.caustic, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">pH Setpoint</div>
+                    <div className="text-xs text-gray-500 mb-1">pH Setpoint</div>
                     <NumInput value={chemDosing.caustic.sp} onChange={(v) => setChemDosing(p => ({ ...p, acid: { ...p.acid, sp: v }, caustic: { ...p.caustic, sp: v } }))} min={4} max={10} step={0.1} className="w-full text-sm" />
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Current pH</div>
+                    <div className="text-xs text-gray-500 mb-1">Current pH</div>
                     <div className={`text-xl font-bold ${smoothedProc.pH < 6.5 || smoothedProc.pH > 8.5 ? 'text-red-400' : 'text-green-400'}`}>{smoothedProc.pH.toFixed(2)}</div>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Dose Rate:</span><span className="text-blue-400 font-mono">{chemDosing.caustic.pv.toFixed(1)} mL/m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pump Rate:</span><span className="font-mono">{chemDosing.caustic.pumpRate.toFixed(3)} L/h</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.caustic.inventory < 50 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.caustic.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.caustic.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Dose Rate:</span><span className="text-blue-400 font-mono">{chemDosing.caustic.pv.toFixed(1)} mL/m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Pump Rate:</span><span className="font-mono">{chemDosing.caustic.pumpRate.toFixed(3)} L/h</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.caustic.inventory < 50 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.caustic.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.caustic.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Henderson-Hasselbalch | Buffer: {CONFIG.chemicals.caustic.bufferCapacity} mol/L/pH
                 </div>
               </div>
 
               {/* Scale Inhibitor */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.scaleInhibitor.enabled ? 'border-green-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.scaleInhibitor.enabled ? 'border-green-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-green-900/50 flex items-center justify-center text-xl">🛡️</div>
                     <div>
                       <h4 className="font-semibold text-green-400">{CONFIG.chemicals.scaleInhibitor.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.scaleInhibitor.tag}</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.scaleInhibitor.tag}</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.scaleInhibitor.enabled} onChange={(e) => setChemDosing(p => ({ ...p, scaleInhibitor: { ...p.scaleInhibitor, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-green-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Mode</div>
-                    <select value={chemDosing.scaleInhibitor.mode} onChange={(e) => setChemDosing(p => ({ ...p, scaleInhibitor: { ...p.scaleInhibitor, mode: e.target.value } }))} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+                    <div className="text-xs text-gray-500 mb-1">Mode</div>
+                    <select value={chemDosing.scaleInhibitor.mode} onChange={(e) => setChemDosing(p => ({ ...p, scaleInhibitor: { ...p.scaleInhibitor, mode: e.target.value } }))} className="w-full bg-gray-100 border border-slate-600 rounded px-2 py-1.5 text-sm">
                       <option value="RATIO">Fixed Dose</option>
                       <option value="ADAPTIVE">Adaptive (LSI)</option>
                     </select>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Dose (ppm)</div>
+                    <div className="text-xs text-gray-500 mb-1">Dose (ppm)</div>
                     <NumInput value={chemDosing.scaleInhibitor.ratio} onChange={(v) => setChemDosing(p => ({ ...p, scaleInhibitor: { ...p.scaleInhibitor, ratio: v } }))} min={0} max={50} className="w-full text-sm" />
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Actual Dose:</span><span className="text-green-400 font-mono">{chemDosing.scaleInhibitor.pv.toFixed(1)} ppm</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">LSI:</span><span className={`font-mono ${(chemDosing.scaleInhibitor.scalingIndex || 0) > 1.5 ? 'text-red-400' : 'text-green-400'}`}>{(chemDosing.scaleInhibitor.scalingIndex || 0).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Effectiveness:</span><span className="font-mono">{(chemDosing.scaleInhibitor.effectiveness * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.scaleInhibitor.inventory < 20 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.scaleInhibitor.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.scaleInhibitor.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Actual Dose:</span><span className="text-green-400 font-mono">{chemDosing.scaleInhibitor.pv.toFixed(1)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">LSI:</span><span className={`font-mono ${(chemDosing.scaleInhibitor.scalingIndex || 0) > 1.5 ? 'text-red-400' : 'text-green-400'}`}>{(chemDosing.scaleInhibitor.scalingIndex || 0).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Effectiveness:</span><span className="font-mono">{(chemDosing.scaleInhibitor.effectiveness * 100).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.scaleInhibitor.inventory < 20 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.scaleInhibitor.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.scaleInhibitor.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Threshold inhibition | LSI threshold: {CONFIG.chemicals.scaleInhibitor.saturationIndex}
                 </div>
               </div>
 
               {/* Antifoam */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.antifoam.enabled ? 'border-orange-500/50' : 'border-slate-700'}`}>
+              <div className={`bg-slate-800 rounded-xl p-5 border ${chemDosing.antifoam.enabled ? 'border-orange-500/50' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-orange-900/50 flex items-center justify-center text-xl">🫧</div>
                     <div>
                       <h4 className="font-semibold text-orange-400">{CONFIG.chemicals.antifoam.name}</h4>
-                      <div className="text-xs text-slate-500">{CONFIG.chemicals.antifoam.tag}</div>
+                      <div className="text-xs text-gray-500">{CONFIG.chemicals.antifoam.tag}</div>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={chemDosing.antifoam.enabled} onChange={(e) => setChemDosing(p => ({ ...p, antifoam: { ...p.antifoam, enabled: e.target.checked } }))} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600" />
+                    <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600" />
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Mode</div>
-                    <select value={chemDosing.antifoam.mode} onChange={(e) => setChemDosing(p => ({ ...p, antifoam: { ...p.antifoam, mode: e.target.value } }))} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-sm">
+                    <div className="text-xs text-gray-500 mb-1">Mode</div>
+                    <select value={chemDosing.antifoam.mode} onChange={(e) => setChemDosing(p => ({ ...p, antifoam: { ...p.antifoam, mode: e.target.value } }))} className="w-full bg-gray-100 border border-slate-600 rounded px-2 py-1.5 text-sm">
                       <option value="MANUAL">Manual</option>
                       <option value="FEEDBACK">Feedback (foam level)</option>
                     </select>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400 mb-1">Setpoint (ppm)</div>
+                    <div className="text-xs text-gray-500 mb-1">Setpoint (ppm)</div>
                     <NumInput value={chemDosing.antifoam.sp} onChange={(v) => setChemDosing(p => ({ ...p, antifoam: { ...p.antifoam, sp: v } }))} min={0} max={100} className="w-full text-sm" />
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Actual Dose:</span><span className="text-orange-400 font-mono">{chemDosing.antifoam.pv.toFixed(1)} ppm</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Foam Level:</span><span className={`font-mono ${chemDosing.antifoam.foamLevel > 0.3 ? 'text-red-400' : 'text-green-400'}`}>{(chemDosing.antifoam.foamLevel * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Effectiveness:</span><span className="font-mono">{(chemDosing.antifoam.effectiveness * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Inventory:</span><span className={`font-mono ${chemDosing.antifoam.inventory < 10 ? 'text-red-400' : 'text-slate-300'}`}>{chemDosing.antifoam.inventory.toFixed(0)} L</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.antifoam.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Actual Dose:</span><span className="text-orange-400 font-mono">{chemDosing.antifoam.pv.toFixed(1)} ppm</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Foam Level:</span><span className={`font-mono ${chemDosing.antifoam.foamLevel > 0.3 ? 'text-red-400' : 'text-green-400'}`}>{(chemDosing.antifoam.foamLevel * 100).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Effectiveness:</span><span className="font-mono">{(chemDosing.antifoam.effectiveness * 100).toFixed(1)}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Inventory:</span><span className={`font-mono ${chemDosing.antifoam.inventory < 10 ? 'text-red-400' : 'text-gray-600'}`}>{chemDosing.antifoam.inventory.toFixed(0)} L</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Session Cost:</span><span className="text-green-400 font-mono">${chemCosts.antifoam.toFixed(2)}</span></div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
                   Persistence: {CONFIG.chemicals.antifoam.persistenceFactor * 100}% | Break time: {CONFIG.chemicals.antifoam.foamBreakTime}s
                 </div>
               </div>
             </div>
 
             {/* Scientific Principles Reference */}
-            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">📚 Scientific Principles Applied</h3>
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">📚 Scientific Principles Applied</h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-cyan-400 font-medium mb-1">Langmuir Adsorption</div>
-                  <div className="text-slate-400 text-xs">θ = KC/(1+KC) - Surface coverage model for demulsifier effectiveness</div>
+                  <div className="text-gray-500 text-xs">θ = KC/(1+KC) - Surface coverage model for demulsifier effectiveness</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-amber-400 font-medium mb-1">Smoluchowski Kinetics</div>
-                  <div className="text-slate-400 text-xs">Collision-based flocculation rate proportional to concentration²</div>
+                  <div className="text-gray-500 text-xs">Collision-based flocculation rate proportional to concentration²</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-purple-400 font-medium mb-1">Schulze-Hardy Rule</div>
-                  <div className="text-slate-400 text-xs">CCC ∝ z⁻⁶ - Charge neutralization by multivalent ions</div>
+                  <div className="text-gray-500 text-xs">CCC ∝ z⁻⁶ - Charge neutralization by multivalent ions</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-red-400 font-medium mb-1">Henderson-Hasselbalch</div>
-                  <div className="text-slate-400 text-xs">pH = pKa + log([A⁻]/[HA]) - Buffer chemistry for pH control</div>
+                  <div className="text-gray-500 text-xs">pH = pKa + log([A⁻]/[HA]) - Buffer chemistry for pH control</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-green-400 font-medium mb-1">Langelier Saturation Index</div>
-                  <div className="text-slate-400 text-xs">LSI = pH - pHs - Scale formation prediction</div>
+                  <div className="text-gray-500 text-xs">LSI = pH - pHs - Scale formation prediction</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-orange-400 font-medium mb-1">Arrhenius Kinetics</div>
-                  <div className="text-slate-400 text-xs">k = A·exp(-Ea/RT) - Temperature dependence of reactions</div>
+                  <div className="text-gray-500 text-xs">k = A·exp(-Ea/RT) - Temperature dependence of reactions</div>
                 </div>
               </div>
             </div>
@@ -4941,7 +4941,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   polishingFilter.status === 'FILTERING' ? 'bg-green-900/50 text-green-400 border border-green-500' :
                   polishingFilter.status === 'BACKWASH' ? 'bg-orange-900/50 text-orange-400 border border-orange-500 animate-pulse' :
                   polishingFilter.status === 'STANDBY' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
-                  'bg-slate-700 text-slate-400'
+                  'bg-gray-100 text-gray-500'
                 }`}>
                   {polishingFilter.status === 'BACKWASH' ? `⏳ BACKWASH (${Math.ceil(polishingFilter.backwashRemaining)}s)` : polishingFilter.status}
                 </div>
@@ -4951,7 +4951,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <input type="checkbox" checked={polishingFilter.enabled} onChange={(e) => setPolishingFilter(p => ({ ...p, enabled: e.target.checked, status: e.target.checked ? 'FILTERING' : 'OFFLINE' }))} className="w-4 h-4 accent-cyan-500" />
                   <span className="text-sm">Enabled</span>
                 </label>
-                <button onClick={triggerBackwash} disabled={polishingFilter.status !== 'FILTERING'} className={`px-4 py-2 rounded-lg text-sm font-medium ${polishingFilter.status === 'FILTERING' ? 'bg-orange-600 hover:bg-orange-500' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}>
+                <button onClick={triggerBackwash} disabled={polishingFilter.status !== 'FILTERING'} className={`px-4 py-2 rounded-lg text-sm font-medium ${polishingFilter.status === 'FILTERING' ? 'bg-orange-600 hover:bg-orange-500' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}>
                   ⏳ Manual Backwash
                 </button>
               </div>
@@ -4962,39 +4962,39 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <h3 className="text-lg font-semibold text-blue-400 mb-4">📋 Waterco SPDD1600 Specifications</h3>
               <div className="grid md:grid-cols-4 gap-6">
                 <div>
-                  <div className="text-xs text-slate-400 mb-2">Physical</div>
+                  <div className="text-xs text-gray-500 mb-2">Physical</div>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span className="text-slate-400">Model:</span><span className="font-mono">{CONFIG.polishingFilter.model}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Inner Diameter:</span><span className="font-mono">{CONFIG.polishingFilter.innerDiameter} mm</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Bed Depth:</span><span className="font-mono">{CONFIG.polishingFilter.bedDepth} mm</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Filter Area:</span><span className="font-mono">{CONFIG.polishingFilter.filterArea} m²</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Model:</span><span className="font-mono">{CONFIG.polishingFilter.model}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Inner Diameter:</span><span className="font-mono">{CONFIG.polishingFilter.innerDiameter} mm</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Bed Depth:</span><span className="font-mono">{CONFIG.polishingFilter.bedDepth} mm</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Filter Area:</span><span className="font-mono">{CONFIG.polishingFilter.filterArea} m²</span></div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 mb-2">Flow Rates (m³/h)</div>
+                  <div className="text-xs text-gray-500 mb-2">Flow Rates (m³/h)</div>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span className="text-slate-400">Standard (30 m/h):</span><span className="font-mono">{CONFIG.polishingFilter.flowRates.standard}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Medium (35 m/h):</span><span className="font-mono">{CONFIG.polishingFilter.flowRates.medium}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">High (40 m/h):</span><span className="font-mono">{CONFIG.polishingFilter.flowRates.high}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Max (50 m/h):</span><span className="text-cyan-400 font-mono">{CONFIG.polishingFilter.flowRates.max}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Standard (30 m/h):</span><span className="font-mono">{CONFIG.polishingFilter.flowRates.standard}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Medium (35 m/h):</span><span className="font-mono">{CONFIG.polishingFilter.flowRates.medium}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">High (40 m/h):</span><span className="font-mono">{CONFIG.polishingFilter.flowRates.high}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Max (50 m/h):</span><span className="text-cyan-400 font-mono">{CONFIG.polishingFilter.flowRates.max}</span></div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 mb-2">Media</div>
+                  <div className="text-xs text-gray-500 mb-2">Media</div>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span className="text-slate-400">Volume:</span><span className="font-mono">{CONFIG.polishingFilter.media.volume} L</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Sand (16/30):</span><span className="font-mono">{CONFIG.polishingFilter.media.sandWeight} kg</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Glass Pearls:</span><span className="font-mono">{CONFIG.polishingFilter.media.glassPearlsWeight} kg</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Micron Rating:</span><span className="font-mono">{CONFIG.polishingFilter.operating.nominalMicron} μm</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Volume:</span><span className="font-mono">{CONFIG.polishingFilter.media.volume} L</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Sand (16/30):</span><span className="font-mono">{CONFIG.polishingFilter.media.sandWeight} kg</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Glass Pearls:</span><span className="font-mono">{CONFIG.polishingFilter.media.glassPearlsWeight} kg</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Micron Rating:</span><span className="font-mono">{CONFIG.polishingFilter.operating.nominalMicron} μm</span></div>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 mb-2">Operating</div>
+                  <div className="text-xs text-gray-500 mb-2">Operating</div>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span className="text-slate-400">Pressure:</span><span className="font-mono">{CONFIG.polishingFilter.operating.pressureRange.min}-{CONFIG.polishingFilter.operating.pressureRange.max} bar</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Max ΔP:</span><span className="font-mono">{CONFIG.polishingFilter.operating.maxDifferentialPressure} bar</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Backwash:</span><span className="font-mono">{CONFIG.polishingFilter.operating.backwashDuration}s</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Water Saving:</span><span className="text-green-400 font-mono">{CONFIG.polishingFilter.operating.backwashWaterSaving * 100}%</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Pressure:</span><span className="font-mono">{CONFIG.polishingFilter.operating.pressureRange.min}-{CONFIG.polishingFilter.operating.pressureRange.max} bar</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Max ΔP:</span><span className="font-mono">{CONFIG.polishingFilter.operating.maxDifferentialPressure} bar</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Backwash:</span><span className="font-mono">{CONFIG.polishingFilter.operating.backwashDuration}s</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Water Saving:</span><span className="text-green-400 font-mono">{CONFIG.polishingFilter.operating.backwashWaterSaving * 100}%</span></div>
                   </div>
                 </div>
               </div>
@@ -5004,39 +5004,39 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             <div className="grid md:grid-cols-5 gap-4">
               <div className="bg-slate-800 rounded-xl p-4 border border-cyan-900/50">
                 <div className="text-sm text-cyan-400 mb-1">Inlet Flow</div>
-                <div className="text-2xl font-bold">{polishingFilter.inletFlow.toFixed(1)} <span className="text-sm text-slate-400">m³/h</span></div>
-                <div className="text-xs text-slate-500 mt-1">From centrifuge</div>
+                <div className="text-2xl font-bold">{polishingFilter.inletFlow.toFixed(1)} <span className="text-sm text-gray-500">m³/h</span></div>
+                <div className="text-xs text-gray-500 mt-1">From centrifuge</div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-green-900/50">
                 <div className="text-sm text-green-400 mb-1">Outlet Flow</div>
-                <div className="text-2xl font-bold">{polishingFilter.outletFlow.toFixed(1)} <span className="text-sm text-slate-400">m³/h</span></div>
-                <div className="text-xs text-slate-500 mt-1">To pond</div>
+                <div className="text-2xl font-bold">{polishingFilter.outletFlow.toFixed(1)} <span className="text-sm text-gray-500">m³/h</span></div>
+                <div className="text-xs text-gray-500 mt-1">To pond</div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-purple-900/50">
                 <div className="text-sm text-purple-400 mb-1">Differential Pressure</div>
                 <div className={`text-2xl font-bold ${polishingFilter.differentialPressure > polishingFilter.backwashTriggerDP * 0.8 ? 'text-orange-400' : ''}`}>
-                  {polishingFilter.differentialPressure.toFixed(2)} <span className="text-sm text-slate-400">bar</span>
+                  {polishingFilter.differentialPressure.toFixed(2)} <span className="text-sm text-gray-500">bar</span>
                 </div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className={`h-full rounded ${polishingFilter.differentialPressure > polishingFilter.backwashTriggerDP * 0.8 ? 'bg-orange-500' : 'bg-purple-500'}`} style={{ width: `${Math.min(100, (polishingFilter.differentialPressure / polishingFilter.backwashTriggerDP) * 100)}%` }} />
                 </div>
-                <div className="text-xs text-slate-500 mt-1">Trigger: {polishingFilter.backwashTriggerDP} bar</div>
+                <div className="text-xs text-gray-500 mt-1">Trigger: {polishingFilter.backwashTriggerDP} bar</div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-amber-900/50">
                 <div className="text-sm text-amber-400 mb-1">Bed Saturation</div>
-                <div className="text-2xl font-bold">{polishingFilter.bedSaturation.toFixed(1)} <span className="text-sm text-slate-400">%</span></div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-2xl font-bold">{polishingFilter.bedSaturation.toFixed(1)} <span className="text-sm text-gray-500">%</span></div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className={`h-full rounded ${polishingFilter.bedSaturation > 80 ? 'bg-red-500' : polishingFilter.bedSaturation > 50 ? 'bg-amber-500' : 'bg-green-500'}`} style={{ width: `${polishingFilter.bedSaturation}%` }} />
                 </div>
-                <div className="text-xs text-slate-500 mt-1">Loading: {polishingFilter.bedLoading.toFixed(2)} kg</div>
+                <div className="text-xs text-gray-500 mt-1">Loading: {polishingFilter.bedLoading.toFixed(2)} kg</div>
               </div>
               <div className="bg-slate-800 rounded-xl p-4 border border-slate-600">
-                <div className="text-sm text-slate-400 mb-1">Media Condition</div>
-                <div className="text-2xl font-bold">{polishingFilter.mediaCondition.toFixed(0)} <span className="text-sm text-slate-400">%</span></div>
-                <div className="h-2 bg-slate-700 rounded mt-2">
+                <div className="text-sm text-gray-500 mb-1">Media Condition</div>
+                <div className="text-2xl font-bold">{polishingFilter.mediaCondition.toFixed(0)} <span className="text-sm text-gray-500">%</span></div>
+                <div className="h-2 bg-gray-100 rounded mt-2">
                   <div className={`h-full rounded ${polishingFilter.mediaCondition > 80 ? 'bg-green-500' : polishingFilter.mediaCondition > 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${polishingFilter.mediaCondition}%` }} />
                 </div>
-                <div className="text-xs text-slate-500 mt-1">Run hours: {polishingFilter.runHours.toFixed(1)}</div>
+                <div className="text-xs text-gray-500 mt-1">Run hours: {polishingFilter.runHours.toFixed(1)}</div>
               </div>
             </div>
 
@@ -5045,15 +5045,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <h3 className="text-lg font-semibold text-green-400 mb-4">💧 Water Quality (Centrifuge → Filter → Pond)</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <div className="text-sm text-slate-400 mb-3">Turbidity (NTU)</div>
+                  <div className="text-sm text-gray-500 mb-3">Turbidity (NTU)</div>
                   <div className="flex items-center gap-4">
-                    <div className="flex-1 bg-slate-700 rounded-lg p-3 text-center">
-                      <div className="text-xs text-slate-400">Inlet</div>
+                    <div className="flex-1 bg-gray-100 rounded-lg p-3 text-center">
+                      <div className="text-xs text-gray-500">Inlet</div>
                       <div className="text-xl font-bold text-red-400">{polishingFilter.inletTurbidity.toFixed(1)}</div>
                     </div>
                     <div className="text-2xl text-green-400">→</div>
-                    <div className="flex-1 bg-slate-700 rounded-lg p-3 text-center">
-                      <div className="text-xs text-slate-400">Outlet</div>
+                    <div className="flex-1 bg-gray-100 rounded-lg p-3 text-center">
+                      <div className="text-xs text-gray-500">Outlet</div>
                       <div className="text-xl font-bold text-green-400">{polishingFilter.outletTurbidity.toFixed(1)}</div>
                     </div>
                     <div className="flex-1 bg-green-900/30 rounded-lg p-3 text-center border border-green-500/30">
@@ -5063,15 +5063,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-slate-400 mb-3">Oil-in-Water (ppm)</div>
+                  <div className="text-sm text-gray-500 mb-3">Oil-in-Water (ppm)</div>
                   <div className="flex items-center gap-4">
-                    <div className="flex-1 bg-slate-700 rounded-lg p-3 text-center">
-                      <div className="text-xs text-slate-400">Inlet</div>
+                    <div className="flex-1 bg-gray-100 rounded-lg p-3 text-center">
+                      <div className="text-xs text-gray-500">Inlet</div>
                       <div className="text-xl font-bold text-amber-400">{polishingFilter.inletOiW.toFixed(1)}</div>
                     </div>
                     <div className="text-2xl text-green-400">→</div>
-                    <div className="flex-1 bg-slate-700 rounded-lg p-3 text-center">
-                      <div className="text-xs text-slate-400">Outlet</div>
+                    <div className="flex-1 bg-gray-100 rounded-lg p-3 text-center">
+                      <div className="text-xs text-gray-500">Outlet</div>
                       <div className="text-xl font-bold text-green-400">{polishingFilter.outletOiW.toFixed(1)}</div>
                     </div>
                     <div className="flex-1 bg-green-900/30 rounded-lg p-3 text-center border border-green-500/30">
@@ -5085,64 +5085,64 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
             {/* Controls and Settings */}
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-                <h3 className="text-lg font-semibold text-slate-300 mb-4">⚙️ Backwash Settings</h3>
+              <div className="bg-slate-800 rounded-xl p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-600 mb-4">⚙️ Backwash Settings</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-400">Auto Backwash</span>
+                    <span className="text-sm text-gray-500">Auto Backwash</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={polishingFilter.autoBackwash} onChange={(e) => setPolishingFilter(p => ({ ...p, autoBackwash: e.target.checked }))} className="sr-only peer" />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600" />
+                      <div className="w-11 h-6 bg-gray-100 peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600" />
                     </label>
                   </div>
                   <div>
-                    <label className="text-sm text-slate-400 block mb-1">ΔP Trigger (bar)</label>
+                    <label className="text-sm text-gray-500 block mb-1">ΔP Trigger (bar)</label>
                     <NumInput value={polishingFilter.backwashTriggerDP} onChange={(v) => setPolishingFilter(p => ({ ...p, backwashTriggerDP: v }))} min={0.5} max={1.5} step={0.1} className="w-full" />
                   </div>
                   <div>
-                    <label className="text-sm text-slate-400 block mb-1">Inlet Pressure (bar)</label>
+                    <label className="text-sm text-gray-500 block mb-1">Inlet Pressure (bar)</label>
                     <NumInput value={polishingFilter.inletPressure} onChange={(v) => setPolishingFilter(p => ({ ...p, inletPressure: v }))} min={2} max={10} step={0.1} className="w-full" />
                   </div>
                   <div>
-                    <label className="text-sm text-slate-400 block mb-1">Bed Capacity (kg)</label>
+                    <label className="text-sm text-gray-500 block mb-1">Bed Capacity (kg)</label>
                     <NumInput value={polishingFilter.bedCapacity} onChange={(v) => setPolishingFilter(p => ({ ...p, bedCapacity: v }))} min={20} max={100} step={5} className="w-full" />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-                <h3 className="text-lg font-semibold text-slate-300 mb-4">📊 Session Statistics</h3>
+              <div className="bg-slate-800 rounded-xl p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 Session Statistics</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Total Filtered:</span><span className="font-mono">{polishingFilter.totalFiltered.toFixed(2)} m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Backwash Count:</span><span className="font-mono">{polishingFilter.backwashCount}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Backwash Water Used:</span><span className="font-mono">{polishingFilter.totalBackwashWater.toFixed(2)} m³</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Solids Removed:</span><span className="font-mono">{polishingFilter.totalSolidsRemoved.toFixed(3)} kg</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Oil Removed:</span><span className="font-mono">{polishingFilter.totalOilRemoved.toFixed(3)} kg</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Filter Cycles:</span><span className="font-mono">{polishingFilter.filterCycles}</span></div>
-                  <div className="border-t border-slate-700 pt-2 mt-2">
-                    <div className="flex justify-between"><span className="text-slate-400">Backwash Water Cost:</span><span className="text-green-400 font-mono">${filterCosts.backwashWater.toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Electricity Cost:</span><span className="text-green-400 font-mono">${filterCosts.electricity.toFixed(2)}</span></div>
-                    <div className="flex justify-between font-semibold"><span className="text-slate-300">Total Cost:</span><span className="text-green-400 font-mono">${filterCosts.total.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Total Filtered:</span><span className="font-mono">{polishingFilter.totalFiltered.toFixed(2)} m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Backwash Count:</span><span className="font-mono">{polishingFilter.backwashCount}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Backwash Water Used:</span><span className="font-mono">{polishingFilter.totalBackwashWater.toFixed(2)} m³</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Solids Removed:</span><span className="font-mono">{polishingFilter.totalSolidsRemoved.toFixed(3)} kg</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Oil Removed:</span><span className="font-mono">{polishingFilter.totalOilRemoved.toFixed(3)} kg</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Filter Cycles:</span><span className="font-mono">{polishingFilter.filterCycles}</span></div>
+                  <div className="border-t border-gray-200 pt-2 mt-2">
+                    <div className="flex justify-between"><span className="text-gray-500">Backwash Water Cost:</span><span className="text-green-400 font-mono">${filterCosts.backwashWater.toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Electricity Cost:</span><span className="text-green-400 font-mono">${filterCosts.electricity.toFixed(2)}</span></div>
+                    <div className="flex justify-between font-semibold"><span className="text-gray-600">Total Cost:</span><span className="text-green-400 font-mono">${filterCosts.total.toFixed(2)}</span></div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Scientific Principles */}
-            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">📚 Deep Bed Filtration Principles</h3>
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">📚 Deep Bed Filtration Principles</h3>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-cyan-400 font-medium mb-1">Iwasaki Model</div>
-                  <div className="text-slate-400 text-xs">λ = λ₀(1 - σ/σmax)ⁿ - Filter coefficient decreases with bed loading</div>
+                  <div className="text-gray-500 text-xs">λ = λ₀(1 - σ/σmax)ⁿ - Filter coefficient decreases with bed loading</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-purple-400 font-medium mb-1">Carman-Kozeny</div>
-                  <div className="text-slate-400 text-xs">ΔP ∝ (1 + kσ) - Pressure drop increases with solids deposition</div>
+                  <div className="text-gray-500 text-xs">ΔP ∝ (1 + kσ) - Pressure drop increases with solids deposition</div>
                 </div>
-                <div className="p-3 bg-slate-900/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-green-400 font-medium mb-1">Nozzle Plate Design</div>
-                  <div className="text-slate-400 text-xs">Uniform air/water backwash for 25% less water usage vs lateral systems</div>
+                  <div className="text-gray-500 text-xs">Uniform air/water backwash for 25% less water usage vs lateral systems</div>
                 </div>
               </div>
             </div>
@@ -5180,7 +5180,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   ☀️ Evap: {pond.evaporationRate} mm/day
                 </div>
                 {/* Level markers */}
-                <div className="absolute left-2 top-0 h-full flex flex-col justify-between py-2 text-xs text-slate-400">
+                <div className="absolute left-2 top-0 h-full flex flex-col justify-between py-2 text-xs text-gray-500">
                   <span>100%</span>
                   <span>50%</span>
                   <span>0%</span>
@@ -5188,7 +5188,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 {/* Center display */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center bg-slate-900/60 rounded-lg px-4 py-2">
-                    <div className="text-3xl font-bold text-white">{pond.volume.toFixed(0)} m³</div>
+                    <div className="text-3xl font-bold text-gray-800">{pond.volume.toFixed(0)} m³</div>
                     <div className="text-sm text-teal-400">{pond.level.toFixed(1)}% of 8,000 m³</div>
                   </div>
                 </div>
@@ -5196,50 +5196,50 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
               {/* Pond Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">Volume</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">Volume</div>
                   <div className="text-lg font-bold text-teal-400">{pond.volume.toFixed(0)} m³</div>
-                  <div className="text-xs text-slate-500">{(pond.volume / 1000).toFixed(2)} ML</div>
+                  <div className="text-xs text-gray-500">{(pond.volume / 1000).toFixed(2)} ML</div>
                 </div>
-                <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">Inflow Rate</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">Inflow Rate</div>
                   <div className="text-lg font-bold text-cyan-400">{pond.inflow.toFixed(2)} m³/h</div>
-                  <div className="text-xs text-slate-500">From GAC filter</div>
+                  <div className="text-xs text-gray-500">From GAC filter</div>
                 </div>
-                <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">Daily Evap</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">Daily Evap</div>
                   <div className="text-lg font-bold text-yellow-400">{(pond.surfaceArea * pond.evaporationRate / 1000).toFixed(1)} m³</div>
-                  <div className="text-xs text-slate-500">{pond.evaporationRate} mm/day</div>
+                  <div className="text-xs text-gray-500">{pond.evaporationRate} mm/day</div>
                 </div>
-                <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">OiW</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">OiW</div>
                   <div className={`text-lg font-bold ${pond.oilInWater <= dischargeLimits.oilInWater ? 'text-green-400' : 'text-red-400'}`}>{pond.oilInWater.toFixed(0)} ppm</div>
-                  <div className="text-xs text-slate-500">Limit: {dischargeLimits.oilInWater} ppm</div>
+                  <div className="text-xs text-gray-500">Limit: {dischargeLimits.oilInWater} ppm</div>
                 </div>
-                <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">Turbidity</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">Turbidity</div>
                   <div className={`text-lg font-bold ${pond.turbidity <= dischargeLimits.turbidity ? 'text-green-400' : 'text-yellow-400'}`}>{pond.turbidity.toFixed(0)} NTU</div>
-                  <div className="text-xs text-slate-500">Limit: {dischargeLimits.turbidity} NTU</div>
+                  <div className="text-xs text-gray-500">Limit: {dischargeLimits.turbidity} NTU</div>
                 </div>
-                <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">pH</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">pH</div>
                   <div className={`text-lg font-bold ${pond.pH >= dischargeLimits.pH.min && pond.pH <= dischargeLimits.pH.max ? 'text-green-400' : 'text-red-400'}`}>{pond.pH.toFixed(1)}</div>
-                  <div className="text-xs text-slate-500">{dischargeLimits.pH.min}-{dischargeLimits.pH.max}</div>
+                  <div className="text-xs text-gray-500">{dischargeLimits.pH.min}-{dischargeLimits.pH.max}</div>
                 </div>
               </div>
 
               {/* Pond totals */}
-              <div className="mt-4 grid grid-cols-3 gap-4 p-3 bg-slate-700/30 rounded-lg text-sm">
+              <div className="mt-4 grid grid-cols-3 gap-4 p-3 bg-gray-100/30 rounded-lg text-sm">
                 <div className="text-center">
-                  <div className="text-slate-400">Total Inflow</div>
+                  <div className="text-gray-500">Total Inflow</div>
                   <div className="font-bold text-cyan-400">{pond.totalInflow.toFixed(1)} m³</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-slate-400">Total Evaporated</div>
+                  <div className="text-gray-500">Total Evaporated</div>
                   <div className="font-bold text-yellow-400">{pond.totalEvaporated.toFixed(1)} m³</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-slate-400">Days to Fill</div>
+                  <div className="text-gray-500">Days to Fill</div>
                   <div className="font-bold text-teal-400">
                     {pond.inflow > 0 ? (((pond.capacity - pond.volume) / (pond.inflow * 24 - pond.surfaceArea * pond.evaporationRate / 1000))).toFixed(0) : '∞'} days
                   </div>
@@ -5259,10 +5259,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               </div>
               <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
                 {tankFarm.map(t => (
-                  <div key={t.id} onClick={() => selectTank(t.id)} className={`bg-slate-900/50 rounded-xl p-4 border-2 cursor-pointer transition-all hover:scale-105 ${t.status === 'processing' ? 'border-purple-500 animate-pulse' : t.status === 'selected' ? 'border-blue-500 ring-2 ring-blue-400' : t.status === 'settling' ? 'border-yellow-500' : t.status === 'empty' ? 'border-slate-600 opacity-50' : 'border-green-500'}`}>
+                  <div key={t.id} onClick={() => selectTank(t.id)} className={`bg-gray-50 rounded-xl p-4 border-2 cursor-pointer transition-all hover:scale-105 ${t.status === 'processing' ? 'border-purple-500 animate-pulse' : t.status === 'selected' ? 'border-blue-500 ring-2 ring-blue-400' : t.status === 'settling' ? 'border-yellow-500' : t.status === 'empty' ? 'border-slate-600 opacity-50' : 'border-green-500'}`}>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-white">{t.id}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${t.status === 'processing' ? 'bg-purple-900/50 text-purple-400' : t.status === 'selected' ? 'bg-blue-900/50 text-blue-400' : t.status === 'empty' ? 'bg-slate-700 text-slate-500' : 'bg-green-900/50 text-green-400'}`}>{t.status}</span>
+                      <span className="font-bold text-gray-800">{t.id}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${t.status === 'processing' ? 'bg-purple-900/50 text-purple-400' : t.status === 'selected' ? 'bg-blue-900/50 text-blue-400' : t.status === 'empty' ? 'bg-gray-100 text-gray-500' : 'bg-green-900/50 text-green-400'}`}>{t.status}</span>
                     </div>
                     <div className="relative h-24 bg-slate-800 rounded border border-slate-600 overflow-hidden mb-2">
                       <div className="absolute bottom-0 w-full" style={{ height: `${t.level}%` }}>
@@ -5271,10 +5271,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <div className="absolute w-full bg-blue-600/50" style={{ bottom: `${t.sediment + t.oil}%`, height: `${t.water}%` }} />
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold text-white drop-shadow-lg">{t.level.toFixed(0)}%</span>
+                        <span className="text-xl font-bold text-gray-800 drop-shadow-lg">{t.level.toFixed(0)}%</span>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-400">{((t.level / 100) * TANK.volume).toFixed(1)} m³</div>
+                    <div className="text-xs text-gray-500">{((t.level / 100) * TANK.volume).toFixed(1)} m³</div>
                   </div>
                 ))}
               </div>
@@ -5285,30 +5285,30 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 <h3 className="text-lg font-semibold text-amber-400">🛢️ Oil Storage (55 m³ × 6)</h3>
                 <div className="flex items-center gap-4">
                   {oilInterlock.reason && <span className={`px-3 py-1 rounded-full text-sm font-medium ${oilInterlock.active ? 'bg-red-900/50 text-red-400 animate-pulse border border-red-500' : 'bg-yellow-900/50 text-yellow-400'}`}>⚠️ {oilInterlock.reason}</span>}
-                  <span className="text-sm text-slate-400">Receiving: <span className="text-amber-400 font-bold">{selectedOilTank}</span></span>
-                  <button onClick={shipOil} disabled={isRunning} className="px-3 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors">🚛 Ship All</button>
+                  <span className="text-sm text-gray-500">Receiving: <span className="text-amber-400 font-bold">{selectedOilTank}</span></span>
+                  <button onClick={shipOil} disabled={isRunning} className="px-3 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors">🚛 Ship All</button>
                 </div>
               </div>
               <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
                 {oilTanks.map(t => (
-                  <div key={t.id} onClick={() => !isRunning && setSelectedOilTank(t.id)} className={`bg-slate-900/50 rounded-xl p-4 border-2 cursor-pointer hover:scale-105 transition-all ${t.level >= OIL_TANK.highHigh ? 'border-red-500 bg-red-900/30' : t.level >= OIL_TANK.high ? 'border-yellow-500' : t.id === selectedOilTank ? 'border-amber-500 ring-2 ring-amber-400' : 'border-slate-600'}`}>
+                  <div key={t.id} onClick={() => !isRunning && setSelectedOilTank(t.id)} className={`bg-gray-50 rounded-xl p-4 border-2 cursor-pointer hover:scale-105 transition-all ${t.level >= OIL_TANK.highHigh ? 'border-red-500 bg-red-900/30' : t.level >= OIL_TANK.high ? 'border-yellow-500' : t.id === selectedOilTank ? 'border-amber-500 ring-2 ring-amber-400' : 'border-slate-600'}`}>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-white">{t.id}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${t.id === selectedOilTank ? 'bg-amber-900/50 text-amber-400' : 'bg-slate-700 text-slate-400'}`}>{t.id === selectedOilTank ? 'recv' : t.status}</span>
+                      <span className="font-bold text-gray-800">{t.id}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${t.id === selectedOilTank ? 'bg-amber-900/50 text-amber-400' : 'bg-gray-100 text-gray-500'}`}>{t.id === selectedOilTank ? 'recv' : t.status}</span>
                     </div>
                     <div className="relative h-10 bg-slate-800 rounded-full border border-slate-600 overflow-hidden mb-2">
                       <div className="absolute left-0 h-full bg-amber-600/70 rounded-l-full transition-all" style={{ width: `${t.level}%` }} />
                       <div className="absolute h-full w-0.5 bg-yellow-400/50" style={{ left: `${OIL_TANK.high}%` }} />
                       <div className="absolute h-full w-0.5 bg-red-400/50" style={{ left: `${OIL_TANK.highHigh}%` }} />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-bold text-white drop-shadow-lg">{t.level.toFixed(0)}%</span>
+                        <span className="font-bold text-gray-800 drop-shadow-lg">{t.level.toFixed(0)}%</span>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-400">{((t.level / 100) * OIL_TANK.volume).toFixed(1)} m³</div>
+                    <div className="text-xs text-gray-500">{((t.level / 100) * OIL_TANK.volume).toFixed(1)} m³</div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 p-3 bg-slate-700/30 rounded-lg text-sm flex justify-between">
+              <div className="mt-4 p-3 bg-gray-100/30 rounded-lg text-sm flex justify-between">
                 <span>Total Inventory: {computed.oilTankTotals.totalM3.toFixed(1)} m³</span>
                 <span className="text-green-400 font-bold">${computed.oilTankTotals.totalValue.toFixed(0)}</span>
               </div>
@@ -5337,11 +5337,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* SCADA Process Flow Diagram */}
             <div className="bg-slate-900 rounded-xl p-6 border-2 border-slate-600">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Process Flow Diagram</h3>
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Process Flow Diagram</h3>
                 <div className="flex items-center gap-4 text-xs">
                   <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded" /> Running</span>
                   <span className="flex items-center gap-1"><div className="w-3 h-3 bg-amber-500 rounded" /> Standby</span>
-                  <span className="flex items-center gap-1"><div className="w-3 h-3 bg-slate-600 rounded" /> Off</span>
+                  <span className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-300 rounded" /> Off</span>
                 </div>
               </div>
               
@@ -5352,17 +5352,17 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <div className={`w-24 h-32 border-2 rounded-b-xl relative ${isBatchMode ? 'border-green-500 bg-green-900/20' : 'border-slate-600 bg-slate-800'}`}>
                     <div className="absolute bottom-0 w-full bg-blue-600/50 rounded-b-xl transition-all" style={{ height: `${isBatchMode && selectedTank ? (tankFarm.find(t => t.id === selectedTank)?.level || 0) : 0}%` }} />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg drop-shadow">{isBatchMode && selectedTank ? `${(tankFarm.find(t => t.id === selectedTank)?.level || 0).toFixed(0)}%` : '--'}</span>
+                      <span className="text-gray-800 font-bold text-lg drop-shadow">{isBatchMode && selectedTank ? `${(tankFarm.find(t => t.id === selectedTank)?.level || 0).toFixed(0)}%` : '--'}</span>
                     </div>
                   </div>
-                  <div className="text-sm text-slate-300 mt-2 font-medium">{selectedTank || 'FEED TANK'}</div>
-                  <div className={`text-xs font-bold ${isBatchMode ? 'text-green-400' : 'text-slate-500'}`}>{isBatchMode ? 'PROCESSING' : 'IDLE'}</div>
+                  <div className="text-sm text-gray-600 mt-2 font-medium">{selectedTank || 'FEED TANK'}</div>
+                  <div className={`text-xs font-bold ${isBatchMode ? 'text-green-400' : 'text-gray-500'}`}>{isBatchMode ? 'PROCESSING' : 'IDLE'}</div>
                 </div>
 
                 {/* Arrow 1 - 1 col */}
                 <div className="col-span-1 flex items-center justify-center">
-                  <div className={`h-1 w-full ${isBatchMode ? 'bg-cyan-500' : 'bg-slate-700'}`} />
-                  <div className={`text-2xl ${isBatchMode ? 'text-cyan-400' : 'text-slate-600'}`}>▶</div>
+                  <div className={`h-1 w-full ${isBatchMode ? 'bg-cyan-500' : 'bg-gray-100'}`} />
+                  <div className={`text-2xl ${isBatchMode ? 'text-cyan-400' : 'text-gray-400'}`}>▶</div>
                 </div>
 
                 {/* Heater - 2 cols */}
@@ -5370,17 +5370,17 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <div className={`w-20 h-24 border-2 rounded-xl relative flex items-center justify-center ${isRunning ? 'border-red-500 bg-red-900/30' : 'border-slate-600 bg-slate-800'}`}>
                     <div className="text-3xl">{isRunning ? '🔥' : '⬜'}</div>
                     <div className="absolute -bottom-3 bg-slate-900 px-2 rounded">
-                      <span className={`text-lg font-bold ${isRunning ? 'text-red-400' : 'text-slate-500'}`}>{smoothedProc.heaterTemp.toFixed(0)}°C</span>
+                      <span className={`text-lg font-bold ${isRunning ? 'text-red-400' : 'text-gray-500'}`}>{smoothedProc.heaterTemp.toFixed(0)}°C</span>
                     </div>
                   </div>
-                  <div className="text-sm text-slate-300 mt-4 font-medium">HEATER</div>
+                  <div className="text-sm text-gray-600 mt-4 font-medium">HEATER</div>
                   <div className="text-xs text-amber-400">SP: {loops.TIC.sp}°C</div>
                 </div>
 
                 {/* Arrow 2 - 1 col */}
                 <div className="col-span-1 flex items-center justify-center">
-                  <div className={`h-1 w-full ${isBatchMode ? 'bg-cyan-500' : 'bg-slate-700'}`} />
-                  <div className={`text-2xl ${isBatchMode ? 'text-cyan-400' : 'text-slate-600'}`}>▶</div>
+                  <div className={`h-1 w-full ${isBatchMode ? 'bg-cyan-500' : 'bg-gray-100'}`} />
+                  <div className={`text-2xl ${isBatchMode ? 'text-cyan-400' : 'text-gray-400'}`}>▶</div>
                 </div>
 
                 {/* Centrifuge - 2 cols */}
@@ -5388,63 +5388,63 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <div className={`w-28 h-28 border-2 rounded-full relative flex items-center justify-center ${isRunning ? 'border-purple-500 bg-purple-900/30' : 'border-slate-600 bg-slate-800'}`}>
                     <div className={`text-4xl ${isRunning ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>⚙️</div>
                     <div className="absolute -bottom-3 bg-slate-900 px-2 rounded">
-                      <span className={`text-lg font-bold ${isRunning ? 'text-purple-400' : 'text-slate-500'}`}>{smoothedProc.bowlSpeed.toFixed(0)}</span>
+                      <span className={`text-lg font-bold ${isRunning ? 'text-purple-400' : 'text-gray-500'}`}>{smoothedProc.bowlSpeed.toFixed(0)}</span>
                     </div>
                   </div>
-                  <div className="text-sm text-slate-300 mt-4 font-medium">CENTRIFUGE</div>
+                  <div className="text-sm text-gray-600 mt-4 font-medium">CENTRIFUGE</div>
                   <div className="text-xs text-green-400">SP: {loops.SIC.sp} RPM</div>
                 </div>
 
                 {/* Output Arrows - 1 col */}
                 <div className="col-span-1 flex flex-col justify-center gap-6 py-4">
                   <div className="flex items-center">
-                    <div className={`h-1 flex-1 ${isBatchMode ? 'bg-amber-500' : 'bg-slate-700'}`} />
-                    <div className={`text-lg ${isBatchMode ? 'text-amber-400' : 'text-slate-600'}`}>▶</div>
+                    <div className={`h-1 flex-1 ${isBatchMode ? 'bg-amber-500' : 'bg-gray-100'}`} />
+                    <div className={`text-lg ${isBatchMode ? 'text-amber-400' : 'text-gray-400'}`}>▶</div>
                   </div>
                   <div className="flex items-center">
-                    <div className={`h-1 flex-1 ${isBatchMode ? 'bg-cyan-500' : 'bg-slate-700'}`} />
-                    <div className={`text-lg ${isBatchMode ? 'text-cyan-400' : 'text-slate-600'}`}>▶</div>
+                    <div className={`h-1 flex-1 ${isBatchMode ? 'bg-cyan-500' : 'bg-gray-100'}`} />
+                    <div className={`text-lg ${isBatchMode ? 'text-cyan-400' : 'text-gray-400'}`}>▶</div>
                   </div>
                   <div className="flex items-center">
-                    <div className={`h-1 flex-1 ${isBatchMode ? 'bg-orange-500' : 'bg-slate-700'}`} />
-                    <div className={`text-lg ${isBatchMode ? 'text-orange-400' : 'text-slate-600'}`}>▶</div>
+                    <div className={`h-1 flex-1 ${isBatchMode ? 'bg-orange-500' : 'bg-gray-100'}`} />
+                    <div className={`text-lg ${isBatchMode ? 'text-orange-400' : 'text-gray-400'}`}>▶</div>
                   </div>
                 </div>
 
                 {/* Output Destinations - 2 cols */}
                 <div className="col-span-2 flex flex-col gap-3">
                   {/* Oil Tank */}
-                  <div className={`flex items-center gap-3 p-2 rounded-lg border ${isBatchMode ? 'border-amber-500 bg-amber-900/20' : 'border-slate-700 bg-slate-800'}`}>
+                  <div className={`flex items-center gap-3 p-2 rounded-lg border ${isBatchMode ? 'border-amber-500 bg-amber-900/20' : 'border-gray-200 bg-slate-800'}`}>
                     <div className="w-12 h-12 border-2 border-amber-500 rounded relative bg-slate-900">
                       <div className="absolute bottom-0 w-full bg-amber-500/60 rounded-b transition-all" style={{ height: `${oilTanks.find(t => t.id === selectedOilTank)?.level || 0}%` }} />
-                      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{(oilTanks.find(t => t.id === selectedOilTank)?.level || 0).toFixed(0)}%</div>
+                      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-800">{(oilTanks.find(t => t.id === selectedOilTank)?.level || 0).toFixed(0)}%</div>
                     </div>
                     <div>
                       <div className="text-amber-400 font-bold text-sm">🛢️ OIL TANK</div>
-                      <div className="text-xs text-slate-400">{selectedOilTank}</div>
+                      <div className="text-xs text-gray-500">{selectedOilTank}</div>
                     </div>
                   </div>
                   
                   {/* Pond */}
-                  <div className={`flex items-center gap-3 p-2 rounded-lg border ${isBatchMode ? 'border-cyan-500 bg-cyan-900/20' : 'border-slate-700 bg-slate-800'}`}>
+                  <div className={`flex items-center gap-3 p-2 rounded-lg border ${isBatchMode ? 'border-cyan-500 bg-cyan-900/20' : 'border-gray-200 bg-slate-800'}`}>
                     <div className="w-12 h-12 border-2 border-cyan-500 rounded relative bg-slate-900">
                       <div className="absolute bottom-0 w-full bg-cyan-500/50 rounded-b transition-all" style={{ height: `${pond.level}%` }} />
-                      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{pond.level.toFixed(0)}%</div>
+                      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-800">{pond.level.toFixed(0)}%</div>
                     </div>
                     <div>
                       <div className="text-cyan-400 font-bold text-sm">🌊 POND</div>
-                      <div className="text-xs text-slate-400">8 ML capacity</div>
+                      <div className="text-xs text-gray-500">8 ML capacity</div>
                     </div>
                   </div>
 
                   {/* Sludge */}
-                  <div className={`flex items-center gap-3 p-2 rounded-lg border ${isBatchMode ? 'border-orange-500 bg-orange-900/20' : 'border-slate-700 bg-slate-800'}`}>
+                  <div className={`flex items-center gap-3 p-2 rounded-lg border ${isBatchMode ? 'border-orange-500 bg-orange-900/20' : 'border-gray-200 bg-slate-800'}`}>
                     <div className="w-12 h-12 border-2 border-orange-500 rounded flex items-center justify-center bg-slate-900">
                       <span className="text-xl">🗑️</span>
                     </div>
                     <div>
                       <div className="text-orange-400 font-bold text-sm">🪨 SLUDGE</div>
-                      <div className="text-xs text-slate-400">Disposal</div>
+                      <div className="text-xs text-gray-500">Disposal</div>
                     </div>
                   </div>
                 </div>
@@ -5460,7 +5460,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <div className="absolute bottom-0 w-full bg-gradient-to-t from-cyan-600/60 to-cyan-400/30 transition-all" style={{ height: `${pond.level}%` }} />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-white drop-shadow">{pond.level.toFixed(1)}%</div>
+                        <div className="text-3xl font-bold text-gray-800 drop-shadow">{pond.level.toFixed(1)}%</div>
                         <div className="text-sm text-cyan-300">{(pond.volume / 1000000).toFixed(2)} ML / 8 ML</div>
                       </div>
                     </div>
@@ -5469,25 +5469,25 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     )}
                   </div>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700">
-                  <div className="text-xs text-slate-400 mb-1">pH Level</div>
+                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-gray-200">
+                  <div className="text-xs text-gray-500 mb-1">pH Level</div>
                   <div className={`text-2xl font-bold ${pond.pH >= 6.5 && pond.pH <= 8.5 ? 'text-green-400' : 'text-red-400'}`}>{pond.pH.toFixed(1)}</div>
-                  <div className="text-xs text-slate-500">Target: 6.5-8.5</div>
+                  <div className="text-xs text-gray-500">Target: 6.5-8.5</div>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700">
-                  <div className="text-xs text-slate-400 mb-1">Turbidity</div>
+                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-gray-200">
+                  <div className="text-xs text-gray-500 mb-1">Turbidity</div>
                   <div className={`text-2xl font-bold ${pond.turbidity <= 100 ? 'text-green-400' : 'text-yellow-400'}`}>{pond.turbidity.toFixed(0)}</div>
-                  <div className="text-xs text-slate-500">NTU (&lt;100)</div>
+                  <div className="text-xs text-gray-500">NTU (&lt;100)</div>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700">
-                  <div className="text-xs text-slate-400 mb-1">Oil in Water</div>
+                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-gray-200">
+                  <div className="text-xs text-gray-500 mb-1">Oil in Water</div>
                   <div className={`text-2xl font-bold ${smoothedProc.waterQuality <= 50 ? 'text-green-400' : 'text-red-400'}`}>{smoothedProc.waterQuality.toFixed(0)}</div>
-                  <div className="text-xs text-slate-500">ppm (&lt;50)</div>
+                  <div className="text-xs text-gray-500">ppm (&lt;50)</div>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700">
-                  <div className="text-xs text-slate-400 mb-1">Fill Rate</div>
+                <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-gray-200">
+                  <div className="text-xs text-gray-500 mb-1">Fill Rate</div>
                   <div className="text-2xl font-bold text-cyan-400">{(smoothedProc.waterOut * 1000).toFixed(0)}</div>
-                  <div className="text-xs text-slate-500">L/h</div>
+                  <div className="text-xs text-gray-500">L/h</div>
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
@@ -5502,7 +5502,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
             {/* Phase Sequence Display - SCADA Style */}
             <div className="bg-slate-900 rounded-xl p-4 border-2 border-slate-600">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Batch Sequence</h3>
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Batch Sequence</h3>
               <div className="flex items-center gap-1">
                 {batchPhases.map((p, i) => (
                   <div key={i} className="flex-1 relative">
@@ -5510,11 +5510,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       i === batchPhase && isBatchMode 
                         ? 'border-green-500 bg-green-900/40 scale-105 z-10' 
                         : i < batchPhase && isBatchMode 
-                          ? 'border-slate-500 bg-slate-700/50' 
-                          : 'border-slate-700 bg-slate-800/50'
+                          ? 'border-slate-500 bg-gray-100/50' 
+                          : 'border-gray-200 bg-slate-800/50'
                     }`}>
                       <span className={`text-lg ${i === batchPhase && isBatchMode ? '' : 'grayscale opacity-50'}`}>{p.icon}</span>
-                      <span className={`text-xs font-medium mt-1 ${i === batchPhase && isBatchMode ? 'text-green-400' : 'text-slate-500'}`}>
+                      <span className={`text-xs font-medium mt-1 ${i === batchPhase && isBatchMode ? 'text-green-400' : 'text-gray-500'}`}>
                         {p.name.split(' ')[0]}
                       </span>
                     </div>
@@ -5524,11 +5524,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         ? 'bg-green-500 border-green-400 animate-pulse' 
                         : i < batchPhase && isBatchMode 
                           ? 'bg-slate-500 border-slate-400' 
-                          : 'bg-slate-700 border-slate-600'
+                          : 'bg-gray-100 border-slate-600'
                     }`} />
                     {/* Connector */}
                     {i < batchPhases.length - 1 && (
-                      <div className={`absolute top-1/2 -right-1 w-2 h-0.5 ${i < batchPhase && isBatchMode ? 'bg-green-500' : 'bg-slate-700'}`} />
+                      <div className={`absolute top-1/2 -right-1 w-2 h-0.5 ${i < batchPhase && isBatchMode ? 'bg-green-500' : 'bg-gray-100'}`} />
                     )}
                   </div>
                 ))}
@@ -5536,11 +5536,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               {/* Progress bar */}
               {isBatchMode && (
                 <div className="mt-4">
-                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>Batch Progress</span>
                     <span>{batchProgress.pct.toFixed(1)}% • {(batchProgress.remain * 1000).toFixed(0)} L remaining</span>
                   </div>
-                  <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full transition-all" style={{ width: `${batchProgress.pct}%` }} />
                   </div>
                 </div>
@@ -5550,77 +5550,77 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* Live Setpoints vs Actuals - SCADA Table */}
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-slate-900 rounded-xl p-4 border-2 border-slate-600">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Current Phase Setpoints</h3>
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Current Phase Setpoints</h3>
                 {isBatchMode && batchPhases[batchPhase] ? (
                   <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-2 text-xs text-slate-500 border-b border-slate-700 pb-1">
+                    <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 border-b border-gray-200 pb-1">
                       <span>PARAMETER</span><span className="text-center">SETPOINT</span><span className="text-center">ACTUAL</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 items-center">
-                      <span className="text-sm text-slate-400">Temperature</span>
+                      <span className="text-sm text-gray-500">Temperature</span>
                       <span className="text-center text-amber-400 font-mono">{batchPhases[batchPhase].temp}°C</span>
                       <span className={`text-center font-mono font-bold ${Math.abs(smoothedProc.heaterTemp - batchPhases[batchPhase].temp) < 3 ? 'text-green-400' : 'text-yellow-400'}`}>{smoothedProc.heaterTemp.toFixed(1)}°C</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 items-center">
-                      <span className="text-sm text-slate-400">Flow Rate</span>
+                      <span className="text-sm text-gray-500">Flow Rate</span>
                       <span className="text-center text-amber-400 font-mono">{batchPhases[batchPhase].flow} m³/h</span>
                       <span className={`text-center font-mono font-bold ${Math.abs(smoothedProc.feedFlow - batchPhases[batchPhase].flow) < 1 ? 'text-green-400' : 'text-yellow-400'}`}>{smoothedProc.feedFlow.toFixed(1)} m³/h</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 items-center">
-                      <span className="text-sm text-slate-400">Bowl Speed</span>
+                      <span className="text-sm text-gray-500">Bowl Speed</span>
                       <span className="text-center text-amber-400 font-mono">{batchPhases[batchPhase].rpm} RPM</span>
                       <span className={`text-center font-mono font-bold ${Math.abs(smoothedProc.bowlSpeed - batchPhases[batchPhase].rpm) < 100 ? 'text-green-400' : 'text-yellow-400'}`}>{smoothedProc.bowlSpeed.toFixed(0)} RPM</span>
                     </div>
-                    <div className="border-t border-slate-700 pt-2 mt-2">
+                    <div className="border-t border-gray-200 pt-2 mt-2">
                       <div className="grid grid-cols-3 gap-2 items-center">
-                        <span className="text-sm text-slate-400">Feed Comp</span>
-                        <span className="text-center text-xs text-slate-500">W{batchPhases[batchPhase].water}/O{batchPhases[batchPhase].oil}/S{batchPhases[batchPhase].sediment}</span>
+                        <span className="text-sm text-gray-500">Feed Comp</span>
+                        <span className="text-center text-xs text-gray-500">W{batchPhases[batchPhase].water}/O{batchPhases[batchPhase].oil}/S{batchPhases[batchPhase].sediment}</span>
                         <span className="text-center text-xs text-cyan-400">Phase {batchPhase + 1}</span>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-slate-500">No batch active</div>
+                  <div className="text-center py-8 text-gray-500">No batch active</div>
                 )}
               </div>
 
               <div className="bg-slate-900 rounded-xl p-4 border-2 border-slate-600">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Performance</h3>
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Performance</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-400">Oil Recovery</span>
+                    <span className="text-sm text-gray-500">Oil Recovery</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full bg-green-500 rounded-full" style={{ width: `${smoothedProc.oilEff}%` }} />
                       </div>
                       <span className={`font-mono font-bold ${smoothedProc.oilEff >= 90 ? 'text-green-400' : 'text-yellow-400'}`}>{smoothedProc.oilEff.toFixed(1)}%</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-400">Solids Removal</span>
+                    <span className="text-sm text-gray-500">Solids Removal</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full bg-green-500 rounded-full" style={{ width: `${smoothedProc.solidsEff}%` }} />
                       </div>
                       <span className={`font-mono font-bold ${smoothedProc.solidsEff >= 95 ? 'text-green-400' : 'text-yellow-400'}`}>{smoothedProc.solidsEff.toFixed(1)}%</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-400">Water Quality</span>
+                    <span className="text-sm text-gray-500">Water Quality</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${Math.max(0, 100 - smoothedProc.waterQuality)}%` }} />
                       </div>
                       <span className={`font-mono font-bold ${smoothedProc.waterQuality <= 50 ? 'text-green-400' : 'text-red-400'}`}>{smoothedProc.waterQuality.toFixed(0)} ppm</span>
                     </div>
                   </div>
-                  <div className="border-t border-slate-700 pt-3 mt-3">
+                  <div className="border-t border-gray-200 pt-3 mt-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-400">Total Power</span>
+                      <span className="text-sm text-gray-500">Total Power</span>
                       <span className="font-mono font-bold text-yellow-400">{smoothedProc.totalPower.toFixed(0)} kW</span>
                     </div>
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-sm text-slate-400">Vibration</span>
+                      <span className="text-sm text-gray-500">Vibration</span>
                       <span className={`font-mono font-bold ${smoothedProc.vibration <= 5 ? 'text-green-400' : smoothedProc.vibration <= 7 ? 'text-yellow-400' : 'text-red-400'}`}>{smoothedProc.vibration.toFixed(1)} mm/s</span>
                     </div>
                   </div>
@@ -5630,27 +5630,27 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
             {/* Batch Recipe Table */}
             <div className="bg-slate-900 rounded-xl p-4 border-2 border-slate-600 overflow-x-auto">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Batch Recipe</h3>
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Batch Recipe</h3>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-600">
-                    <th className="text-left py-2 px-2 text-slate-500">PHASE</th>
-                    <th className="text-center py-2 px-2 text-slate-500">VOL (m³)</th>
-                    <th className="text-center py-2 px-2 text-slate-500">TEMP</th>
-                    <th className="text-center py-2 px-2 text-slate-500">FLOW</th>
-                    <th className="text-center py-2 px-2 text-slate-500">RPM</th>
-                    <th className="text-center py-2 px-2 text-slate-500">WATER</th>
-                    <th className="text-center py-2 px-2 text-slate-500">OIL</th>
-                    <th className="text-center py-2 px-2 text-slate-500">SOLIDS</th>
-                    <th className="text-center py-2 px-2 text-slate-500">STATUS</th>
+                    <th className="text-left py-2 px-2 text-gray-500">PHASE</th>
+                    <th className="text-center py-2 px-2 text-gray-500">VOL (m³)</th>
+                    <th className="text-center py-2 px-2 text-gray-500">TEMP</th>
+                    <th className="text-center py-2 px-2 text-gray-500">FLOW</th>
+                    <th className="text-center py-2 px-2 text-gray-500">RPM</th>
+                    <th className="text-center py-2 px-2 text-gray-500">WATER</th>
+                    <th className="text-center py-2 px-2 text-gray-500">OIL</th>
+                    <th className="text-center py-2 px-2 text-gray-500">SOLIDS</th>
+                    <th className="text-center py-2 px-2 text-gray-500">STATUS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {batchPhases.map((p, i) => (
-                    <tr key={i} className={`border-b border-slate-700/50 ${i === batchPhase && isBatchMode ? 'bg-green-900/20' : ''}`}>
+                    <tr key={i} className={`border-b border-gray-200/50 ${i === batchPhase && isBatchMode ? 'bg-green-900/20' : ''}`}>
                       <td className="py-2 px-2">
                         <span className="text-lg mr-2">{p.icon}</span>
-                        <span className={i === batchPhase && isBatchMode ? 'text-green-400 font-bold' : 'text-slate-300'}>{p.name}</span>
+                        <span className={i === batchPhase && isBatchMode ? 'text-green-400 font-bold' : 'text-gray-600'}>{p.name}</span>
                       </td>
                       <td className="text-center py-2 px-2 font-mono text-cyan-400">{p.volume}</td>
                       <td className="text-center py-2 px-2 font-mono text-red-400">{p.temp}°C</td>
@@ -5663,9 +5663,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         {i === batchPhase && isBatchMode ? (
                           <span className="px-2 py-0.5 bg-green-900/50 text-green-400 rounded text-xs font-bold animate-pulse">RUNNING</span>
                         ) : i < batchPhase && isBatchMode ? (
-                          <span className="px-2 py-0.5 bg-slate-700 text-slate-400 rounded text-xs">DONE</span>
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">DONE</span>
                         ) : (
-                          <span className="px-2 py-0.5 bg-slate-800 text-slate-500 rounded text-xs">PENDING</span>
+                          <span className="px-2 py-0.5 bg-slate-800 text-gray-500 rounded text-xs">PENDING</span>
                         )}
                       </td>
                     </tr>
@@ -5673,8 +5673,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 </tbody>
               </table>
               <div className="mt-3 flex justify-between text-sm">
-                <span className="text-slate-400">Total Batch Volume: <span className="text-cyan-400 font-bold">{batchPhases.reduce((s, p) => s + p.volume, 0).toFixed(1)} m³</span></span>
-                <span className="text-slate-400">Estimated Time: <span className="text-amber-400 font-bold">{((batchPhases.reduce((s, p) => s + p.volume, 0) / 10) * 60).toFixed(0)} min</span></span>
+                <span className="text-gray-500">Total Batch Volume: <span className="text-cyan-400 font-bold">{batchPhases.reduce((s, p) => s + p.volume, 0).toFixed(1)} m³</span></span>
+                <span className="text-gray-500">Estimated Time: <span className="text-amber-400 font-bold">{((batchPhases.reduce((s, p) => s + p.volume, 0) / 10) * 60).toFixed(0)} min</span></span>
               </div>
             </div>
           </div>
@@ -5684,12 +5684,12 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
           <div className="space-y-6">
             <h2 className="text-xl font-bold">📈 Process Trends</h2>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-sm font-semibold text-cyan-400 mb-3">Flow & Temperature</h3><ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis yAxisId="l" stroke="#06b6d4" /><YAxis yAxisId="r" orientation="right" stroke="#f97316" /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><Line yAxisId="l" type="monotone" dataKey="flow" stroke="#06b6d4" dot={false} name="Flow" /><Line yAxisId="r" type="monotone" dataKey="temp" stroke="#f97316" dot={false} name="Temp" /></LineChart></ResponsiveContainer></div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-sm font-semibold text-green-400 mb-3">Efficiency & Water Quality</h3><ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis yAxisId="l" stroke="#22c55e" domain={[70, 100]} /><YAxis yAxisId="r" orientation="right" stroke="#3b82f6" domain={[0, 200]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine yAxisId="l" y={targets.oilEff} stroke="#22c55e" strokeDasharray="5 5" /><ReferenceLine yAxisId="r" y={targets.waterQuality} stroke="#3b82f6" strokeDasharray="5 5" /><Line yAxisId="l" type="monotone" dataKey="oilEff" stroke="#22c55e" dot={false} name="Oil Eff" /><Line yAxisId="r" type="monotone" dataKey="wq" stroke="#3b82f6" dot={false} name="OiW" /></LineChart></ResponsiveContainer></div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-sm font-semibold text-purple-400 mb-3">Speed & Power</h3><ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis yAxisId="l" stroke="#a855f7" /><YAxis yAxisId="r" orientation="right" stroke="#ef4444" /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><Line yAxisId="l" type="monotone" dataKey="speed" stroke="#a855f7" dot={false} name="Speed" /><Line yAxisId="r" type="monotone" dataKey="power" stroke="#ef4444" dot={false} name="Power" /></LineChart></ResponsiveContainer></div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-sm font-semibold text-amber-400 mb-3">Vibration</h3><ResponsiveContainer width="100%" height={180}><AreaChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#f59e0b" domain={[0, 10]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={7} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Alarm', fill: '#ef4444', fontSize: 10 }} /><Area type="monotone" dataKey="vib" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} name="Vibration" /></AreaChart></ResponsiveContainer></div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-sm font-semibold text-teal-400 mb-3">pH</h3><ResponsiveContainer width="100%" height={180}><AreaChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#14b8a6" domain={[5, 10]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={targets.pH.max} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'High', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={targets.pH.min} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Low', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={7} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Neutral', fill: '#22c55e', fontSize: 10 }} /><Area type="monotone" dataKey="pH" stroke="#14b8a6" fill="#14b8a6" fillOpacity={0.3} name="pH" /></AreaChart></ResponsiveContainer></div>
-              <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-sm font-semibold text-indigo-400 mb-3">Turbidity</h3><ResponsiveContainer width="100%" height={180}><AreaChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#818cf8" domain={[0, 200]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={targets.turbidity} stroke="#22c55e" strokeDasharray="5 5" label={{ value: 'Target', fill: '#22c55e', fontSize: 10 }} /><Area type="monotone" dataKey="turbidity" stroke="#818cf8" fill="#818cf8" fillOpacity={0.3} name="Turbidity" /></AreaChart></ResponsiveContainer></div>
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-sm font-semibold text-cyan-400 mb-3">Flow & Temperature</h3><ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis yAxisId="l" stroke="#06b6d4" /><YAxis yAxisId="r" orientation="right" stroke="#f97316" /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><Line yAxisId="l" type="monotone" dataKey="flow" stroke="#06b6d4" dot={false} name="Flow" /><Line yAxisId="r" type="monotone" dataKey="temp" stroke="#f97316" dot={false} name="Temp" /></LineChart></ResponsiveContainer></div>
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-sm font-semibold text-green-400 mb-3">Efficiency & Water Quality</h3><ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis yAxisId="l" stroke="#22c55e" domain={[70, 100]} /><YAxis yAxisId="r" orientation="right" stroke="#3b82f6" domain={[0, 200]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine yAxisId="l" y={targets.oilEff} stroke="#22c55e" strokeDasharray="5 5" /><ReferenceLine yAxisId="r" y={targets.waterQuality} stroke="#3b82f6" strokeDasharray="5 5" /><Line yAxisId="l" type="monotone" dataKey="oilEff" stroke="#22c55e" dot={false} name="Oil Eff" /><Line yAxisId="r" type="monotone" dataKey="wq" stroke="#3b82f6" dot={false} name="OiW" /></LineChart></ResponsiveContainer></div>
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-sm font-semibold text-purple-400 mb-3">Speed & Power</h3><ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis yAxisId="l" stroke="#a855f7" /><YAxis yAxisId="r" orientation="right" stroke="#ef4444" /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><Line yAxisId="l" type="monotone" dataKey="speed" stroke="#a855f7" dot={false} name="Speed" /><Line yAxisId="r" type="monotone" dataKey="power" stroke="#ef4444" dot={false} name="Power" /></LineChart></ResponsiveContainer></div>
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-sm font-semibold text-amber-400 mb-3">Vibration</h3><ResponsiveContainer width="100%" height={180}><AreaChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#f59e0b" domain={[0, 10]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={7} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Alarm', fill: '#ef4444', fontSize: 10 }} /><Area type="monotone" dataKey="vib" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} name="Vibration" /></AreaChart></ResponsiveContainer></div>
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-sm font-semibold text-teal-400 mb-3">pH</h3><ResponsiveContainer width="100%" height={180}><AreaChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#14b8a6" domain={[5, 10]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={targets.pH.max} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'High', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={targets.pH.min} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'Low', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={7} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Neutral', fill: '#22c55e', fontSize: 10 }} /><Area type="monotone" dataKey="pH" stroke="#14b8a6" fill="#14b8a6" fillOpacity={0.3} name="pH" /></AreaChart></ResponsiveContainer></div>
+              <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-sm font-semibold text-indigo-400 mb-3">Turbidity</h3><ResponsiveContainer width="100%" height={180}><AreaChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#818cf8" domain={[0, 200]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={targets.turbidity} stroke="#22c55e" strokeDasharray="5 5" label={{ value: 'Target', fill: '#22c55e', fontSize: 10 }} /><Area type="monotone" dataKey="turbidity" stroke="#818cf8" fill="#818cf8" fillOpacity={0.3} name="Turbidity" /></AreaChart></ResponsiveContainer></div>
             </div>
           </div>
         )}
@@ -5699,8 +5699,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             <h2 className="text-xl font-bold">📊 KPI Dashboard</h2>
 
             {/* Process Performance KPIs */}
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <h3 className="text-sm font-semibold text-slate-400 mb-3">CENTRIFUGE PERFORMANCE</h3>
+            <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-500 mb-3">CENTRIFUGE PERFORMANCE</h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <KPI title="Oil Recovery" val={smoothedProc.oilEff} unit="%" target={targets.oilEff} icon="🛢️" />
                 <KPI title="Solids Removal" val={smoothedProc.solidsEff} unit="%" target={targets.solidsEff} icon="🪨" />
@@ -5758,15 +5758,134 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               </div>
             </div>
 
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700"><h3 className="text-lg font-semibold text-cyan-400 mb-4">📈 Session Statistics</h3><div className="grid md:grid-cols-4 gap-4">{Object.entries(kpiStats).map(([k, s]) => (<div key={k} className="bg-slate-700/30 rounded-lg p-3"><div className="text-sm text-slate-400 mb-2 capitalize">{k.replace(/([A-Z])/g, ' $1')}</div><div className="grid grid-cols-2 gap-2 text-xs"><div>Mean: <span className="text-cyan-400 font-bold">{s.mean.toFixed(2)}</span></div><div>σ: <span className="text-amber-400 font-bold">{s.stdDev.toFixed(2)}</span></div><div>Min: <span className="text-blue-400 font-bold">{s.min.toFixed(2)}</span></div><div>Max: <span className="text-red-400 font-bold">{s.max.toFixed(2)}</span></div></div></div>))}</div></div>
+            <div className="bg-slate-800 rounded-lg p-4 border border-gray-200"><h3 className="text-lg font-semibold text-cyan-400 mb-4">📈 Session Statistics</h3><div className="grid md:grid-cols-4 gap-4">{Object.entries(kpiStats).map(([k, s]) => (<div key={k} className="bg-gray-100/30 rounded-lg p-3"><div className="text-sm text-gray-500 mb-2 capitalize">{k.replace(/([A-Z])/g, ' $1')}</div><div className="grid grid-cols-2 gap-2 text-xs"><div>Mean: <span className="text-cyan-400 font-bold">{s.mean.toFixed(2)}</span></div><div>σ: <span className="text-amber-400 font-bold">{s.stdDev.toFixed(2)}</span></div><div>Min: <span className="text-blue-400 font-bold">{s.min.toFixed(2)}</span></div><div>Max: <span className="text-red-400 font-bold">{s.max.toFixed(2)}</span></div></div></div>))}</div></div>
           </div>
         )}
 
         {activeTab === 'spc' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold">📉 SPC Charts</h2>
-            <div className="bg-slate-800 rounded-lg p-4 border border-green-900/50"><h3 className="text-lg font-semibold text-green-400 mb-4">Oil Efficiency X̄ Chart</h3><ResponsiveContainer width="100%" height={220}><LineChart data={kpiHistory}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#22c55e" domain={[Math.max(0, kpiStats.oilEff.mean - 4 * Math.max(kpiStats.oilEff.stdDev, 1)), Math.min(100, kpiStats.oilEff.mean + 4 * Math.max(kpiStats.oilEff.stdDev, 1))]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={kpiStats.oilEff.mean} stroke="#22c55e" label={{ value: 'CL', fill: '#22c55e', fontSize: 10 }} /><ReferenceLine y={Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev)} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'LCL', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={targets.oilEff} stroke="#3b82f6" strokeDasharray="3 3" label={{ value: 'Target', fill: '#3b82f6', fontSize: 10 }} /><Line type="monotone" dataKey="oilEff" stroke="#22c55e" dot={false} /></LineChart></ResponsiveContainer><div className="mt-2 grid grid-cols-4 gap-4 text-sm"><div>UCL: <span className="text-red-400">{(kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></div><div>CL: <span className="text-green-400">{kpiStats.oilEff.mean.toFixed(2)}%</span></div><div>LCL: <span className="text-red-400">{Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></div><div>Cp: <span className="text-cyan-400">{kpiStats.oilEff.stdDev > 0 ? ((100 - targets.oilEff) / (3 * kpiStats.oilEff.stdDev)).toFixed(2) : 'N/A'}</span></div></div></div>
-            <div className="bg-slate-800 rounded-lg p-4 border border-blue-900/50"><h3 className="text-lg font-semibold text-blue-400 mb-4">Water Quality X̄ Chart</h3><ResponsiveContainer width="100%" height={220}><LineChart data={kpiHistory}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#3b82f6" domain={[0, Math.max(200, kpiStats.wq.mean + 4 * Math.max(kpiStats.wq.stdDev, 10))]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={kpiStats.wq.mean + 3 * kpiStats.wq.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={kpiStats.wq.mean} stroke="#3b82f6" label={{ value: 'CL', fill: '#3b82f6', fontSize: 10 }} /><ReferenceLine y={targets.waterQuality} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Target', fill: '#22c55e', fontSize: 10 }} /><Line type="monotone" dataKey="wq" stroke="#3b82f6" dot={false} /></LineChart></ResponsiveContainer></div>
+            <div className="bg-slate-800 rounded-lg p-4 border border-green-900/50">
+              <h3 className="text-lg font-semibold text-green-400 mb-4">Oil Efficiency X̄ Chart</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={kpiHistory} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} />
+                  <YAxis
+                    stroke="#22c55e"
+                    domain={[Math.max(0, kpiStats.oilEff.mean - 4 * Math.max(kpiStats.oilEff.stdDev, 1)), Math.min(100, kpiStats.oilEff.mean + 4 * Math.max(kpiStats.oilEff.stdDev, 1))]}
+                    tickFormatter={(value) => `${value.toFixed(1)}%`}
+                    tickCount={6}
+                    width={60}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }}
+                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Oil Efficiency']}
+                    labelFormatter={(label) => `Time: ${label}`}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    wrapperStyle={{ paddingBottom: '10px' }}
+                  />
+                  <ReferenceLine y={kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={kpiStats.oilEff.mean} stroke="#22c55e" label={{ value: 'CL', fill: '#22c55e', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev)} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'LCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={targets.oilEff} stroke="#3b82f6" strokeDasharray="3 3" label={{ value: 'Target', fill: '#3b82f6', fontSize: 10, position: 'right' }} />
+                  <Line type="monotone" dataKey="oilEff" stroke="#22c55e" dot={false} name="Oil Efficiency %" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+
+              {/* Control Limits Legend */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-xs text-gray-500 mb-2 font-semibold">CONTROL LIMITS (3-sigma)</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>UCL: <span className="text-red-400 font-mono">{(kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-green-400"></div>
+                    <span>CL: <span className="text-green-400 font-mono">{kpiStats.oilEff.mean.toFixed(2)}%</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>LCL: <span className="text-red-400 font-mono">{Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-400 border-dashed border-t-2 border-blue-400"></div>
+                    <span>Target: <span className="text-blue-400 font-mono">{targets.oilEff}%</span></span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>Cp: <span className="text-cyan-400 font-mono">{kpiStats.oilEff.stdDev > 0 ? ((100 - targets.oilEff) / (3 * kpiStats.oilEff.stdDev)).toFixed(2) : 'N/A'}</span></div>
+                  <div>Mean: <span className="text-gray-600 font-mono">{kpiStats.oilEff.mean.toFixed(2)}%</span></div>
+                  <div>Std Dev: <span className="text-gray-600 font-mono">{kpiStats.oilEff.stdDev.toFixed(2)}</span></div>
+                  <div>Range: <span className="text-gray-600 font-mono">{kpiStats.oilEff.min.toFixed(1)} - {kpiStats.oilEff.max.toFixed(1)}%</span></div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4 border border-blue-900/50">
+              <h3 className="text-lg font-semibold text-blue-400 mb-4">Water Quality X̄ Chart</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={kpiHistory} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} />
+                  <YAxis
+                    stroke="#3b82f6"
+                    domain={[0, Math.max(200, kpiStats.wq.mean + 4 * Math.max(kpiStats.wq.stdDev, 10))]}
+                    tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0)}
+                    tickCount={6}
+                    width={60}
+                    label={{ value: 'ppm', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9ca3af', fontSize: 10 } }}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }}
+                    formatter={(value: number) => [`${value.toFixed(1)} ppm`, 'Oil in Water']}
+                    labelFormatter={(label) => `Time: ${label}`}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    wrapperStyle={{ paddingBottom: '10px' }}
+                  />
+                  <ReferenceLine y={kpiStats.wq.mean + 3 * kpiStats.wq.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={kpiStats.wq.mean} stroke="#3b82f6" label={{ value: 'CL', fill: '#3b82f6', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={Math.max(0, kpiStats.wq.mean - 3 * kpiStats.wq.stdDev)} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'LCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={targets.waterQuality} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Target', fill: '#22c55e', fontSize: 10, position: 'right' }} />
+                  <Line type="monotone" dataKey="wq" stroke="#3b82f6" dot={false} name="Oil in Water (ppm)" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+
+              {/* Control Limits Legend */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-xs text-gray-500 mb-2 font-semibold">CONTROL LIMITS (3-sigma)</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>UCL: <span className="text-red-400 font-mono">{(kpiStats.wq.mean + 3 * kpiStats.wq.stdDev).toFixed(1)} ppm</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-400"></div>
+                    <span>CL: <span className="text-blue-400 font-mono">{kpiStats.wq.mean.toFixed(1)} ppm</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>LCL: <span className="text-red-400 font-mono">{Math.max(0, kpiStats.wq.mean - 3 * kpiStats.wq.stdDev).toFixed(1)} ppm</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-green-400 border-dashed border-t-2 border-green-400"></div>
+                    <span>Target: <span className="text-green-400 font-mono">{targets.waterQuality} ppm</span></span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>Cp: <span className="text-cyan-400 font-mono">{kpiStats.wq.stdDev > 0 ? (targets.waterQuality / (3 * kpiStats.wq.stdDev)).toFixed(2) : 'N/A'}</span></div>
+                  <div>Mean: <span className="text-gray-600 font-mono">{kpiStats.wq.mean.toFixed(1)} ppm</span></div>
+                  <div>Std Dev: <span className="text-gray-600 font-mono">{kpiStats.wq.stdDev.toFixed(1)}</span></div>
+                  <div>Range: <span className="text-gray-600 font-mono">{kpiStats.wq.min.toFixed(0)} - {kpiStats.wq.max.toFixed(0)} ppm</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -5979,14 +6098,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
                     phaseData.length > 0
                       ? 'bg-purple-600 hover:bg-purple-500'
-                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                   }`}
                   title={phaseData.length === 0 ? 'Run a batch first' : `${phaseData.length} phases recorded`}
                 >
                   📊 Phase Report {phaseData.length > 0 && `(${phaseData.length})`}
                 </button>
                 <button onClick={() => addEvent('NOTE', 'Manual checkpoint')} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium">➕ Add Note</button>
-                <button onClick={() => window.print()} className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium">🖨️ Print</button>
+                <button onClick={() => window.print()} className="px-3 py-1.5 bg-gray-300 hover:bg-slate-500 rounded-lg text-sm font-medium">🖨️ Print</button>
                 <button onClick={() => { if (window.confirm('Reset all data?')) dailyReset(); }} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium">🔄 Reset</button>
               </div>
             </div>
@@ -5994,7 +6113,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* Print Header */}
             <div className="hidden print:block text-center border-b-2 border-slate-600 pb-4 mb-4">
               <h1 className="text-2xl font-bold">Centrifuge Operations Report</h1>
-              <p className="text-slate-400">Generated: {new Date().toLocaleString()}</p>
+              <p className="text-gray-500">Generated: {new Date().toLocaleString()}</p>
             </div>
 
             {/* Shift Information */}
@@ -6002,23 +6121,23 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <h3 className="text-lg font-semibold text-blue-400 mb-4 print:text-blue-600">📝 Shift Information</h3>
               <div className="grid md:grid-cols-4 gap-4">
                 <div>
-                  <label className="text-xs text-slate-400">Date</label>
-                  <input type="date" value={shiftInfo.date} onChange={e => setShiftInfo(p => ({ ...p, date: e.target.value }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none print:bg-white print:border-slate-300" />
+                  <label className="text-xs text-gray-500">Date</label>
+                  <input type="date" value={shiftInfo.date} onChange={e => setShiftInfo(p => ({ ...p, date: e.target.value }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none print:bg-white print:border-slate-300" />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400">Shift</label>
-                  <select value={shiftInfo.shift} onChange={e => setShiftInfo(p => ({ ...p, shift: e.target.value }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none print:bg-white print:border-slate-300">
+                  <label className="text-xs text-gray-500">Shift</label>
+                  <select value={shiftInfo.shift} onChange={e => setShiftInfo(p => ({ ...p, shift: e.target.value }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none print:bg-white print:border-slate-300">
                     <option>Day (06:00-18:00)</option>
                     <option>Night (18:00-06:00)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400">Operator</label>
-                  <input type="text" value={shiftInfo.operator} onChange={e => setShiftInfo(p => ({ ...p, operator: e.target.value }))} placeholder="Name" className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none print:bg-white print:border-slate-300" />
+                  <label className="text-xs text-gray-500">Operator</label>
+                  <input type="text" value={shiftInfo.operator} onChange={e => setShiftInfo(p => ({ ...p, operator: e.target.value }))} placeholder="Name" className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none print:bg-white print:border-slate-300" />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400">Run Time</label>
-                  <div className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1 text-lg font-bold text-cyan-400 print:bg-white print:border-slate-300">
+                  <label className="text-xs text-gray-500">Run Time</label>
+                  <div className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1 text-lg font-bold text-cyan-400 print:bg-white print:border-slate-300">
                     {formatTime(totals.runTime)}
                   </div>
                 </div>
@@ -6032,43 +6151,43 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-600">
-                      <th className="text-left py-2 px-3 text-slate-400">Stream</th>
-                      <th className="text-right py-2 px-3 text-slate-400">Volume (m³)</th>
-                      <th className="text-right py-2 px-3 text-slate-400">Volume (L)</th>
-                      <th className="text-right py-2 px-3 text-slate-400">% of Feed</th>
-                      <th className="text-right py-2 px-3 text-slate-400">Avg Rate (m³/h)</th>
+                      <th className="text-left py-2 px-3 text-gray-500">Stream</th>
+                      <th className="text-right py-2 px-3 text-gray-500">Volume (m³)</th>
+                      <th className="text-right py-2 px-3 text-gray-500">Volume (L)</th>
+                      <th className="text-right py-2 px-3 text-gray-500">% of Feed</th>
+                      <th className="text-right py-2 px-3 text-gray-500">Avg Rate (m³/h)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-slate-700 bg-blue-900/20">
+                    <tr className="border-b border-gray-200 bg-blue-900/20">
                       <td className="py-2 px-3 font-bold text-blue-400">📥 Feed Processed</td>
                       <td className="text-right py-2 px-3 font-mono text-blue-400">{totals.feed.toFixed(3)}</td>
                       <td className="text-right py-2 px-3 font-mono">{(totals.feed * 1000).toFixed(0)}</td>
                       <td className="text-right py-2 px-3 font-mono">100.0%</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.runTime > 0 ? (totals.feed / (totals.runTime / 3600)).toFixed(2) : '0.00'}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
+                    <tr className="border-b border-gray-200/50">
                       <td className="py-2 px-3 text-cyan-400">💧 Water Discharged</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.water.toFixed(3)}</td>
                       <td className="text-right py-2 px-3 font-mono">{(totals.water * 1000).toFixed(0)}</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.feed > 0 ? ((totals.water / totals.feed) * 100).toFixed(1) : '0.0'}%</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.runTime > 0 ? (totals.water / (totals.runTime / 3600)).toFixed(2) : '0.00'}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
+                    <tr className="border-b border-gray-200/50">
                       <td className="py-2 px-3 text-amber-400">🛢️ Oil Recovered</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.oil.toFixed(4)}</td>
                       <td className="text-right py-2 px-3 font-mono font-bold text-amber-400">{(totals.oil * 1000).toFixed(1)}</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.feed > 0 ? ((totals.oil / totals.feed) * 100).toFixed(2) : '0.00'}%</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.runTime > 0 ? (totals.oil / (totals.runTime / 3600)).toFixed(4) : '0.0000'}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
+                    <tr className="border-b border-gray-200/50">
                       <td className="py-2 px-3 text-orange-400">🪨 Sludge Generated</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.solids.toFixed(4)}</td>
                       <td className="text-right py-2 px-3 font-mono">{(totals.solids * 1000).toFixed(1)}</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.feed > 0 ? ((totals.solids / totals.feed) * 100).toFixed(2) : '0.00'}%</td>
                       <td className="text-right py-2 px-3 font-mono">{totals.runTime > 0 ? (totals.solids / (totals.runTime / 3600)).toFixed(4) : '0.0000'}</td>
                     </tr>
-                    <tr className="bg-slate-700/30">
+                    <tr className="bg-gray-100/30">
                       <td className="py-2 px-3 font-bold">⚡ Energy Consumed</td>
                       <td className="text-right py-2 px-3 font-mono font-bold text-yellow-400" colSpan="2">{totals.energy.toFixed(1)} kWh</td>
                       <td className="text-right py-2 px-3 font-mono" colSpan="2">{totals.feed > 0 ? (totals.energy / totals.feed).toFixed(2) : '0.00'} kWh/m³</td>
@@ -6096,7 +6215,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <h4 className="text-sm font-semibold text-green-400 mb-2">Revenue</h4>
                       <table className="w-full text-sm">
                         <tbody>
-                          <tr className="border-b border-slate-700">
+                          <tr className="border-b border-gray-200">
                             <td className="py-2">Oil Recovered ({(totals.oil * 1000).toFixed(0)} L @ ${costs.oilValue}/m³)</td>
                             <td className="py-2 text-right text-green-400 font-bold">+${revenue.toFixed(2)}</td>
                           </tr>
@@ -6111,19 +6230,19 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <h4 className="text-sm font-semibold text-red-400 mb-2">Operating Costs</h4>
                       <table className="w-full text-sm">
                         <tbody>
-                          <tr className="border-b border-slate-700">
+                          <tr className="border-b border-gray-200">
                             <td className="py-1">Electricity ({totals.energy.toFixed(1)} kWh @ ${costs.elec}/kWh)</td>
                             <td className="py-1 text-right text-red-400">-${energyCost.toFixed(2)}</td>
                           </tr>
-                          <tr className="border-b border-slate-700">
+                          <tr className="border-b border-gray-200">
                             <td className="py-1">Sludge Disposal ({(totals.solids * 1000).toFixed(0)} L @ ${costs.sludgeDisposal}/m³)</td>
                             <td className="py-1 text-right text-red-400">-${sludgeCost.toFixed(2)}</td>
                           </tr>
-                          <tr className="border-b border-slate-700">
+                          <tr className="border-b border-gray-200">
                             <td className="py-1">Water Treatment ({totals.water.toFixed(2)} m³ @ ${costs.waterTreatment}/m³)</td>
                             <td className="py-1 text-right text-red-400">-${waterCost.toFixed(2)}</td>
                           </tr>
-                          <tr className="border-b border-slate-700">
+                          <tr className="border-b border-gray-200">
                             <td className="py-1">Labor ({(totals.runTime / 3600).toFixed(1)} hrs @ ${costs.laborRate}/hr)</td>
                             <td className="py-1 text-right text-red-400">-${laborCost.toFixed(2)}</td>
                           </tr>
@@ -6139,7 +6258,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <div className="flex justify-between items-center">
                           <div>
                             <div className="text-lg font-bold">NET {isProfit ? 'PROFIT' : 'LOSS'}</div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-gray-500">
                               {totals.feed > 0 ? `$${(netProfit / totals.feed).toFixed(2)} per m³ processed` : 'No feed processed'}
                             </div>
                           </div>
@@ -6170,7 +6289,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 ].map((kpi, i) => (
                   <div key={i} className={`p-3 rounded-lg border ${kpi.good ? 'bg-green-900/20 border-green-500/50' : 'bg-red-900/20 border-red-500/50'}`}>
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm text-slate-300">{kpi.name}</span>
+                      <span className="text-sm text-gray-600">{kpi.name}</span>
                       <span className={`text-lg ${kpi.good ? '✅' : '❌'}`}></span>
                     </div>
                     <div className="flex justify-between items-end">
@@ -6178,11 +6297,11 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         <div className={`text-2xl font-bold ${kpi.good ? 'text-green-400' : 'text-red-400'}`}>
                           {kpi.current.toFixed(kpi.unit === 'ppm' || kpi.unit === 'NTU' ? 0 : 1)}
                         </div>
-                        <div className="text-xs text-slate-500">{kpi.unit}</div>
+                        <div className="text-xs text-gray-500">{kpi.unit}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-slate-400">Target</div>
-                        <div className="text-lg text-slate-300">{kpi.target}</div>
+                        <div className="text-sm text-gray-500">Target</div>
+                        <div className="text-lg text-gray-600">{kpi.target}</div>
                       </div>
                     </div>
                   </div>
@@ -6194,10 +6313,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             <div className="bg-slate-800 rounded-lg p-4 border border-cyan-900/50">
               <h3 className="text-lg font-semibold text-cyan-400 mb-4">🔧 Equipment Status</h3>
               <div className="grid md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/30 rounded-lg p-3">
-                  <div className="text-xs text-slate-400 mb-1">Bearing Condition</div>
+                <div className="bg-gray-100/30 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Bearing Condition</div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${equipment.bearingCondition > 70 ? 'bg-green-500' : equipment.bearingCondition > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${equipment.bearingCondition}%` }} />
                     </div>
                     <span className={`font-bold ${equipment.bearingCondition > 70 ? 'text-green-400' : equipment.bearingCondition > 40 ? 'text-yellow-400' : 'text-red-400'}`}>
@@ -6205,24 +6324,24 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </span>
                   </div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-3">
-                  <div className="text-xs text-slate-400 mb-1">Avg Vibration</div>
+                <div className="bg-gray-100/30 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Avg Vibration</div>
                   <div className={`text-xl font-bold ${kpiStats.vib.mean <= 5 ? 'text-green-400' : kpiStats.vib.mean <= 7 ? 'text-yellow-400' : 'text-red-400'}`}>
                     {kpiStats.vib.mean.toFixed(2)} mm/s
                   </div>
-                  <div className="text-xs text-slate-500">Max: {kpiStats.vib.max.toFixed(2)} mm/s</div>
+                  <div className="text-xs text-gray-500">Max: {kpiStats.vib.max.toFixed(2)} mm/s</div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-3">
-                  <div className="text-xs text-slate-400 mb-1">Avg G-Force</div>
+                <div className="bg-gray-100/30 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Avg G-Force</div>
                   <div className="text-xl font-bold text-purple-400">{kpiStats.gForce ? kpiStats.gForce.mean.toFixed(0) : smoothedProc.gForce.toFixed(0)} G</div>
-                  <div className="text-xs text-slate-500">Bowl: {equipment.bowlDiameter}mm @ {loops.SIC.sp} RPM</div>
+                  <div className="text-xs text-gray-500">Bowl: {equipment.bowlDiameter}mm @ {loops.SIC.sp} RPM</div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-3">
-                  <div className="text-xs text-slate-400 mb-1">Heater/Motor Load</div>
+                <div className="bg-gray-100/30 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Heater/Motor Load</div>
                   <div className="text-xl font-bold text-yellow-400">
                     {computed.utilization.average.toFixed(0)}%
                   </div>
-                  <div className="text-xs text-slate-500">Avg capacity utilization</div>
+                  <div className="text-xs text-gray-500">Avg capacity utilization</div>
                 </div>
               </div>
             </div>
@@ -6234,33 +6353,33 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 <div className="bg-cyan-900/20 rounded-lg p-3 text-center border border-cyan-500/30">
                   <div className="text-xs text-cyan-400">Pond Level</div>
                   <div className="text-2xl font-bold text-cyan-400">{pond.level.toFixed(1)}%</div>
-                  <div className="text-xs text-slate-500">{(pond.volume / 1000000).toFixed(2)} / 8 ML</div>
+                  <div className="text-xs text-gray-500">{(pond.volume / 1000000).toFixed(2)} / 8 ML</div>
                 </div>
                 <div className={`rounded-lg p-3 text-center border ${kpiStats.pH.mean >= targets.pH.min && kpiStats.pH.mean <= targets.pH.max ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
-                  <div className="text-xs text-slate-400">Avg pH</div>
+                  <div className="text-xs text-gray-500">Avg pH</div>
                   <div className={`text-2xl font-bold ${kpiStats.pH.mean >= targets.pH.min && kpiStats.pH.mean <= targets.pH.max ? 'text-green-400' : 'text-red-400'}`}>
                     {kpiStats.pH.mean.toFixed(2)}
                   </div>
-                  <div className="text-xs text-slate-500">Target: 6.5-8.5</div>
+                  <div className="text-xs text-gray-500">Target: 6.5-8.5</div>
                 </div>
                 <div className={`rounded-lg p-3 text-center border ${kpiStats.turbidity.mean <= targets.turbidity ? 'bg-green-900/20 border-green-500/30' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
-                  <div className="text-xs text-slate-400">Avg Turbidity</div>
+                  <div className="text-xs text-gray-500">Avg Turbidity</div>
                   <div className={`text-2xl font-bold ${kpiStats.turbidity.mean <= targets.turbidity ? 'text-green-400' : 'text-yellow-400'}`}>
                     {kpiStats.turbidity.mean.toFixed(0)} NTU
                   </div>
-                  <div className="text-xs text-slate-500">Target: &lt;{targets.turbidity}</div>
+                  <div className="text-xs text-gray-500">Target: &lt;{targets.turbidity}</div>
                 </div>
                 <div className={`rounded-lg p-3 text-center border ${kpiStats.wq.mean <= targets.waterQuality ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
-                  <div className="text-xs text-slate-400">Avg OiW</div>
+                  <div className="text-xs text-gray-500">Avg OiW</div>
                   <div className={`text-2xl font-bold ${kpiStats.wq.mean <= targets.waterQuality ? 'text-green-400' : 'text-red-400'}`}>
                     {kpiStats.wq.mean.toFixed(0)} ppm
                   </div>
-                  <div className="text-xs text-slate-500">Target: &lt;{targets.waterQuality}</div>
+                  <div className="text-xs text-gray-500">Target: &lt;{targets.waterQuality}</div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-3 text-center">
-                  <div className="text-xs text-slate-400">Water Discharged</div>
+                <div className="bg-gray-100/30 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-500">Water Discharged</div>
                   <div className="text-2xl font-bold text-blue-400">{totals.water.toFixed(2)} m³</div>
-                  <div className="text-xs text-slate-500">{(totals.water * 1000).toFixed(0)} L</div>
+                  <div className="text-xs text-gray-500">{(totals.water * 1000).toFixed(0)} L</div>
                 </div>
               </div>
             </div>
@@ -6277,9 +6396,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <div className="text-xs text-orange-400">Pending</div>
                   <div className="text-3xl font-bold text-orange-400">{pendingAlarms.length}</div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-3 text-center border border-slate-600">
-                  <div className="text-xs text-slate-400">Interlock Events</div>
-                  <div className="text-3xl font-bold text-slate-300">
+                <div className="bg-gray-100/30 rounded-lg p-3 text-center border border-slate-600">
+                  <div className="text-xs text-gray-500">Interlock Events</div>
+                  <div className="text-3xl font-bold text-gray-600">
                     {reportEvents.filter(e => e.type === 'INTERLOCK').length}
                   </div>
                 </div>
@@ -6301,23 +6420,23 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             </div>
 
             {/* Event Log */}
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">📜 Event Log ({reportEvents.length} events)</h3>
+            <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">📜 Event Log ({reportEvents.length} events)</h3>
               <div className="max-h-64 overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-slate-800">
                     <tr className="border-b border-slate-600">
-                      <th className="text-left py-2 px-2 text-slate-400">Real Time</th>
-                      <th className="text-left py-2 px-2 text-slate-400">Sim Time</th>
-                      <th className="text-left py-2 px-2 text-slate-400">Type</th>
-                      <th className="text-left py-2 px-2 text-slate-400">Description</th>
+                      <th className="text-left py-2 px-2 text-gray-500">Real Time</th>
+                      <th className="text-left py-2 px-2 text-gray-500">Sim Time</th>
+                      <th className="text-left py-2 px-2 text-gray-500">Type</th>
+                      <th className="text-left py-2 px-2 text-gray-500">Description</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reportEvents.slice().reverse().map((e, i) => (
-                      <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                        <td className="py-2 px-2 text-slate-400 font-mono text-xs">{e.time}</td>
-                        <td className="py-2 px-2 text-slate-400 font-mono text-xs">{formatTime(e.simTime)}</td>
+                      <tr key={i} className="border-b border-gray-200/50 hover:bg-gray-100/30">
+                        <td className="py-2 px-2 text-gray-500 font-mono text-xs">{e.time}</td>
+                        <td className="py-2 px-2 text-gray-500 font-mono text-xs">{formatTime(e.simTime)}</td>
                         <td className="py-2 px-2">
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                             e.type === 'START' ? 'bg-green-900/50 text-green-400' : 
@@ -6325,7 +6444,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                             e.type === 'PHASE' ? 'bg-purple-900/50 text-purple-400' : 
                             e.type === 'INTERLOCK' ? 'bg-red-900/50 text-red-400' :
                             e.type === 'ALARM' ? 'bg-orange-900/50 text-orange-400' :
-                            'bg-slate-700 text-slate-400'
+                            'bg-gray-100 text-gray-500'
                           }`}>{e.type}</span>
                         </td>
                         <td className="py-2 px-2">{e.desc}</td>
@@ -6333,7 +6452,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     ))}
                     {reportEvents.length === 0 && (
                       <tr>
-                        <td colSpan="4" className="py-8 text-center text-slate-500">No events recorded yet</td>
+                        <td colSpan="4" className="py-8 text-center text-gray-500">No events recorded yet</td>
                       </tr>
                     )}
                   </tbody>
@@ -6342,10 +6461,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             </div>
 
             {/* Operator Notes */}
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">📝 Operator Notes</h3>
+            <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">📝 Operator Notes</h3>
               <textarea 
-                className="w-full h-32 bg-slate-700 border border-slate-600 rounded px-3 py-2 focus:border-cyan-500 focus:outline-none resize-none"
+                className="w-full h-32 bg-gray-100 border border-slate-600 rounded px-3 py-2 focus:border-cyan-500 focus:outline-none resize-none"
                 placeholder="Enter shift notes, observations, issues, handover information..."
                 value={shiftInfo.notes || ''}
                 onChange={e => setShiftInfo(p => ({ ...p, notes: e.target.value }))}
@@ -6353,20 +6472,20 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             </div>
 
             {/* Sign-off */}
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">✅ Shift Sign-off</h3>
+            <div className="bg-slate-800 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">✅ Shift Sign-off</h3>
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-slate-400">Outgoing Operator</label>
-                  <input type="text" value={shiftInfo.operator} readOnly className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                  <label className="text-xs text-gray-500">Outgoing Operator</label>
+                  <input type="text" value={shiftInfo.operator} readOnly className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400">Incoming Operator</label>
-                  <input type="text" placeholder="Name" className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none" />
+                  <label className="text-xs text-gray-500">Incoming Operator</label>
+                  <input type="text" placeholder="Name" className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400">Handover Time</label>
-                  <input type="time" defaultValue={new Date().toTimeString().slice(0, 5)} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none" />
+                  <label className="text-xs text-gray-500">Handover Time</label>
+                  <input type="time" defaultValue={new Date().toTimeString().slice(0, 5)} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none" />
                 </div>
               </div>
             </div>
@@ -7026,8 +7145,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     disabled={phaseData.length === 0}
                     className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors print:hidden ${
                       phaseData.length > 0
-                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                        : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                        ? 'bg-purple-600 hover:bg-purple-500 text-gray-800'
+                        : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                     }`}
                     title={phaseData.length === 0 ? 'Run a batch to generate phase data' : `${phaseData.length} phases recorded`}
                   >
@@ -7035,7 +7154,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </button>
                   <button
                     onClick={printCapitalModel}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2 transition-colors print:hidden"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-gray-800 rounded-lg flex items-center gap-2 transition-colors print:hidden"
                   >
                     🖨️ Print Capital Report
                   </button>
@@ -7047,7 +7166,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 <h3 className="text-lg font-semibold text-green-400 mb-4">📊 Total Capital Investment (AUD)</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <span className="text-slate-400 text-sm w-16">$0</span>
+                    <span className="text-gray-500 text-sm w-16">$0</span>
                     <input
                       type="range"
                       min={0}
@@ -7055,15 +7174,15 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       step={10000}
                       value={capitalModel.totalInvestment}
                       onChange={e => setCapitalModel(p => ({ ...p, totalInvestment: Number(e.target.value) }))}
-                      className="flex-1 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                      className="flex-1 h-3 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-green-500"
                     />
-                    <span className="text-slate-400 text-sm w-24">$10,000,000</span>
+                    <span className="text-gray-500 text-sm w-24">$10,000,000</span>
                   </div>
                   <div className="text-center">
                     <div className="text-4xl font-bold text-green-400">
                       {formatCurrency(capitalModel.totalInvestment, 2)}
                     </div>
-                    <div className="text-sm text-slate-400 mt-1">
+                    <div className="text-sm text-gray-500 mt-1">
                       SACOR Base Price: $587.75K | With Options: {formatCurrency(587750 + optionalCosts, 2)}
                     </div>
                   </div>
@@ -7073,7 +7192,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       <button
                         key={v}
                         onClick={() => setCapitalModel(p => ({ ...p, totalInvestment: v }))}
-                        className={`px-3 py-1 rounded text-sm ${capitalModel.totalInvestment === v ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                        className={`px-3 py-1 rounded text-sm ${capitalModel.totalInvestment === v ? 'bg-green-600 text-gray-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                       >
                         ${(v / 1000000).toFixed(v < 1000000 ? 2 : 1)}M
                       </button>
@@ -7085,39 +7204,39 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               {/* Key Financial Metrics */}
               <div className="grid md:grid-cols-5 gap-4">
                 <div className={`bg-slate-800 rounded-lg p-4 border ${simplePayback < 3 ? 'border-green-500' : simplePayback < 5 ? 'border-yellow-500' : 'border-red-500'}`}>
-                  <div className="text-sm text-slate-400">Simple Payback</div>
+                  <div className="text-sm text-gray-500">Simple Payback</div>
                   <div className={`text-2xl font-bold ${simplePayback < 3 ? 'text-green-400' : simplePayback < 5 ? 'text-yellow-400' : 'text-red-400'}`}>
                     {simplePayback.toFixed(1)} years
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Target: &lt;3 years</div>
+                  <div className="text-xs text-gray-500 mt-1">Target: &lt;3 years</div>
                 </div>
                 <div className={`bg-slate-800 rounded-lg p-4 border ${roi > 30 ? 'border-green-500' : roi > 15 ? 'border-yellow-500' : 'border-red-500'}`}>
-                  <div className="text-sm text-slate-400">Annual ROI</div>
+                  <div className="text-sm text-gray-500">Annual ROI</div>
                   <div className={`text-2xl font-bold ${roi > 30 ? 'text-green-400' : roi > 15 ? 'text-yellow-400' : 'text-red-400'}`}>
                     {roi.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Target: &gt;25%</div>
+                  <div className="text-xs text-gray-500 mt-1">Target: &gt;25%</div>
                 </div>
                 <div className={`bg-slate-800 rounded-lg p-4 border ${npv > 0 ? 'border-green-500' : 'border-red-500'}`}>
-                  <div className="text-sm text-slate-400">NPV ({capitalModel.projectLife}yr)</div>
+                  <div className="text-sm text-gray-500">NPV ({capitalModel.projectLife}yr)</div>
                   <div className={`text-2xl font-bold ${npv > 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(npv, 2)}
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">@ {capitalModel.discountRate}% discount</div>
+                  <div className="text-xs text-gray-500 mt-1">@ {capitalModel.discountRate}% discount</div>
                 </div>
                 <div className={`bg-slate-800 rounded-lg p-4 border ${irr > capitalModel.discountRate ? 'border-green-500' : 'border-red-500'}`}>
-                  <div className="text-sm text-slate-400">IRR</div>
+                  <div className="text-sm text-gray-500">IRR</div>
                   <div className={`text-2xl font-bold ${irr > capitalModel.discountRate ? 'text-green-400' : 'text-red-400'}`}>
                     {irr.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Hurdle: {capitalModel.discountRate}%</div>
+                  <div className="text-xs text-gray-500 mt-1">Hurdle: {capitalModel.discountRate}%</div>
                 </div>
                 <div className={`bg-slate-800 rounded-lg p-4 border ${profitabilityIndex > 1.2 ? 'border-green-500' : profitabilityIndex > 1 ? 'border-yellow-500' : 'border-red-500'}`}>
-                  <div className="text-sm text-slate-400">Profitability Index</div>
+                  <div className="text-sm text-gray-500">Profitability Index</div>
                   <div className={`text-2xl font-bold ${profitabilityIndex > 1.2 ? 'text-green-400' : profitabilityIndex > 1 ? 'text-yellow-400' : 'text-red-400'}`}>
                     {profitabilityIndex.toFixed(2)}x
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Target: &gt;1.2x</div>
+                  <div className="text-xs text-gray-500 mt-1">Target: &gt;1.2x</div>
                 </div>
               </div>
 
@@ -7127,38 +7246,38 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <h3 className="text-lg font-semibold text-blue-400 mb-4">🏗️ Capital Breakdown</h3>
                   <table className="w-full text-sm">
                     <tbody>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Equipment (centrifuge, motors)</td>
                         <td className="py-2 text-right">
-                          <input type="number" value={capitalModel.breakdown.equipment} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, equipment: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
+                          <input type="number" value={capitalModel.breakdown.equipment} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, equipment: Number(e.target.value) } }))} className="w-12 bg-gray-100 rounded px-1 text-right" />%
                         </td>
                         <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.equipment, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Installation (mechanical/electrical)</td>
                         <td className="py-2 text-right">
-                          <input type="number" value={capitalModel.breakdown.installation} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, installation: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
+                          <input type="number" value={capitalModel.breakdown.installation} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, installation: Number(e.target.value) } }))} className="w-12 bg-gray-100 rounded px-1 text-right" />%
                         </td>
                         <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.installation, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Engineering & commissioning</td>
                         <td className="py-2 text-right">
-                          <input type="number" value={capitalModel.breakdown.engineering} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, engineering: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
+                          <input type="number" value={capitalModel.breakdown.engineering} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, engineering: Number(e.target.value) } }))} className="w-12 bg-gray-100 rounded px-1 text-right" />%
                         </td>
                         <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.engineering, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Instrumentation & controls</td>
                         <td className="py-2 text-right">
-                          <input type="number" value={capitalModel.breakdown.instrumentation} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, instrumentation: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
+                          <input type="number" value={capitalModel.breakdown.instrumentation} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, instrumentation: Number(e.target.value) } }))} className="w-12 bg-gray-100 rounded px-1 text-right" />%
                         </td>
                         <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.instrumentation, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Contingency</td>
                         <td className="py-2 text-right">
-                          <input type="number" value={capitalModel.breakdown.contingency} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, contingency: Number(e.target.value) } }))} className="w-12 bg-slate-700 rounded px-1 text-right" />%
+                          <input type="number" value={capitalModel.breakdown.contingency} onChange={e => setCapitalModel(p => ({ ...p, breakdown: { ...p.breakdown, contingency: Number(e.target.value) } }))} className="w-12 bg-gray-100 rounded px-1 text-right" />%
                         </td>
                         <td className="py-2 text-right text-blue-400 font-mono">{formatCurrency(capBreakdown.contingency, 0)}</td>
                       </tr>
@@ -7176,39 +7295,39 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <h3 className="text-lg font-semibold text-red-400 mb-4">📉 Annual Operating Costs</h3>
                   <table className="w-full text-sm">
                     <tbody>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Electricity ({(avgPowerKW * capitalModel.operatingHours / 1000).toFixed(0)} MWh)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualEnergyCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Sludge disposal ({annualSolids.toFixed(0)} m³)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualSludgeCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Water treatment ({annualWater.toFixed(0)} m³)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualWaterCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Pond disposal ({annualWater.toFixed(0)} m³ @ $3.5/kL)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualPondCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Labor (0.5 FTE @ ${costs.laborRate}/h)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualLaborCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Chemicals ({annualChemicalKg.toFixed(0)} kg @ ${chemicalCostPerKg}/kg)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualChemicalCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Maintenance contract</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(capitalModel.maintenanceCost, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Insurance ({capitalModel.insurancePct}%)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualInsurance, 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">Overhead ({capitalModel.overheadPct}%)</td>
                         <td className="py-2 text-right text-red-400 font-mono">-{formatCurrency(annualOverhead, 0)}</td>
                       </tr>
@@ -7228,28 +7347,28 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
                   {/* Feedstock Badge */}
                   <div className="mb-3 flex items-center gap-2 flex-wrap">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${feedstockTypes[selectedFeedstock].color} bg-slate-700`}>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${feedstockTypes[selectedFeedstock].color} bg-gray-100`}>
                       🛢️ {feedstockTypes[selectedFeedstock].name}
                     </span>
-                    <span className="px-2 py-1 rounded text-xs font-medium text-cyan-400 bg-slate-700">
+                    <span className="px-2 py-1 rounded text-xs font-medium text-cyan-400 bg-gray-100">
                       🚛 → {transportDestinations[selectedDestination].name}
                     </span>
                   </div>
 
-                  <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
-                    <div className="text-xs text-slate-400 mb-2">Production Summary (Current Efficiency: {avgOilEff.toFixed(1)}%)</div>
+                  <div className="mb-4 p-3 bg-gray-100/50 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-2">Production Summary (Current Efficiency: {avgOilEff.toFixed(1)}%)</div>
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
                         <div className="text-lg font-bold text-blue-400">{annualFeed.toLocaleString()}</div>
-                        <div className="text-xs text-slate-500">m³ Feed/yr</div>
+                        <div className="text-xs text-gray-500">m³ Feed/yr</div>
                       </div>
                       <div>
                         <div className="text-lg font-bold text-amber-400">{annualOilRecovered.toLocaleString()}</div>
-                        <div className="text-xs text-slate-500">m³ Oil/yr</div>
+                        <div className="text-xs text-gray-500">m³ Oil/yr</div>
                       </div>
                       <div>
                         <div className="text-lg font-bold text-orange-400">{annualSolids.toLocaleString()}</div>
-                        <div className="text-xs text-slate-500">m³ Sludge/yr</div>
+                        <div className="text-xs text-gray-500">m³ Sludge/yr</div>
                       </div>
                     </div>
                   </div>
@@ -7265,26 +7384,26 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                       </tr>
 
                       {/* Oil Sale Revenue */}
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2">
                           <span className={feedstockTypes[selectedFeedstock].color}>{feedstockTypes[selectedFeedstock].name}</span> oil ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)
                         </td>
                         <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilGrossRevenue, 2)}</td>
                       </tr>
-                      <tr className="border-b border-slate-700">
+                      <tr className="border-b border-gray-200">
                         <td className="py-2 text-amber-400">
                           Transport → {transportDestinations[selectedDestination].name} ({annualOilRecovered.toLocaleString(undefined, {maximumFractionDigits: 0})} kL @ ${(costs.oilTransport / 1000).toFixed(2)}/L)
                         </td>
                         <td className="py-2 text-right text-amber-400 font-mono">-{formatCurrency(annualOilTransportCost, 2)}</td>
                       </tr>
-                      <tr className="bg-green-900/20 border-b border-slate-700">
-                        <td className="py-2 font-medium text-slate-300">Net Oil Revenue</td>
+                      <tr className="bg-green-900/20 border-b border-gray-200">
+                        <td className="py-2 font-medium text-gray-600">Net Oil Revenue</td>
                         <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilNetRevenue, 2)}</td>
                       </tr>
 
                       {/* Total Revenue */}
                       <tr className="bg-green-900/40">
-                        <td className="py-2 font-bold text-white">Total Annual Revenue</td>
+                        <td className="py-2 font-bold text-gray-800">Total Annual Revenue</td>
                         <td className="py-2 text-right text-green-400 font-bold text-lg">+{formatCurrency(totalAnnualRevenue, 2)}</td>
                       </tr>
                     </tbody>
@@ -7296,7 +7415,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                         {netAnnualBenefit > 0 ? '+' : ''}{formatCurrency(netAnnualBenefit, 2)}
                       </div>
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">
+                    <div className="text-xs text-gray-500 mt-1">
                       ${(netAnnualBenefit / annualFeed).toFixed(2)} per m³ processed
                     </div>
                   </div>
@@ -7307,39 +7426,39 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <h3 className="text-lg font-semibold text-purple-400 mb-4">⚙️ Model Assumptions</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs text-slate-400">Operating Hours/Year</label>
-                      <input type="number" value={capitalModel.operatingHours} onChange={e => setCapitalModel(p => ({ ...p, operatingHours: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Operating Hours/Year</label>
+                      <input type="number" value={capitalModel.operatingHours} onChange={e => setCapitalModel(p => ({ ...p, operatingHours: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Annual Feed Volume (m³)</label>
-                      <input type="number" value={capitalModel.annualFeedVolume} onChange={e => setCapitalModel(p => ({ ...p, annualFeedVolume: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Annual Feed Volume (m³)</label>
+                      <input type="number" value={capitalModel.annualFeedVolume} onChange={e => setCapitalModel(p => ({ ...p, annualFeedVolume: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Feed Oil Content (%)</label>
-                      <input type="number" value={capitalModel.feedOilContent} onChange={e => setCapitalModel(p => ({ ...p, feedOilContent: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Feed Oil Content (%)</label>
+                      <input type="number" value={capitalModel.feedOilContent} onChange={e => setCapitalModel(p => ({ ...p, feedOilContent: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Feed Solids Content (%)</label>
-                      <input type="number" value={capitalModel.feedSolidsContent} onChange={e => setCapitalModel(p => ({ ...p, feedSolidsContent: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Feed Solids Content (%)</label>
+                      <input type="number" value={capitalModel.feedSolidsContent} onChange={e => setCapitalModel(p => ({ ...p, feedSolidsContent: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Discount Rate (WACC %)</label>
-                      <input type="number" step="0.5" value={capitalModel.discountRate} onChange={e => setCapitalModel(p => ({ ...p, discountRate: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Discount Rate (WACC %)</label>
+                      <input type="number" step="0.5" value={capitalModel.discountRate} onChange={e => setCapitalModel(p => ({ ...p, discountRate: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Project Life (years)</label>
-                      <input type="number" value={capitalModel.projectLife} onChange={e => setCapitalModel(p => ({ ...p, projectLife: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Project Life (years)</label>
+                      <input type="number" value={capitalModel.projectLife} onChange={e => setCapitalModel(p => ({ ...p, projectLife: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Inflation Rate (%)</label>
-                      <input type="number" step="0.5" value={capitalModel.inflationRate} onChange={e => setCapitalModel(p => ({ ...p, inflationRate: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Inflation Rate (%)</label>
+                      <input type="number" step="0.5" value={capitalModel.inflationRate} onChange={e => setCapitalModel(p => ({ ...p, inflationRate: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Maintenance $/year</label>
-                      <input type="number" value={capitalModel.maintenanceCost} onChange={e => setCapitalModel(p => ({ ...p, maintenanceCost: Number(e.target.value) }))} className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 mt-1" />
+                      <label className="text-xs text-gray-500">Maintenance $/year</label>
+                      <input type="number" value={capitalModel.maintenanceCost} onChange={e => setCapitalModel(p => ({ ...p, maintenanceCost: Number(e.target.value) }))} className="w-full bg-gray-100 border border-slate-600 rounded px-3 py-2 mt-1" />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-slate-400">Gate Fee - Input Feed Collection ($/L)</label>
+                      <label className="text-xs text-gray-500">Gate Fee - Input Feed Collection ($/L)</label>
                       <div className="flex items-center gap-3 mt-1">
                         <input
                           type="range"
@@ -7348,13 +7467,13 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                           step="50"
                           value={capitalModel.gateFee}
                           onChange={e => setCapitalModel(p => ({ ...p, gateFee: Number(e.target.value) }))}
-                          className="flex-1 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                          className="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-purple-500"
                         />
                         <span className="text-lg font-bold text-purple-400 font-mono w-24 text-right">
                           ${(capitalModel.gateFee / 1000).toFixed(2)}/L
                         </span>
                       </div>
-                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
                         <span>$0/L</span>
                         <span className="text-purple-400">${capitalModel.gateFee.toLocaleString()}/m³</span>
                         <span>$2/L</span>
@@ -7388,20 +7507,20 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-4 grid grid-cols-4 gap-4 text-center">
-                  <div className="bg-slate-700/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-400">Year 1 Cash Flow</div>
+                  <div className="bg-gray-100/50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500">Year 1 Cash Flow</div>
                     <div className="text-lg font-bold text-cyan-400">{formatCurrency(cashFlows[1] || 0, 2)}</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-400">Year 5 Cumulative</div>
+                  <div className="bg-gray-100/50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500">Year 5 Cumulative</div>
                     <div className="text-lg font-bold text-green-400">{formatCurrency(cashFlows.slice(0, 6).reduce((a, b) => a + b, 0), 2)}</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-400">Year 10 Cumulative</div>
+                  <div className="bg-gray-100/50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500">Year 10 Cumulative</div>
                     <div className="text-lg font-bold text-green-400">{formatCurrency(cashFlows.slice(0, 11).reduce((a, b) => a + b, 0), 2)}</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-400">Total {capitalModel.projectLife}yr Return</div>
+                  <div className="bg-gray-100/50 rounded-lg p-3">
+                    <div className="text-xs text-gray-500">Total {capitalModel.projectLife}yr Return</div>
                     <div className="text-lg font-bold text-green-400">{formatCurrency(cashFlows.reduce((a, b) => a + b, 0), 2)}</div>
                   </div>
                 </div>
@@ -7411,31 +7530,31 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <div className="bg-slate-800 rounded-lg p-4 border border-amber-900/50">
                 <h3 className="text-lg font-semibold text-amber-400 mb-4">📋 SACOR Optional Items</h3>
                 <div className="grid md:grid-cols-4 gap-4">
-                  <label className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700">
+                  <label className="flex items-center gap-3 p-3 bg-gray-100/50 rounded-lg cursor-pointer hover:bg-gray-100">
                     <input type="checkbox" checked={capitalModel.extendedWarrantyY2} onChange={e => setCapitalModel(p => ({ ...p, extendedWarrantyY2: e.target.checked }))} className="w-5 h-5 accent-amber-500" />
                     <div>
                       <div className="font-medium">Extended Warranty Y2</div>
                       <div className="text-sm text-amber-400">+$12,500</div>
                     </div>
                   </label>
-                  <label className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700">
+                  <label className="flex items-center gap-3 p-3 bg-gray-100/50 rounded-lg cursor-pointer hover:bg-gray-100">
                     <input type="checkbox" checked={capitalModel.extendedWarrantyY3} onChange={e => setCapitalModel(p => ({ ...p, extendedWarrantyY3: e.target.checked }))} className="w-5 h-5 accent-amber-500" />
                     <div>
                       <div className="font-medium">Extended Warranty Y3</div>
                       <div className="text-sm text-amber-400">+$15,000</div>
                     </div>
                   </label>
-                  <label className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700">
+                  <label className="flex items-center gap-3 p-3 bg-gray-100/50 rounded-lg cursor-pointer hover:bg-gray-100">
                     <input type="checkbox" checked={capitalModel.remoteMonitoring} onChange={e => setCapitalModel(p => ({ ...p, remoteMonitoring: e.target.checked }))} className="w-5 h-5 accent-amber-500" />
                     <div>
                       <div className="font-medium">Remote Monitoring</div>
                       <div className="text-sm text-amber-400">+$8,500</div>
                     </div>
                   </label>
-                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                  <div className="p-3 bg-gray-100/50 rounded-lg">
                     <div className="font-medium mb-1">Additional Training Days</div>
                     <div className="flex items-center gap-2">
-                      <input type="number" min={0} max={10} value={capitalModel.additionalTraining} onChange={e => setCapitalModel(p => ({ ...p, additionalTraining: Number(e.target.value) }))} className="w-16 bg-slate-600 rounded px-2 py-1" />
+                      <input type="number" min={0} max={10} value={capitalModel.additionalTraining} onChange={e => setCapitalModel(p => ({ ...p, additionalTraining: Number(e.target.value) }))} className="w-16 bg-gray-300 rounded px-2 py-1" />
                       <span className="text-sm text-amber-400">× $2,200/day</span>
                     </div>
                   </div>
@@ -7453,7 +7572,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     <h3 className="text-xl font-bold flex items-center gap-2">
                       {npv > 0 && irr > capitalModel.discountRate ? '✅' : '⚠️'} Investment Decision
                     </h3>
-                    <div className="text-slate-400 mt-1">
+                    <div className="text-gray-500 mt-1">
                       {npv > 0 && irr > capitalModel.discountRate
                         ? `Project meets investment criteria. NPV positive at ${formatCurrency(npv, 2)} with ${irr.toFixed(1)}% IRR exceeding ${capitalModel.discountRate}% hurdle rate.`
                         : `Project does not meet investment criteria. Consider adjusting operating assumptions or capital investment.`
@@ -7461,7 +7580,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-slate-400">Lifetime Value Created</div>
+                    <div className="text-sm text-gray-500">Lifetime Value Created</div>
                     <div className={`text-3xl font-bold ${npv > 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {formatCurrency(npv + capitalModel.totalInvestment, 2)}
                     </div>
@@ -7475,8 +7594,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
         {activeTab === 'alarms' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold">🚨 Alarm Management</h2>
-            {pendingAlarms.length > 0 && (<div className="bg-orange-900/20 rounded-xl p-6 border border-orange-900/50"><h3 className="text-lg font-semibold text-orange-400 mb-4">⏳ Pending Alarms (3 second delay)</h3><div className="grid md:grid-cols-3 gap-3">{pendingAlarms.map((a, i) => (<div key={i} className="p-3 rounded-lg border bg-orange-900/20 border-orange-700"><div className="flex items-center justify-between"><span className="text-orange-300 text-sm font-medium">{a.type.replace(/_/g, ' ')}</span><span className="text-lg font-bold text-orange-400">{a.remain.toFixed(1)}s</span></div><div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${((3 - a.remain) / 3) * 100}%` }} /></div></div>))}</div></div>)}
-            <div className={`rounded-xl p-6 border ${alarms.length > 0 ? 'bg-red-900/20 border-red-500' : 'bg-green-900/20 border-green-500'}`}><h3 className="text-lg font-semibold mb-4">{alarms.length > 0 ? `🔴 ${alarms.length} Active Alarm${alarms.length > 1 ? 's' : ''}` : '✅ All Clear'}</h3>{alarms.length === 0 ? <div className="text-center py-8 text-slate-400">No active alarms - all process values within limits</div> : (<div className="space-y-3">{alarms.map((a, i) => (<div key={i} className={`p-4 rounded-lg border ${a.sev === 'critical' ? 'bg-red-900/30 border-red-700' : 'bg-yellow-900/30 border-yellow-700'}`}><div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className={`text-2xl ${a.sev === 'critical' ? 'animate-pulse' : ''}`}>{a.sev === 'critical' ? '🔴' : '🟡'}</span><div><div className="font-bold">{a.type.replace(/_/g, ' ')}</div><div className="text-sm text-slate-400 capitalize">{a.sev}</div></div></div><div className="text-right"><div className="text-2xl font-bold">{a.val.toFixed(1)}</div><div className="text-xs text-slate-400">Limit: {a.lim}</div></div></div></div>))}</div>)}</div>
+            {pendingAlarms.length > 0 && (<div className="bg-orange-900/20 rounded-xl p-6 border border-orange-900/50"><h3 className="text-lg font-semibold text-orange-400 mb-4">⏳ Pending Alarms (3 second delay)</h3><div className="grid md:grid-cols-3 gap-3">{pendingAlarms.map((a, i) => (<div key={i} className="p-3 rounded-lg border bg-orange-900/20 border-orange-700"><div className="flex items-center justify-between"><span className="text-orange-300 text-sm font-medium">{a.type.replace(/_/g, ' ')}</span><span className="text-lg font-bold text-orange-400">{a.remain.toFixed(1)}s</span></div><div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${((3 - a.remain) / 3) * 100}%` }} /></div></div>))}</div></div>)}
+            <div className={`rounded-xl p-6 border ${alarms.length > 0 ? 'bg-red-900/20 border-red-500' : 'bg-green-900/20 border-green-500'}`}><h3 className="text-lg font-semibold mb-4">{alarms.length > 0 ? `🔴 ${alarms.length} Active Alarm${alarms.length > 1 ? 's' : ''}` : '✅ All Clear'}</h3>{alarms.length === 0 ? <div className="text-center py-8 text-gray-500">No active alarms - all process values within limits</div> : (<div className="space-y-3">{alarms.map((a, i) => (<div key={i} className={`p-4 rounded-lg border ${a.sev === 'critical' ? 'bg-red-900/30 border-red-700' : 'bg-yellow-900/30 border-yellow-700'}`}><div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className={`text-2xl ${a.sev === 'critical' ? 'animate-pulse' : ''}`}>{a.sev === 'critical' ? '🔴' : '🟡'}</span><div><div className="font-bold">{a.type.replace(/_/g, ' ')}</div><div className="text-sm text-gray-500 capitalize">{a.sev}</div></div></div><div className="text-right"><div className="text-2xl font-bold">{a.val.toFixed(1)}</div><div className="text-xs text-gray-500">Limit: {a.lim}</div></div></div></div>))}</div>)}</div>
           </div>
         )}
 
@@ -7498,83 +7617,83 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-600">
-                      <th className="text-left py-2 px-3 text-slate-400">Stream</th>
-                      <th className="text-right py-2 px-3 text-slate-400">m³/h</th>
-                      <th className="text-right py-2 px-3 text-slate-400">L/h</th>
-                      <th className="text-right py-2 px-3 text-slate-400">% of Feed</th>
-                      <th className="text-right py-2 px-3 text-slate-400">Daily (m³)</th>
-                      <th className="text-right py-2 px-3 text-slate-400">$/h</th>
+                      <th className="text-left py-2 px-3 text-gray-500">Stream</th>
+                      <th className="text-right py-2 px-3 text-gray-500">m³/h</th>
+                      <th className="text-right py-2 px-3 text-gray-500">L/h</th>
+                      <th className="text-right py-2 px-3 text-gray-500">% of Feed</th>
+                      <th className="text-right py-2 px-3 text-gray-500">Daily (m³)</th>
+                      <th className="text-right py-2 px-3 text-gray-500">$/h</th>
                     </tr>
                   </thead>
                   <tbody>
                     {/* Feed Input */}
-                    <tr className="border-b border-slate-700 bg-blue-900/20">
+                    <tr className="border-b border-gray-200 bg-blue-900/20">
                       <td className="py-3 px-3 font-bold text-blue-400">📥 FEED IN</td>
                       <td className="text-right py-3 px-3 font-mono text-blue-400">{smoothedProc.feedFlow.toFixed(3)}</td>
                       <td className="text-right py-3 px-3 font-mono text-blue-300">{(smoothedProc.feedFlow * 1000).toFixed(0)}</td>
                       <td className="text-right py-3 px-3 font-mono text-blue-400">100.0%</td>
                       <td className="text-right py-3 px-3 font-mono text-blue-300">{computed.dailyProjection.feed.toFixed(1)}</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-500">-</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">-</td>
                     </tr>
                     {/* Stage 1: Centrifuge Outputs */}
-                    <tr className="border-b border-slate-600 bg-slate-700/20">
-                      <td colSpan={6} className="py-1 px-3 text-xs text-slate-400 font-semibold">STAGE 1: CENTRIFUGE SEPARATION</td>
+                    <tr className="border-b border-slate-600 bg-gray-100/20">
+                      <td colSpan={6} className="py-1 px-3 text-xs text-gray-500 font-semibold">STAGE 1: CENTRIFUGE SEPARATION</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
+                    <tr className="border-b border-gray-200/50">
                       <td className="py-3 px-3 text-amber-400">🛢️ Oil Recovered</td>
                       <td className="text-right py-3 px-3 font-mono">{smoothedProc.oilOut.toFixed(4)}</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{(smoothedProc.oilOut * 1000).toFixed(1)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{(smoothedProc.oilOut * 1000).toFixed(1)}</td>
                       <td className="text-right py-3 px-3 font-mono text-amber-400">{computed.flowPct.oil.toFixed(2)}%</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{computed.dailyProjection.oil.toFixed(2)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{computed.dailyProjection.oil.toFixed(2)}</td>
                       <td className="text-right py-3 px-3 font-mono text-green-400">+${computed.hourly.oilRevenue.toFixed(2)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
+                    <tr className="border-b border-gray-200/50">
                       <td className="py-3 px-3 text-orange-400">🪨 Sludge/Solids</td>
                       <td className="text-right py-3 px-3 font-mono">{smoothedProc.solidsOut.toFixed(4)}</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{(smoothedProc.solidsOut * 1000).toFixed(1)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{(smoothedProc.solidsOut * 1000).toFixed(1)}</td>
                       <td className="text-right py-3 px-3 font-mono text-orange-400">{computed.flowPct.solids.toFixed(2)}%</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{computed.dailyProjection.solids.toFixed(2)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{computed.dailyProjection.solids.toFixed(2)}</td>
                       <td className="text-right py-3 px-3 font-mono text-red-400">-${computed.hourly.sludgeCost.toFixed(2)}</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50 bg-cyan-900/10">
+                    <tr className="border-b border-gray-200/50 bg-cyan-900/10">
                       <td className="py-3 px-3 text-cyan-400">💧 Water (pre-filter)</td>
                       <td className="text-right py-3 px-3 font-mono">{smoothedProc.waterOut.toFixed(3)}</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{(smoothedProc.waterOut * 1000).toFixed(0)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{(smoothedProc.waterOut * 1000).toFixed(0)}</td>
                       <td className="text-right py-3 px-3 font-mono text-cyan-400">{computed.flowPct.water.toFixed(1)}%</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{computed.dailyProjection.water.toFixed(1)}</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-500">{smoothedProc.waterQuality.toFixed(0)} ppm OiW</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{computed.dailyProjection.water.toFixed(1)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{smoothedProc.waterQuality.toFixed(0)} ppm OiW</td>
                     </tr>
                     {/* Stage 2: GAC Polishing Filter */}
-                    <tr className="border-b border-slate-600 bg-slate-700/20">
-                      <td colSpan={6} className="py-1 px-3 text-xs text-slate-400 font-semibold">STAGE 2: SPDD1600 GAC POLISHING FILTER</td>
+                    <tr className="border-b border-slate-600 bg-gray-100/20">
+                      <td colSpan={6} className="py-1 px-3 text-xs text-gray-500 font-semibold">STAGE 2: SPDD1600 GAC POLISHING FILTER</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50 bg-teal-900/10">
+                    <tr className="border-b border-gray-200/50 bg-teal-900/10">
                       <td className="py-3 px-3 text-teal-400">🔵 Filtered Water (to pond)</td>
                       <td className="text-right py-3 px-3 font-mono">{polishingFilter.outletFlow.toFixed(3)}</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{(polishingFilter.outletFlow * 1000).toFixed(0)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{(polishingFilter.outletFlow * 1000).toFixed(0)}</td>
                       <td className="text-right py-3 px-3 font-mono text-teal-400">{smoothedProc.feedFlow > 0 ? ((polishingFilter.outletFlow / smoothedProc.feedFlow) * 100).toFixed(1) : '0.0'}%</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{(polishingFilter.outletFlow * 24).toFixed(1)}</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{(polishingFilter.outletFlow * 24).toFixed(1)}</td>
                       <td className="text-right py-3 px-3 font-mono text-teal-400">{polishingFilter.outletOiW.toFixed(0)} ppm OiW</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
-                      <td className="py-3 px-3 text-slate-400 pl-6">├─ Turbidity reduction</td>
-                      <td colSpan={3} className="text-right py-3 px-3 font-mono text-slate-400">
+                    <tr className="border-b border-gray-200/50">
+                      <td className="py-3 px-3 text-gray-500 pl-6">├─ Turbidity reduction</td>
+                      <td colSpan={3} className="text-right py-3 px-3 font-mono text-gray-500">
                         {polishingFilter.inletTurbidity.toFixed(1)} → {polishingFilter.outletTurbidity.toFixed(1)} NTU ({polishingFilter.turbidityRemoval.toFixed(0)}% removal)
                       </td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">ΔP: {polishingFilter.differentialPressure.toFixed(2)} bar</td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">Bed: {polishingFilter.bedSaturation.toFixed(0)}%</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">ΔP: {polishingFilter.differentialPressure.toFixed(2)} bar</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">Bed: {polishingFilter.bedSaturation.toFixed(0)}%</td>
                     </tr>
-                    <tr className="border-b border-slate-700/50">
-                      <td className="py-3 px-3 text-slate-400 pl-6">└─ OiW reduction</td>
-                      <td colSpan={3} className="text-right py-3 px-3 font-mono text-slate-400">
+                    <tr className="border-b border-gray-200/50">
+                      <td className="py-3 px-3 text-gray-500 pl-6">└─ OiW reduction</td>
+                      <td colSpan={3} className="text-right py-3 px-3 font-mono text-gray-500">
                         {polishingFilter.inletOiW.toFixed(0)} → {polishingFilter.outletOiW.toFixed(0)} ppm ({polishingFilter.oilRemoval.toFixed(0)}% removal)
                       </td>
-                      <td className="text-right py-3 px-3 font-mono text-slate-400">{polishingFilter.totalFiltered.toFixed(1)} m³ filtered</td>
+                      <td className="text-right py-3 px-3 font-mono text-gray-500">{polishingFilter.totalFiltered.toFixed(1)} m³ filtered</td>
                       <td className="text-right py-3 px-3 font-mono text-red-400">-${(filterCosts.total).toFixed(2)}</td>
                     </tr>
                     {/* Final Output Summary */}
-                    <tr className="bg-slate-700/30">
-                      <td className="py-3 px-3 font-bold text-slate-300">📤 TOTAL OUT</td>
+                    <tr className="bg-gray-100/30">
+                      <td className="py-3 px-3 font-bold text-gray-600">📤 TOTAL OUT</td>
                       <td className="text-right py-3 px-3 font-mono font-bold">{computed.totalOut.toFixed(3)}</td>
                       <td className="text-right py-3 px-3 font-mono">{(computed.totalOut * 1000).toFixed(0)}</td>
                       <td className="text-right py-3 px-3 font-mono font-bold">{computed.flowPct.total.toFixed(1)}%</td>
@@ -7598,12 +7717,12 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 <div className="bg-cyan-900/20 rounded-lg p-3 text-center border border-cyan-500/30">
                   <div className="text-xs text-cyan-400">Final OiW (post-GAC)</div>
                   <div className="text-xl font-bold text-cyan-400">{polishingFilter.outletOiW.toFixed(0)} ppm</div>
-                  <div className="text-xs text-slate-500">Pre: {smoothedProc.waterQuality.toFixed(0)} ppm</div>
+                  <div className="text-xs text-gray-500">Pre: {smoothedProc.waterQuality.toFixed(0)} ppm</div>
                 </div>
                 <div className="bg-blue-900/20 rounded-lg p-3 text-center border border-blue-500/30">
                   <div className="text-xs text-blue-400">Final Turbidity</div>
                   <div className="text-xl font-bold text-blue-400">{polishingFilter.outletTurbidity.toFixed(1)} NTU</div>
-                  <div className="text-xs text-slate-500">Pre: {smoothedProc.turbidity.toFixed(1)} NTU</div>
+                  <div className="text-xs text-gray-500">Pre: {smoothedProc.turbidity.toFixed(1)} NTU</div>
                 </div>
                 <div className="bg-amber-900/20 rounded-lg p-3 text-center border border-amber-500/30">
                   <div className="text-xs text-amber-400">G-Force</div>
@@ -7669,10 +7788,10 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
                 {/* Net Result */}
                 <div>
-                  <h4 className="text-sm text-slate-400 font-semibold mb-3 uppercase">Net Result</h4>
+                  <h4 className="text-sm text-gray-500 font-semibold mb-3 uppercase">Net Result</h4>
                   <div className={`p-4 rounded-xl border-2 ${computed.hourly.isProfit ? 'bg-green-900/20 border-green-500' : 'bg-red-900/20 border-red-500'}`}>
                     <div className="text-center">
-                      <div className="text-sm text-slate-400">Net {computed.hourly.isProfit ? 'Profit' : 'Loss'}</div>
+                      <div className="text-sm text-gray-500">Net {computed.hourly.isProfit ? 'Profit' : 'Loss'}</div>
                       <div className={`text-3xl font-bold ${computed.hourly.isProfit ? 'text-green-400' : 'text-red-400'}`}>
                         {computed.hourly.isProfit ? '+' : ''}${computed.hourly.netProfit.toFixed(2)}/h
                       </div>
@@ -7682,13 +7801,13 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                     </div>
                     <div className="mt-3 pt-3 border-t border-slate-600 grid grid-cols-2 gap-2 text-xs">
                       <div className="text-center">
-                        <div className="text-slate-400">Per m³ Feed</div>
+                        <div className="text-gray-500">Per m³ Feed</div>
                         <div className={`font-bold ${computed.hourly.isProfit ? 'text-green-400' : 'text-red-400'}`}>
                           ${computed.hourly.perM3Feed.toFixed(2)}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-slate-400">Daily (24h)</div>
+                        <div className="text-gray-500">Daily (24h)</div>
                         <div className={`font-bold ${computed.hourly.isProfit ? 'text-green-400' : 'text-red-400'}`}>
                           ${computed.hourly.daily.toFixed(0)}
                         </div>
@@ -7699,41 +7818,41 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               </div>
 
               {/* Cost breakdown bars */}
-              <div className="mt-6 pt-4 border-t border-slate-700">
-                <h4 className="text-sm text-slate-400 mb-3">Cost Structure Breakdown</h4>
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h4 className="text-sm text-gray-500 mb-3">Cost Structure Breakdown</h4>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <span className="w-20 text-xs text-yellow-400">Energy</span>
-                    <div className="flex-1 h-5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full bg-yellow-500 rounded-full flex items-center justify-end pr-2" style={{ width: `${computed.costBreakdown.energy.pct}%` }}>
-                        <span className="text-xs text-white font-bold">{computed.costBreakdown.energy.pct.toFixed(0)}%</span>
+                        <span className="text-xs text-gray-800 font-bold">{computed.costBreakdown.energy.pct.toFixed(0)}%</span>
                       </div>
                     </div>
                     <span className="w-16 text-right text-xs text-yellow-400">${computed.costBreakdown.energy.amount.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="w-20 text-xs text-orange-400">Sludge</span>
-                    <div className="flex-1 h-5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full bg-orange-500 rounded-full flex items-center justify-end pr-2" style={{ width: `${computed.costBreakdown.sludge.pct}%` }}>
-                        <span className="text-xs text-white font-bold">{computed.costBreakdown.sludge.pct.toFixed(0)}%</span>
+                        <span className="text-xs text-gray-800 font-bold">{computed.costBreakdown.sludge.pct.toFixed(0)}%</span>
                       </div>
                     </div>
                     <span className="w-16 text-right text-xs text-orange-400">${computed.costBreakdown.sludge.amount.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="w-20 text-xs text-cyan-400">Water</span>
-                    <div className="flex-1 h-5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full bg-cyan-500 rounded-full flex items-center justify-end pr-2" style={{ width: `${computed.costBreakdown.water.pct}%` }}>
-                        <span className="text-xs text-white font-bold">{computed.costBreakdown.water.pct.toFixed(0)}%</span>
+                        <span className="text-xs text-gray-800 font-bold">{computed.costBreakdown.water.pct.toFixed(0)}%</span>
                       </div>
                     </div>
                     <span className="w-16 text-right text-xs text-cyan-400">${computed.costBreakdown.water.amount.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="w-20 text-xs text-purple-400">Labor</span>
-                    <div className="flex-1 h-5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full bg-purple-500 rounded-full flex items-center justify-end pr-2" style={{ width: `${computed.costBreakdown.labor.pct}%` }}>
-                        <span className="text-xs text-white font-bold">{computed.costBreakdown.labor.pct.toFixed(0)}%</span>
+                        <span className="text-xs text-gray-800 font-bold">{computed.costBreakdown.labor.pct.toFixed(0)}%</span>
                       </div>
                     </div>
                     <span className="w-16 text-right text-xs text-purple-400">${computed.costBreakdown.labor.amount.toFixed(2)}</span>
@@ -7747,7 +7866,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-cyan-400">📊 Session Totals & P&L</h3>
                 <div className="flex items-center gap-4">
-                  <span className="text-slate-400">⏱️ {formatTime(totals.runTime)}</span>
+                  <span className="text-gray-500">⏱️ {formatTime(totals.runTime)}</span>
                   <button onClick={() => setTotals({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 })} className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm transition-colors">Reset</button>
                 </div>
               </div>
@@ -7781,7 +7900,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               </div>
 
               {/* Session Financial Summary */}
-              <div className="bg-slate-900/50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4">
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between"><span className="text-green-400">Oil Revenue</span><span className="text-green-400">+${computed.session.oilRevenue.toFixed(2)}</span></div>
@@ -7800,7 +7919,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                   <div className="flex justify-between items-center">
                     <div>
                       <div className="font-bold text-lg">NET SESSION {(computed.session.netProfit - chemCosts.total - filterCosts.total) >= 0 ? 'PROFIT' : 'LOSS'}</div>
-                      {totals.feed > 0 && <div className="text-sm text-slate-400">${((computed.session.netProfit - chemCosts.total - filterCosts.total) / totals.feed).toFixed(2)} per m³ processed</div>}
+                      {totals.feed > 0 && <div className="text-sm text-gray-500">${((computed.session.netProfit - chemCosts.total - filterCosts.total) / totals.feed).toFixed(2)} per m³ processed</div>}
                     </div>
                     <div className={`text-3xl font-bold ${(computed.session.netProfit - chemCosts.total - filterCosts.total) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {(computed.session.netProfit - chemCosts.total - filterCosts.total) >= 0 ? '+' : ''}${(computed.session.netProfit - chemCosts.total - filterCosts.total).toFixed(2)}
@@ -7810,29 +7929,29 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               </div>
 
               {/* Process Flow Summary */}
-              <div className="bg-slate-900/50 rounded-lg p-4 mt-4">
-                <h4 className="text-sm text-slate-400 font-semibold mb-3">🔄 PROCESS FLOW (Final Output Quality)</h4>
+              <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                <h4 className="text-sm text-gray-500 font-semibold mb-3">🔄 PROCESS FLOW (Final Output Quality)</h4>
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <div className="bg-blue-900/30 rounded p-2 text-center border border-blue-500/30">
                     <div className="text-blue-400 font-bold">FEED</div>
-                    <div className="text-slate-300">{smoothedProc.feedFlow.toFixed(1)} m³/h</div>
+                    <div className="text-gray-600">{smoothedProc.feedFlow.toFixed(1)} m³/h</div>
                   </div>
-                  <div className="text-slate-500">→</div>
+                  <div className="text-gray-500">→</div>
                   <div className="bg-amber-900/30 rounded p-2 text-center border border-amber-500/30">
                     <div className="text-amber-400 font-bold">CENTRIFUGE</div>
-                    <div className="text-slate-300">OiW: {smoothedProc.waterQuality.toFixed(0)} ppm</div>
-                    <div className="text-slate-400">Turb: {smoothedProc.turbidity.toFixed(0)} NTU</div>
+                    <div className="text-gray-600">OiW: {smoothedProc.waterQuality.toFixed(0)} ppm</div>
+                    <div className="text-gray-500">Turb: {smoothedProc.turbidity.toFixed(0)} NTU</div>
                   </div>
-                  <div className="text-slate-500">→</div>
+                  <div className="text-gray-500">→</div>
                   <div className="bg-teal-900/30 rounded p-2 text-center border border-teal-500/30">
                     <div className="text-teal-400 font-bold">SPDD1600 GAC</div>
-                    <div className="text-slate-300">OiW: {polishingFilter.outletOiW.toFixed(0)} ppm</div>
-                    <div className="text-slate-400">Turb: {polishingFilter.outletTurbidity.toFixed(1)} NTU</div>
+                    <div className="text-gray-600">OiW: {polishingFilter.outletOiW.toFixed(0)} ppm</div>
+                    <div className="text-gray-500">Turb: {polishingFilter.outletTurbidity.toFixed(1)} NTU</div>
                   </div>
-                  <div className="text-slate-500">→</div>
+                  <div className="text-gray-500">→</div>
                   <div className="bg-green-900/30 rounded p-2 text-center border border-green-500/30">
                     <div className="text-green-400 font-bold">TO POND</div>
-                    <div className="text-slate-300">{polishingFilter.outletFlow.toFixed(1)} m³/h</div>
+                    <div className="text-gray-600">{polishingFilter.outletFlow.toFixed(1)} m³/h</div>
                     <div className="text-green-400 text-xs">✓ Treated</div>
                   </div>
                 </div>
@@ -7841,8 +7960,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
               {/* WATER DISCHARGE Compliance Status - License Conditions */}
               {/* Note: These limits ONLY apply to water discharge, NOT to oil or sludge products */}
               {dischargeLimits.enabled && (
-                <div className="bg-slate-900/50 rounded-lg p-4 mt-4">
-                  <h4 className="text-sm text-slate-400 font-semibold mb-3">💧 WATER DISCHARGE - LICENSE COMPLIANCE</h4>
+                <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                  <h4 className="text-sm text-gray-500 font-semibold mb-3">💧 WATER DISCHARGE - LICENSE COMPLIANCE</h4>
                   {(() => {
                     const trhPass = polishingFilter.outletTRH <= dischargeLimits.trh;
                     const codPass = polishingFilter.outletCOD <= dischargeLimits.cod;
@@ -7859,7 +7978,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                               <div className={`font-bold text-lg ${allPass ? 'text-green-400' : 'text-red-400'}`}>
                                 WATER DISCHARGE {allPass ? 'COMPLIANT' : 'NON-COMPLIANT'}
                               </div>
-                              <div className="text-xs text-slate-400">
+                              <div className="text-xs text-gray-500">
                                 Water to pond: TRH ≤{dischargeLimits.trh} mg/L | COD ≤{dischargeLimits.cod} mg/L | pH {dischargeLimits.pH.min}-{dischargeLimits.pH.max}
                               </div>
                             </div>
@@ -7890,29 +8009,29 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             </div>
 
             {/* Unit Economics */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">📈 Unit Economics</h3>
+            <div className="bg-slate-800 rounded-xl p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">📈 Unit Economics</h3>
               <div className="grid grid-cols-4 gap-4">
-                <div className="bg-slate-700/30 rounded-lg p-4 text-center">
-                  <div className="text-xs text-slate-400 mb-1">Cost per m³ Feed</div>
+                <div className="bg-gray-100/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-500 mb-1">Cost per m³ Feed</div>
                   <div className="text-2xl font-bold text-red-400">
                     ${computed.unitEcon.costPerM3Feed.toFixed(2)}
                   </div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-4 text-center">
-                  <div className="text-xs text-slate-400 mb-1">Revenue per m³ Feed</div>
+                <div className="bg-gray-100/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-500 mb-1">Revenue per m³ Feed</div>
                   <div className="text-2xl font-bold text-green-400">
                     ${computed.unitEcon.revenuePerM3Feed.toFixed(2)}
                   </div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-4 text-center">
-                  <div className="text-xs text-slate-400 mb-1">Specific Energy</div>
+                <div className="bg-gray-100/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-500 mb-1">Specific Energy</div>
                   <div className="text-2xl font-bold text-yellow-400">
                     {computed.specificEnergy.toFixed(1)} kWh/m³
                   </div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-4 text-center">
-                  <div className="text-xs text-slate-400 mb-1">Sludge Cost per L Oil</div>
+                <div className="bg-gray-100/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-500 mb-1">Sludge Cost per L Oil</div>
                   <div className="text-2xl font-bold text-orange-400">
                     ${computed.unitEcon.sludgeCostPerLOil.toFixed(3)}
                   </div>
