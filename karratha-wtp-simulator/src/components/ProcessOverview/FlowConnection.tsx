@@ -1,8 +1,8 @@
 /**
  * FLOW CONNECTION COMPONENT
  * =========================
- * Renders animated flow lines between equipment blocks.
- * Supports different line styles and stream types.
+ * Modern, refined flow lines with smooth animations,
+ * gradient strokes, and polished visual effects.
  */
 
 import React, { useMemo } from 'react';
@@ -11,6 +11,7 @@ import {
   getBlockById,
   getConnectionColor,
   getConnectionWidth,
+  DIAGRAM_COLORS,
 } from './diagramConfig';
 
 interface FlowConnectionProps {
@@ -18,7 +19,7 @@ interface FlowConnectionProps {
   blockPositions?: Record<string, { x: number; y: number }>;
   isHighlighted?: boolean;
   animationEnabled?: boolean;
-  flowRate?: number; // 0-1 for animation speed scaling
+  flowRate?: number;
 }
 
 export function FlowConnection({
@@ -41,36 +42,81 @@ export function FlowConnection({
     ? { ...baseToBlock, x: blockPositions[connection.to].x, y: blockPositions[connection.to].y }
     : baseToBlock;
 
-  // Calculate connection points
+  // Calculate connection path
   const path = useMemo(() => {
     return calculatePath(fromBlock, toBlock, connection);
   }, [fromBlock, toBlock, connection]);
 
   const color = getConnectionColor(connection.type);
   const width = getConnectionWidth(connection.type);
-  const opacity = isHighlighted ? 1 : 0.8;
+  const gradientId = `flow-gradient-${connection.id}`;
+  const glowId = `flow-glow-${connection.id}`;
 
   // Determine stroke dash pattern
   const getDashArray = () => {
     switch (connection.style) {
-      case 'dashed': return '8,4';
-      case 'dotted': return '4,4';
+      case 'dashed': return '10,6';
+      case 'dotted': return '4,6';
       default: return undefined;
     }
   };
 
   // Animation duration based on flow rate
-  const animDuration = Math.max(1, 3 - flowRate * 2);
+  const animDuration = Math.max(1.5, 4 - flowRate * 3);
 
   return (
     <g className="flow-connection">
-      {/* Background line (wider, for click area) */}
+      {/* Definitions */}
+      <defs>
+        {/* Gradient for flow line */}
+        <linearGradient id={gradientId} gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="50%" stopColor={color} stopOpacity="1" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.4" />
+        </linearGradient>
+
+        {/* Glow filter */}
+        <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* Background glow for highlighted state */}
+      {isHighlighted && (
+        <path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth={width + 6}
+          strokeOpacity={0.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ filter: `url(#${glowId})` }}
+        />
+      )}
+
+      {/* Invisible wider path for hit area */}
       <path
         d={path}
         fill="none"
         stroke="transparent"
-        strokeWidth={width + 8}
+        strokeWidth={width + 12}
         className="cursor-pointer"
+      />
+
+      {/* Main flow line - base layer */}
+      <path
+        d={path}
+        fill="none"
+        stroke={DIAGRAM_COLORS.ui.border}
+        strokeWidth={width + 2}
+        strokeOpacity={0.3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
 
       {/* Main flow line */}
@@ -79,25 +125,25 @@ export function FlowConnection({
         fill="none"
         stroke={color}
         strokeWidth={width}
-        strokeOpacity={opacity}
+        strokeOpacity={isHighlighted ? 1 : 0.85}
         strokeDasharray={getDashArray()}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="transition-all duration-300"
+        className="transition-all duration-200"
         style={{
-          filter: isHighlighted ? `drop-shadow(0 0 4px ${color})` : undefined,
+          filter: isHighlighted ? `drop-shadow(0 0 6px ${color})` : undefined,
         }}
       />
 
-      {/* Animated flow particles */}
+      {/* Animated flow effect - moving dots */}
       {animationEnabled && connection.animated && (
-        <g className="flow-animation">
-          {[0, 0.33, 0.66].map((offset, i) => (
+        <g className="flow-particles">
+          {[0, 0.25, 0.5, 0.75].map((offset, i) => (
             <circle
               key={i}
-              r={width * 0.8}
-              fill={color}
-              opacity={0.9}
+              r={width * 0.6}
+              fill="#ffffff"
+              opacity={0}
             >
               <animateMotion
                 dur={`${animDuration}s`}
@@ -105,25 +151,59 @@ export function FlowConnection({
                 begin={`${offset * animDuration}s`}
                 path={path}
               />
+              <animate
+                attributeName="opacity"
+                values="0;0.9;0.9;0"
+                dur={`${animDuration}s`}
+                repeatCount="indefinite"
+                begin={`${offset * animDuration}s`}
+              />
+              <animate
+                attributeName="r"
+                values={`${width * 0.4};${width * 0.7};${width * 0.4}`}
+                dur={`${animDuration}s`}
+                repeatCount="indefinite"
+                begin={`${offset * animDuration}s`}
+              />
             </circle>
           ))}
         </g>
       )}
 
-      {/* Dashed line animation (for chemical/recirculation) */}
+      {/* Dashed line animation */}
       {animationEnabled && connection.style === 'dashed' && (
         <path
           d={path}
           fill="none"
           stroke={color}
-          strokeWidth={width}
-          strokeOpacity={0.6}
-          strokeDasharray="8,4"
+          strokeWidth={width * 0.6}
+          strokeOpacity={0.5}
+          strokeDasharray="10,6"
           strokeLinecap="round"
         >
           <animate
             attributeName="stroke-dashoffset"
-            values="0;24"
+            values="0;32"
+            dur={`${animDuration * 1.5}s`}
+            repeatCount="indefinite"
+          />
+        </path>
+      )}
+
+      {/* Dotted line animation */}
+      {animationEnabled && connection.style === 'dotted' && (
+        <path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth={width * 0.5}
+          strokeOpacity={0.4}
+          strokeDasharray="4,6"
+          strokeLinecap="round"
+        >
+          <animate
+            attributeName="stroke-dashoffset"
+            values="0;20"
             dur={`${animDuration * 2}s`}
             repeatCount="indefinite"
           />
@@ -132,11 +212,11 @@ export function FlowConnection({
 
       {/* Flow label */}
       {connection.label && (
-        <FlowLabel path={path} label={connection.label} color={color} />
+        <FlowLabel path={path} label={connection.label} color={color} id={connection.id} />
       )}
 
-      {/* Arrow marker at the end */}
-      <ArrowMarker path={path} color={color} size={width * 2} />
+      {/* Arrow marker at end */}
+      <ArrowMarker path={path} color={color} size={width * 2.5} />
     </g>
   );
 }
@@ -147,6 +227,11 @@ function calculatePath(
   to: { x: number; y: number; width: number; height: number },
   connection: ConnectionType
 ): string {
+  // Use custom path if provided
+  if (connection.path) {
+    return connection.path;
+  }
+
   // Get center points
   const fromCenter = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
   const toCenter = { x: to.x + to.width / 2, y: to.y + to.height / 2 };
@@ -159,7 +244,6 @@ function calculatePath(
 
   // Determine which sides to connect
   if (Math.abs(dx) > Math.abs(dy)) {
-    // Horizontal-dominant connection
     if (dx > 0) {
       startX = from.x + from.width;
       startY = fromCenter.y;
@@ -172,7 +256,6 @@ function calculatePath(
       endY = toCenter.y;
     }
   } else {
-    // Vertical-dominant connection
     if (dy > 0) {
       startX = fromCenter.x;
       startY = from.y + from.height;
@@ -186,36 +269,53 @@ function calculatePath(
     }
   }
 
-  // Use custom path if provided
-  if (connection.path) {
-    return connection.path;
-  }
-
-  // Create smooth bezier curve or straight line with corners
   const midX = (startX + endX) / 2;
   const midY = (startY + endY) / 2;
 
-  // For mostly horizontal/vertical lines, use right-angle paths
+  // For mostly horizontal/vertical lines
   if (Math.abs(startX - endX) < 20) {
-    // Nearly vertical
     return `M ${startX} ${startY} L ${endX} ${endY}`;
   } else if (Math.abs(startY - endY) < 20) {
-    // Nearly horizontal
     return `M ${startX} ${startY} L ${endX} ${endY}`;
   } else {
-    // Use L-shaped or smooth curve
-    // Determine best path style
-    if (Math.abs(dx) > Math.abs(dy) * 2) {
+    // Use rounded corners for L-shaped paths
+    const radius = 12;
+
+    if (Math.abs(dx) > Math.abs(dy) * 1.5) {
       // Go horizontal first, then vertical
+      const turnY = startY;
+      const turnX = midX;
+
+      if (Math.abs(endY - startY) > radius * 2) {
+        const dir = endY > startY ? 1 : -1;
+        return `M ${startX} ${startY}
+                L ${turnX - radius} ${turnY}
+                Q ${turnX} ${turnY} ${turnX} ${turnY + radius * dir}
+                L ${turnX} ${endY - radius * dir}
+                Q ${turnX} ${endY} ${turnX + radius * (endX > turnX ? 1 : -1)} ${endY}
+                L ${endX} ${endY}`;
+      }
       return `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
-    } else if (Math.abs(dy) > Math.abs(dx) * 2) {
+    } else if (Math.abs(dy) > Math.abs(dx) * 1.5) {
       // Go vertical first, then horizontal
+      const turnX = startX;
+      const turnY = midY;
+
+      if (Math.abs(endX - startX) > radius * 2) {
+        const dir = endX > startX ? 1 : -1;
+        return `M ${startX} ${startY}
+                L ${turnX} ${turnY - radius}
+                Q ${turnX} ${turnY} ${turnX + radius * dir} ${turnY}
+                L ${endX - radius * dir} ${turnY}
+                Q ${endX} ${turnY} ${endX} ${turnY + radius * (endY > turnY ? 1 : -1)}
+                L ${endX} ${endY}`;
+      }
       return `M ${startX} ${startY} L ${startX} ${midY} L ${endX} ${midY} L ${endX} ${endY}`;
     } else {
-      // Use bezier curve for diagonal
-      const cx1 = startX + dx * 0.5;
+      // Smooth bezier curve for diagonal connections
+      const cx1 = startX + dx * 0.4;
       const cy1 = startY;
-      const cx2 = endX - dx * 0.5;
+      const cx2 = endX - dx * 0.4;
       const cy2 = endY;
       return `M ${startX} ${startY} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${endX} ${endY}`;
     }
@@ -223,21 +323,38 @@ function calculatePath(
 }
 
 // Flow label component
-function FlowLabel({ path, label, color }: { path: string; label: string; color: string }) {
-  const id = `label-${Math.random().toString(36).substr(2, 9)}`;
+function FlowLabel({ path, label, color, id }: { path: string; label: string; color: string; id: string }) {
+  const pathId = `label-path-${id}`;
 
   return (
-    <g>
+    <g className="flow-label">
       <defs>
-        <path id={id} d={path} />
+        <path id={pathId} d={path} />
       </defs>
+      {/* Label background */}
+      <text
+        fill={DIAGRAM_COLORS.ui.background}
+        fontSize={10}
+        fontWeight="700"
+        fontFamily="Inter, system-ui, sans-serif"
+        dy={-5}
+        stroke={DIAGRAM_COLORS.ui.background}
+        strokeWidth={3}
+        strokeLinejoin="round"
+      >
+        <textPath href={`#${pathId}`} startOffset="50%" textAnchor="middle">
+          {label}
+        </textPath>
+      </text>
+      {/* Label text */}
       <text
         fill={color}
         fontSize={10}
-        fontWeight="bold"
-        dy={-6}
+        fontWeight="700"
+        fontFamily="Inter, system-ui, sans-serif"
+        dy={-5}
       >
-        <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">
+        <textPath href={`#${pathId}`} startOffset="50%" textAnchor="middle">
           {label}
         </textPath>
       </text>
@@ -248,24 +365,32 @@ function FlowLabel({ path, label, color }: { path: string; label: string; color:
 // Arrow marker at end of path
 function ArrowMarker({ path, color, size }: { path: string; color: string; size: number }) {
   // Parse path to get end point and direction
-  const segments = path.split(/[ML C,]/).filter(Boolean).map(s => parseFloat(s.trim()));
+  const segments = path.split(/[MLCQ ,\n]/).filter(s => s && !isNaN(parseFloat(s))).map(s => parseFloat(s.trim()));
 
   if (segments.length < 4) return null;
 
   const endX = segments[segments.length - 2];
   const endY = segments[segments.length - 1];
-  const prevX = segments[segments.length - 4] || segments[segments.length - 2];
-  const prevY = segments[segments.length - 3] || segments[segments.length - 1];
+  const prevX = segments[segments.length - 4] || segments[0];
+  const prevY = segments[segments.length - 3] || segments[1];
 
   // Calculate angle
   const angle = Math.atan2(endY - prevY, endX - prevX) * (180 / Math.PI);
 
   return (
-    <polygon
-      points={`0,-${size / 2} ${size},0 0,${size / 2}`}
-      fill={color}
-      transform={`translate(${endX}, ${endY}) rotate(${angle})`}
-    />
+    <g transform={`translate(${endX}, ${endY}) rotate(${angle})`}>
+      {/* Arrow shadow */}
+      <polygon
+        points={`-${size * 0.8},-${size / 2.5} 0,0 -${size * 0.8},${size / 2.5}`}
+        fill="rgba(0,0,0,0.3)"
+        transform="translate(1, 1)"
+      />
+      {/* Arrow body */}
+      <polygon
+        points={`-${size * 0.8},-${size / 2.5} 0,0 -${size * 0.8},${size / 2.5}`}
+        fill={color}
+      />
+    </g>
   );
 }
 
