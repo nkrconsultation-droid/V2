@@ -11,3 +11,17 @@ export {
   useSimulationLoop,
   useDebugPanel,
 } from './useSimulation';
+
+export {
+  usePhaseTracking,
+  getPhaseAverage,
+  calculateOverallTotals,
+  calculateWeightedQuality,
+} from './usePhaseTracking';
+
+export type {
+  PhaseDataRecord,
+  PhaseQualityStats,
+  ProcessDataSnapshot,
+  CostRates,
+} from './usePhaseTracking';

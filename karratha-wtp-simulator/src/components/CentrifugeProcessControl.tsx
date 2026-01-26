@@ -46,6 +46,12 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
 
+// Extracted modules
+import { usePhaseTracking, ProcessDataSnapshot } from '../hooks/usePhaseTracking';
+import { FEEDSTOCK_TYPES, TRANSPORT_DESTINATIONS, DEFAULT_COSTS } from '../lib/constants';
+import { BATCH_PHASES, getTotalBatchVolume } from '../lib/constants/batch-phases';
+import { generatePhaseReportHTML } from '../lib/reports/phase-report';
+
 const gaussianRandom = (mean, stdDev) => {
   if (stdDev === 0) return mean;
   const u1 = Math.random(), u2 = Math.random();
@@ -527,14 +533,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
   const [batchPhase, setBatchPhase] = useState(0);
   const [tankVolume, setTankVolume] = useState(55);
 
-  const batchPhases = useMemo(() => [
-    { name: 'Heavy Sediment', icon: '🪨', water: 60, oil: 10, sediment: 30, volume: 2.75, temp: 55, flow: 6, rpm: 4200 },
-    { name: 'Mixed Sludge', icon: '🌊', water: 65, oil: 15, sediment: 20, volume: 5.5, temp: 58, flow: 8, rpm: 4000 },
-    { name: 'Emulsion Layer', icon: '🧴', water: 50, oil: 45, sediment: 5, volume: 8.25, temp: 65, flow: 10, rpm: 3800 },
-    { name: 'Oil-Rich', icon: '🛢️', water: 30, oil: 65, sediment: 5, volume: 11.0, temp: 68, flow: 12, rpm: 3500 },
-    { name: 'Water-Rich', icon: '💧', water: 85, oil: 12, sediment: 3, volume: 22.0, temp: 62, flow: 14, rpm: 3200 },
-    { name: 'Final Rinse', icon: '✨', water: 95, oil: 4, sediment: 1, volume: 5.5, temp: 55, flow: 10, rpm: 3000 },
-  ], []);
+  // Batch phases imported from constants
+  const batchPhases = BATCH_PHASES;
 
   // ═══════════════════════════════════════════════════════════════
   //                   CONTROL LOOPS (Simplified 3-loop)
@@ -750,296 +750,62 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
   const [totals, setTotals] = useState({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 });
 
   // ═══════════════════════════════════════════════════════════════
-  //    PHASE DATA TRACKING (for Phase Cost & Quality Report)
+  //    PHASE DATA TRACKING (using extracted hook)
   // ═══════════════════════════════════════════════════════════════
-  // Tracks detailed metrics for each operational phase during batch processing
-  const [phaseData, setPhaseData] = useState<{
-    phaseIndex: number;
-    phaseName: string;
-    startTime: number;
-    endTime: number | null;
-    // Volume totals (m³)
-    totals: { feed: number; water: number; oil: number; solids: number; energy: number; duration: number };
-    // Quality metrics (rolling averages)
-    quality: {
-      oilEfficiency: { sum: number; count: number; min: number; max: number };
-      solidsEfficiency: { sum: number; count: number; min: number; max: number };
-      waterQuality: { sum: number; count: number; min: number; max: number };
-      pH: { sum: number; count: number; min: number; max: number };
-      turbidity: { sum: number; count: number; min: number; max: number };
+  const {
+    phaseData,
+    currentPhaseDataRef,
+    initializePhaseData,
+    startPhaseTracking,
+    updatePhaseData: updatePhaseDataHook,
+    finalizePhaseData,
+    clearPhaseData,
+  } = usePhaseTracking(batchPhases);
+
+  // Wrapper for updatePhaseData to match existing call signature
+  const updatePhaseData = useCallback((proc: any, dt: number, currentCosts: any, _chemCosts: any, _filterCosts: any) => {
+    const procSnapshot: ProcessDataSnapshot = {
+      feedFlow: proc.feedFlow,
+      waterOut: proc.waterOut,
+      oilOut: proc.oilOut,
+      solidsOut: proc.solidsOut,
+      totalPower: proc.totalPower,
+      oilEff: proc.oilEff,
+      solidsEff: proc.solidsEff,
+      waterQuality: proc.waterQuality,
+      pH: proc.pH,
+      turbidity: proc.turbidity,
+      vibration: proc.vibration,
+      oilMoisture: proc.oilMoisture,
+      oilSolids: proc.oilSolids,
+      cakeMoisture: proc.cakeMoisture,
+      cakeOil: proc.cakeOil,
     };
-    // Cost breakdown ($)
-    costs: { energy: number; chemicals: number; disposal: number; water: number; labor: number; filter: number };
-    // Three-fraction output quality
-    fractions: {
-      water: { purity: { sum: number; count: number }; oilContent: { sum: number; count: number }; tss: { sum: number; count: number } };
-      oil: { waterContent: { sum: number; count: number }; solidsContent: { sum: number; count: number }; recovery: { sum: number; count: number } };
-      solids: { moisture: { sum: number; count: number }; oilContent: { sum: number; count: number }; recovery: { sum: number; count: number } };
-    };
-    // Mass balance validation
-    massBalance: { totalIn: number; totalOut: number; closurePct: { sum: number; count: number } };
-    // Data quality flags
-    dataQuality: { samplesCollected: number; anomalies: string[]; confidenceLevel: string };
-  }[]>([]);
-
-  // Current phase tracking reference (used in simulation loop)
-  const currentPhaseDataRef = useRef<{
-    phaseIndex: number;
-    startTime: number;
-    totals: { feed: number; water: number; oil: number; solids: number; energy: number };
-    qualitySamples: { oilEff: number[]; solidsEff: number[]; wq: number[]; pH: number[]; turb: number[] };
-    fractionSamples: {
-      waterPurity: number[]; waterOil: number[]; waterTSS: number[];
-      oilWater: number[]; oilSolids: number[]; oilRecovery: number[];
-      solidsMoisture: number[]; solidsOil: number[]; solidsRecovery: number[];
-    };
-    costs: { energy: number; chemicals: number; disposal: number; water: number; labor: number; filter: number };
-    massIn: number;
-    massOut: number;
-    closureSamples: number[];
-    anomalies: string[];
-  } | null>(null);
-
-  // Initialize phase data when batch mode starts
-  const initializePhaseData = useCallback(() => {
-    setPhaseData([]);
-    currentPhaseDataRef.current = null;
-  }, []);
-
-  // Finalize phase data and store - defined BEFORE startPhaseTracking
-  const finalizePhaseData = useCallback((endTime: number) => {
-    if (!currentPhaseDataRef.current) return;
-
-    const ref = currentPhaseDataRef.current;
-    const calcStats = (arr: number[]) => {
-      if (arr.length === 0) return { sum: 0, count: 0, min: 0, max: 0 };
-      return {
-        sum: arr.reduce((a, b) => a + b, 0),
-        count: arr.length,
-        min: Math.min(...arr),
-        max: Math.max(...arr),
-      };
-    };
-
-    const phaseRecord = {
-      phaseIndex: ref.phaseIndex,
-      phaseName: batchPhases[ref.phaseIndex]?.name || `Phase ${ref.phaseIndex + 1}`,
-      startTime: ref.startTime,
-      endTime: endTime,
-      totals: {
-        ...ref.totals,
-        duration: endTime - ref.startTime,
-      },
-      quality: {
-        oilEfficiency: calcStats(ref.qualitySamples.oilEff),
-        solidsEfficiency: calcStats(ref.qualitySamples.solidsEff),
-        waterQuality: calcStats(ref.qualitySamples.wq),
-        pH: calcStats(ref.qualitySamples.pH),
-        turbidity: calcStats(ref.qualitySamples.turb),
-      },
-      costs: ref.costs,
-      fractions: {
-        water: {
-          purity: calcStats(ref.fractionSamples.waterPurity),
-          oilContent: calcStats(ref.fractionSamples.waterOil),
-          tss: calcStats(ref.fractionSamples.waterTSS),
-        },
-        oil: {
-          waterContent: calcStats(ref.fractionSamples.oilWater),
-          solidsContent: calcStats(ref.fractionSamples.oilSolids),
-          recovery: calcStats(ref.fractionSamples.oilRecovery),
-        },
-        solids: {
-          moisture: calcStats(ref.fractionSamples.solidsMoisture),
-          oilContent: calcStats(ref.fractionSamples.solidsOil),
-          recovery: calcStats(ref.fractionSamples.solidsRecovery),
-        },
-      },
-      massBalance: {
-        totalIn: ref.massIn,
-        totalOut: ref.massOut,
-        closurePct: calcStats(ref.closureSamples),
-      },
-      dataQuality: {
-        samplesCollected: ref.qualitySamples.oilEff.length,
-        anomalies: [...new Set(ref.anomalies)].slice(0, 10), // Unique anomalies, max 10
-        confidenceLevel: ref.qualitySamples.oilEff.length > 60 ? 'High' : ref.qualitySamples.oilEff.length > 30 ? 'Medium' : 'Low',
-      },
-    };
-
-    setPhaseData(prev => [...prev, phaseRecord]);
-    currentPhaseDataRef.current = null;
-  }, [batchPhases]);
-
-  // Start tracking a new phase
-  const startPhaseTracking = useCallback((phaseIndex: number, simTime: number) => {
-    // Guard: Don't start if we're already tracking this exact phase
-    if (currentPhaseDataRef.current?.phaseIndex === phaseIndex) {
-      return;
-    }
-
-    // Finalize previous phase if exists
-    if (currentPhaseDataRef.current !== null) {
-      finalizePhaseData(simTime);
-    }
-
-    // Initialize new phase tracking
-    currentPhaseDataRef.current = {
-      phaseIndex,
-      startTime: simTime,
-      totals: { feed: 0, water: 0, oil: 0, solids: 0, energy: 0 },
-      qualitySamples: { oilEff: [], solidsEff: [], wq: [], pH: [], turb: [] },
-      fractionSamples: {
-        waterPurity: [], waterOil: [], waterTSS: [],
-        oilWater: [], oilSolids: [], oilRecovery: [],
-        solidsMoisture: [], solidsOil: [], solidsRecovery: [],
-      },
-      costs: { energy: 0, chemicals: 0, disposal: 0, water: 0, labor: 0, filter: 0 },
-      massIn: 0,
-      massOut: 0,
-      closureSamples: [],
-      anomalies: [],
-    };
-  }, [finalizePhaseData]);
-
-  // Update phase data with current process values
-  const updatePhaseData = useCallback((proc: any, dt: number, currentCosts: any, currentChemCosts: any, currentFilterCosts: any) => {
-    if (!currentPhaseDataRef.current) return;
-
-    const ref = currentPhaseDataRef.current;
-
-    // Update volume totals
-    ref.totals.feed += proc.feedFlow * dt / 3600;
-    ref.totals.water += proc.waterOut * dt / 3600;
-    ref.totals.oil += proc.oilOut * dt / 3600;
-    ref.totals.solids += proc.solidsOut * dt / 3600;
-    ref.totals.energy += proc.totalPower * dt / 3600;
-
-    // Collect quality samples (every second of sim time)
-    ref.qualitySamples.oilEff.push(proc.oilEff);
-    ref.qualitySamples.solidsEff.push(proc.solidsEff);
-    ref.qualitySamples.wq.push(proc.waterQuality);
-    ref.qualitySamples.pH.push(proc.pH);
-    ref.qualitySamples.turb.push(proc.turbidity);
-
-    // Three-fraction quality samples
-    ref.fractionSamples.waterPurity.push(100 - (proc.waterQuality / 10000) * 100); // OiW in ppm -> purity %
-    ref.fractionSamples.waterOil.push(proc.waterQuality); // ppm OiW
-    ref.fractionSamples.waterTSS.push(proc.turbidity * 1.2); // Approx TSS from turbidity
-
-    ref.fractionSamples.oilWater.push(proc.oilMoisture || 3); // % water in oil
-    ref.fractionSamples.oilSolids.push(proc.oilSolids || 0.5); // % solids in oil
-    ref.fractionSamples.oilRecovery.push(proc.oilEff); // % oil recovery
-
-    ref.fractionSamples.solidsMoisture.push(proc.cakeMoisture || 18); // % moisture in solids
-    ref.fractionSamples.solidsOil.push(proc.cakeOil || 2); // % oil in solids
-    ref.fractionSamples.solidsRecovery.push(proc.solidsEff); // % solids recovery
-
-    // Update costs
-    ref.costs.energy += proc.totalPower * dt / 3600 * currentCosts.elec;
-    ref.costs.water += proc.waterOut * dt / 3600 * currentCosts.waterTreatment;
-    ref.costs.disposal += proc.solidsOut * dt / 3600 * currentCosts.sludgeDisposal;
-    ref.costs.labor += (dt / 3600) * currentCosts.laborRate;
-
-    // Mass balance
-    ref.massIn += proc.feedFlow * dt / 3600;
-    const totalOut = (proc.waterOut + proc.oilOut + proc.solidsOut) * dt / 3600;
-    ref.massOut += totalOut;
-    const closure = ref.massIn > 0 ? (ref.massOut / ref.massIn) * 100 : 100;
-    ref.closureSamples.push(closure);
-
-    // Check for anomalies
-    if (proc.oilEff < 70) ref.anomalies.push(`Low oil efficiency: ${proc.oilEff.toFixed(1)}%`);
-    if (proc.vibration > 6) ref.anomalies.push(`High vibration: ${proc.vibration.toFixed(1)} mm/s`);
-    if (closure < 95 || closure > 105) ref.anomalies.push(`Mass balance deviation: ${closure.toFixed(1)}%`);
-  }, []);
+    updatePhaseDataHook(procSnapshot, dt, {
+      elec: currentCosts.elec,
+      waterTreatment: currentCosts.waterTreatment,
+      sludgeDisposal: currentCosts.sludgeDisposal,
+      laborRate: currentCosts.laborRate,
+    });
+  }, [updatePhaseDataHook]);
 
   // ═══════════════════════════════════════════════════════════════
-  //    FEEDSTOCK TYPES & OIL VALUE MATRIX
+  //    FEEDSTOCK TYPES & OIL VALUE MATRIX (imported from constants)
   // ═══════════════════════════════════════════════════════════════
-  const feedstockTypes = {
-    washWater: {
-      id: 'washWater',
-      name: 'Wash Water',
-      oilContent: 2.5,        // % typical oil content
-      solidsContent: 1.5,     // % typical solids
-      oilValue: 350,          // $/m³ recovered oil (lower grade, needs processing)
-      description: 'Equipment/tank wash water - lower grade oil',
-      color: 'text-blue-400',
-    },
-    refinerySlop: {
-      id: 'refinerySlop',
-      name: 'Refinery Slop Oil',
-      oilContent: 8.0,        // %
-      solidsContent: 3.0,     // %
-      oilValue: 450,          // $/m³ (medium grade)
-      description: 'Refinery process water/slop - medium grade',
-      color: 'text-purple-400',
-    },
-    tankBottoms: {
-      id: 'tankBottoms',
-      name: 'Tank Bottom Sludge',
-      oilContent: 15.0,       // %
-      solidsContent: 8.0,     // %
-      oilValue: 280,          // $/m³ (heavy, high sediment)
-      description: 'Storage tank sediment/BS&W - heavy, high sediment',
-      color: 'text-amber-400',
-    },
-    producedWater: {
-      id: 'producedWater',
-      name: 'Produced Water',
-      oilContent: 1.5,        // %
-      solidsContent: 0.5,     // %
-      oilValue: 400,          // $/m³ (light but dilute)
-      description: 'Oil/gas production water - light but dilute',
-      color: 'text-cyan-400',
-    },
-    lightCrude: {
-      id: 'lightCrude',
-      name: 'Light Crude Emulsion',
-      oilContent: 25.0,       // %
-      solidsContent: 2.0,     // %
-      oilValue: 520,          // $/m³ (premium, low sulfur)
-      description: 'Light crude/condensate emulsion - premium grade',
-      color: 'text-green-400',
-    },
-    heavyCrude: {
-      id: 'heavyCrude',
-      name: 'Heavy Crude Emulsion',
-      oilContent: 20.0,       // %
-      solidsContent: 5.0,     // %
-      oilValue: 380,          // $/m³ (discount for API gravity)
-      description: 'Heavy crude water cut - discounted for API',
-      color: 'text-orange-400',
-    },
-  };
+  // Using imported FEEDSTOCK_TYPES and TRANSPORT_DESTINATIONS from lib/constants
+  const feedstockTypes = FEEDSTOCK_TYPES;
+  const transportDestinations = TRANSPORT_DESTINATIONS;
 
-  // Transport destinations with costs
-  const transportDestinations = {
-    kalgoorlie: { name: 'Kalgoorlie Refinery', cost: 220, distance: '1,200 km' },
-    perth: { name: 'Perth (Kwinana)', cost: 280, distance: '1,500 km' },
-    local: { name: 'Local Processing', cost: 80, distance: '< 50 km' },
-    export: { name: 'Port Hedland (Export)', cost: 150, distance: '240 km' },
-  };
+  const [selectedFeedstock, setSelectedFeedstock] = useState<keyof typeof FEEDSTOCK_TYPES>('refinerySlop');
+  const [selectedDestination, setSelectedDestination] = useState<keyof typeof TRANSPORT_DESTINATIONS>('kalgoorlie');
 
-  const [selectedFeedstock, setSelectedFeedstock] = useState<keyof typeof feedstockTypes>('refinerySlop');
-  const [selectedDestination, setSelectedDestination] = useState<keyof typeof transportDestinations>('kalgoorlie');
-
-  // Australian market rates (WA commercial)
-  const [costs, setCosts] = useState({
-    elec: 0.34,              // $/kWh
-    sludgeDisposal: 270,     // $/m³
-    waterTreatment: 3.5,     // $/m³
-    oilValue: 450,           // $/m³ (value at destination) - updated by feedstock
-    oilTransport: 220,       // $/m³ ($0.22/L) - updated by destination
-    pondDisposal: 3.5,       // $/m³ ($3.5/1000L evaporation pond)
-    laborRate: 140,          // $/hour
-  });
+  // Australian market rates (WA commercial) - using imported defaults
+  const [costs, setCosts] = useState({ ...DEFAULT_COSTS });
 
   // Update costs and capital model when feedstock or destination changes
   useEffect(() => {
-    const feedstock = feedstockTypes[selectedFeedstock];
-    const destination = transportDestinations[selectedDestination];
+    const feedstock = FEEDSTOCK_TYPES[selectedFeedstock];
+    const destination = TRANSPORT_DESTINATIONS[selectedDestination];
     setCosts(prev => ({
       ...prev,
       oilValue: feedstock.oilValue,
