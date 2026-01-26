@@ -13,22 +13,33 @@ interface EquipmentBlockProps {
   block: BlockType;
   isSelected?: boolean;
   isHighlighted?: boolean;
+  isDragging?: boolean;
+  editMode?: boolean;
   data?: Record<string, number | string | boolean>;
   onClick?: (blockId: string) => void;
   onHover?: (blockId: string | null) => void;
+  onDragStart?: (blockId: string, e: React.MouseEvent) => void;
 }
 
 export function EquipmentBlock({
   block,
   isSelected = false,
   isHighlighted = false,
+  isDragging = false,
+  editMode = false,
   data,
   onClick,
   onHover,
+  onDragStart,
 }: EquipmentBlockProps) {
   const handleClick = () => onClick?.(block.id);
   const handleMouseEnter = () => onHover?.(block.id);
   const handleMouseLeave = () => onHover?.(null);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (editMode && onDragStart) {
+      onDragStart(block.id, e);
+    }
+  };
 
   // Calculate dynamic font sizes based on block dimensions
   const fontSizes = useMemo(() => {
@@ -50,16 +61,25 @@ export function EquipmentBlock({
   const displayName = block.shortName || block.name;
   const lines = wrapText(displayName, block.width - 16, fontSizes.name);
 
+  // Cursor style based on mode
+  const cursorClass = isDragging
+    ? 'cursor-grabbing'
+    : editMode
+    ? 'cursor-grab'
+    : 'cursor-pointer';
+
   return (
     <g
-      className="equipment-block cursor-pointer"
+      className={`equipment-block ${cursorClass}`}
       transform={`translate(${block.x}, ${block.y})`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      style={{ userSelect: 'none' }}
     >
-      {/* Selection/hover glow */}
-      {(isSelected || isHighlighted) && (
+      {/* Selection/hover/drag glow */}
+      {(isSelected || isHighlighted || isDragging) && (
         <rect
           x={-4}
           y={-4}
@@ -68,9 +88,26 @@ export function EquipmentBlock({
           rx={10}
           ry={10}
           fill="none"
-          stroke={isSelected ? '#4080c0' : '#ffffff50'}
-          strokeWidth={isSelected ? 3 : 2}
-          className={isSelected ? '' : 'animate-pulse'}
+          stroke={isDragging ? '#B8860B' : isSelected ? '#4080c0' : '#ffffff50'}
+          strokeWidth={isDragging ? 3 : isSelected ? 3 : 2}
+          className={isSelected || isDragging ? '' : 'animate-pulse'}
+        />
+      )}
+
+      {/* Edit mode indicator */}
+      {editMode && !isDragging && (
+        <rect
+          x={-2}
+          y={-2}
+          width={block.width + 4}
+          height={block.height + 4}
+          rx={9}
+          ry={9}
+          fill="none"
+          stroke="#B8860B"
+          strokeWidth={1}
+          strokeDasharray="4,4"
+          opacity={0.5}
         />
       )}
 
@@ -85,8 +122,12 @@ export function EquipmentBlock({
         strokeWidth={block.borderColor ? 3 : 2}
         strokeDasharray={block.id === 'RECIRC' ? '8,4' : undefined}
         style={{
-          transition: 'all 0.2s ease',
-          filter: isHighlighted ? 'brightness(1.15)' : undefined,
+          transition: isDragging ? 'none' : 'all 0.2s ease',
+          filter: isDragging
+            ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.4)) brightness(1.1)'
+            : isHighlighted
+            ? 'brightness(1.15)'
+            : undefined,
         }}
       />
 

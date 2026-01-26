@@ -5,9 +5,14 @@
  * water treatment process with live data integration.
  *
  * ISA-101 Level 1 Overview Display
+ *
+ * Features:
+ * - Drag and drop blocks to reposition
+ * - Stream highlighting
+ * - Animated flow visualization
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { EquipmentBlock } from './EquipmentBlock';
 import { FlowConnection } from './FlowConnection';
 import {
@@ -15,6 +20,7 @@ import {
   FLOW_CONNECTIONS,
   OUTPUT_BOXES,
   DIAGRAM_COLORS,
+  EquipmentBlock as BlockType,
 } from './diagramConfig';
 import { HP_HMI_COLORS } from '@/lib/hmi-standards';
 
@@ -38,18 +44,42 @@ export default function ProcessOverview({
   onBackToHome,
   simulationData = {},
 }: ProcessOverviewProps) {
+  // Block positions state (initialized from config)
+  const [blockPositions, setBlockPositions] = useState<Record<string, { x: number; y: number }>>(() => {
+    const positions: Record<string, { x: number; y: number }> = {};
+    EQUIPMENT_BLOCKS.forEach(block => {
+      positions[block.id] = { x: block.x, y: block.y };
+    });
+    return positions;
+  });
+
   // Local state
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [animationEnabled, setAnimationEnabled] = useState(true);
   const [highlightedStream, setHighlightedStream] = useState<'oil' | 'water' | 'solids' | null>(null);
+  const [editMode, setEditMode] = useState(false);
+
+  // Drag state
+  const [draggingBlock, setDraggingBlock] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // Get blocks with current positions
+  const blocksWithPositions = useMemo(() => {
+    return EQUIPMENT_BLOCKS.map(block => ({
+      ...block,
+      x: blockPositions[block.id]?.x ?? block.x,
+      y: blockPositions[block.id]?.y ?? block.y,
+    }));
+  }, [blockPositions]);
 
   // Calculate SVG viewBox to fit all blocks
   const viewBox = useMemo(() => {
     const padding = 40;
     let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
 
-    EQUIPMENT_BLOCKS.forEach(block => {
+    blocksWithPositions.forEach(block => {
       minX = Math.min(minX, block.x);
       minY = Math.min(minY, block.y);
       maxX = Math.max(maxX, block.x + block.width);
@@ -59,16 +89,70 @@ export default function ProcessOverview({
     return {
       x: minX - padding,
       y: minY - padding,
-      width: maxX - minX + padding * 2 + 150, // Extra for output boxes
+      width: maxX - minX + padding * 2 + 150,
       height: maxY - minY + padding * 2,
     };
+  }, [blocksWithPositions]);
+
+  // Convert screen coordinates to SVG coordinates
+  const screenToSVG = useCallback((screenX: number, screenY: number) => {
+    if (!svgRef.current) return { x: screenX, y: screenY };
+
+    const svg = svgRef.current;
+    const pt = svg.createSVGPoint();
+    pt.x = screenX;
+    pt.y = screenY;
+
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return { x: screenX, y: screenY };
+
+    const svgPt = pt.matrixTransform(ctm.inverse());
+    return { x: svgPt.x, y: svgPt.y };
   }, []);
 
-  // Handle block click - navigate to detail view
+  // Handle drag start
+  const handleDragStart = useCallback((blockId: string, e: React.MouseEvent) => {
+    if (!editMode) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const svgCoords = screenToSVG(e.clientX, e.clientY);
+    const blockPos = blockPositions[blockId];
+
+    setDraggingBlock(blockId);
+    setDragOffset({
+      x: svgCoords.x - blockPos.x,
+      y: svgCoords.y - blockPos.y,
+    });
+  }, [editMode, screenToSVG, blockPositions]);
+
+  // Handle drag move
+  const handleDragMove = useCallback((e: React.MouseEvent) => {
+    if (!draggingBlock) return;
+
+    const svgCoords = screenToSVG(e.clientX, e.clientY);
+
+    setBlockPositions(prev => ({
+      ...prev,
+      [draggingBlock]: {
+        x: Math.round((svgCoords.x - dragOffset.x) / 10) * 10, // Snap to 10px grid
+        y: Math.round((svgCoords.y - dragOffset.y) / 10) * 10,
+      },
+    }));
+  }, [draggingBlock, screenToSVG, dragOffset]);
+
+  // Handle drag end
+  const handleDragEnd = useCallback(() => {
+    setDraggingBlock(null);
+  }, []);
+
+  // Handle block click - navigate to detail view (only if not in edit mode)
   const handleBlockClick = useCallback((blockId: string) => {
+    if (editMode) return; // Don't navigate in edit mode
+
     setSelectedBlock(blockId);
 
-    // Map block IDs to simulator tabs/routes
     const blockToTab: Record<string, string> = {
       'FEED-01': 'feed',
       'PRE-01': 'feed',
@@ -82,10 +166,9 @@ export default function ProcessOverview({
 
     const tab = blockToTab[blockId];
     if (tab && onNavigate) {
-      // Delay navigation to show selection feedback
       setTimeout(() => onNavigate(tab), 300);
     }
-  }, [onNavigate]);
+  }, [onNavigate, editMode]);
 
   // Check if connection should be highlighted
   const isConnectionHighlighted = useCallback((conn: typeof FLOW_CONNECTIONS[0]) => {
@@ -97,6 +180,15 @@ export default function ProcessOverview({
     }
     return false;
   }, [hoveredBlock, highlightedStream]);
+
+  // Reset positions to default
+  const handleResetPositions = useCallback(() => {
+    const positions: Record<string, { x: number; y: number }> = {};
+    EQUIPMENT_BLOCKS.forEach(block => {
+      positions[block.id] = { x: block.x, y: block.y };
+    });
+    setBlockPositions(positions);
+  }, []);
 
   // Summary metrics
   const metrics = useMemo(() => ({
@@ -146,12 +238,45 @@ export default function ProcessOverview({
               style={{ color: HP_HMI_COLORS.text.secondary }}
             >
               Block Flow Diagram - Karratha WTP
+              {editMode && <span className="ml-2 text-yellow-400">(Edit Mode - Drag blocks to reposition)</span>}
             </p>
           </div>
         </div>
 
         {/* View Controls */}
         <div className="flex items-center gap-4">
+          {/* Edit Mode Toggle */}
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition-all ${
+              editMode ? 'ring-2 ring-yellow-400' : ''
+            }`}
+            style={{
+              backgroundColor: editMode
+                ? '#B8860B'
+                : HP_HMI_COLORS.interactive.button,
+              color: editMode ? '#fff' : HP_HMI_COLORS.text.secondary,
+            }}
+          >
+            <span>{editMode ? '✏️' : '🔒'}</span>
+            <span>{editMode ? 'Editing' : 'Edit Layout'}</span>
+          </button>
+
+          {/* Reset Positions (only in edit mode) */}
+          {editMode && (
+            <button
+              onClick={handleResetPositions}
+              className="flex items-center gap-2 px-3 py-1 rounded text-sm transition-colors"
+              style={{
+                backgroundColor: HP_HMI_COLORS.interactive.button,
+                color: HP_HMI_COLORS.text.secondary,
+              }}
+            >
+              <span>↺</span>
+              <span>Reset</span>
+            </button>
+          )}
+
           {/* Stream Highlight Buttons */}
           <div className="flex items-center gap-2">
             <span
@@ -204,13 +329,21 @@ export default function ProcessOverview({
           className="rounded-xl border overflow-hidden"
           style={{
             backgroundColor: HP_HMI_COLORS.background.primary,
-            borderColor: HP_HMI_COLORS.normal.border,
+            borderColor: editMode ? '#B8860B' : HP_HMI_COLORS.normal.border,
+            borderWidth: editMode ? 2 : 1,
           }}
         >
           <svg
+            ref={svgRef}
             viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
             className="w-full h-auto min-h-[500px]"
-            style={{ maxHeight: 'calc(100vh - 280px)' }}
+            style={{
+              maxHeight: 'calc(100vh - 280px)',
+              cursor: draggingBlock ? 'grabbing' : editMode ? 'default' : 'default',
+            }}
+            onMouseMove={handleDragMove}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={handleDragEnd}
           >
             {/* Background Grid */}
             <defs>
@@ -225,7 +358,7 @@ export default function ProcessOverview({
                   fill="none"
                   stroke={HP_HMI_COLORS.normal.border}
                   strokeWidth="0.5"
-                  strokeOpacity="0.3"
+                  strokeOpacity={editMode ? 0.5 : 0.3}
                 />
               </pattern>
             </defs>
@@ -243,8 +376,9 @@ export default function ProcessOverview({
                 <FlowConnection
                   key={conn.id}
                   connection={conn}
+                  blockPositions={blockPositions}
                   isHighlighted={isConnectionHighlighted(conn)}
-                  animationEnabled={animationEnabled && simulationData.isRunning !== false}
+                  animationEnabled={animationEnabled && simulationData.isRunning !== false && !editMode}
                   flowRate={simulationData.feedFlow ? simulationData.feedFlow / 20 : 0.5}
                 />
               ))}
@@ -252,15 +386,18 @@ export default function ProcessOverview({
 
             {/* Equipment Blocks */}
             <g className="blocks">
-              {EQUIPMENT_BLOCKS.map((block) => (
+              {blocksWithPositions.map((block) => (
                 <EquipmentBlock
                   key={block.id}
                   block={block}
                   isSelected={selectedBlock === block.id}
                   isHighlighted={hoveredBlock === block.id}
+                  isDragging={draggingBlock === block.id}
+                  editMode={editMode}
                   data={simulationData}
                   onClick={handleBlockClick}
                   onHover={setHoveredBlock}
+                  onDragStart={handleDragStart}
                 />
               ))}
             </g>
@@ -270,9 +407,9 @@ export default function ProcessOverview({
               {OUTPUT_BOXES.map((box) => (
                 <g key={box.id} transform={`translate(${box.x}, ${box.y})`}>
                   <rect
-                    width={100}
-                    height={box.lines.length * 16 + 8}
-                    fill="none"
+                    width={120}
+                    height={box.lines.length * 18 + 12}
+                    fill={HP_HMI_COLORS.background.secondary}
                     stroke={HP_HMI_COLORS.normal.border}
                     strokeWidth={1}
                     rx={4}
@@ -280,10 +417,10 @@ export default function ProcessOverview({
                   {box.lines.map((line, i) => (
                     <text
                       key={i}
-                      x={8}
-                      y={16 + i * 16}
+                      x={10}
+                      y={20 + i * 18}
                       fill={HP_HMI_COLORS.text.secondary}
-                      fontSize={10}
+                      fontSize={11}
                     >
                       {line.label}
                     </text>
@@ -296,7 +433,7 @@ export default function ProcessOverview({
             <g transform={`translate(${viewBox.x + 20}, ${viewBox.y + viewBox.height - 80})`}>
               <text
                 fill={HP_HMI_COLORS.text.muted}
-                fontSize={10}
+                fontSize={11}
                 fontWeight="bold"
               >
                 Flow Legend:
@@ -308,20 +445,20 @@ export default function ProcessOverview({
                 { label: 'Solids', color: DIAGRAM_COLORS.streams.solids },
                 { label: 'Chemicals', color: DIAGRAM_COLORS.streams.chemical },
               ].map((item, i) => (
-                <g key={item.label} transform={`translate(${i * 80}, 15)`}>
+                <g key={item.label} transform={`translate(${i * 100}, 20)`}>
                   <line
                     x1={0}
                     y1={0}
-                    x2={20}
+                    x2={25}
                     y2={0}
                     stroke={item.color}
                     strokeWidth={3}
                   />
                   <text
-                    x={25}
+                    x={30}
                     y={4}
                     fill={HP_HMI_COLORS.text.secondary}
-                    fontSize={9}
+                    fontSize={10}
                   >
                     {item.label}
                   </text>
