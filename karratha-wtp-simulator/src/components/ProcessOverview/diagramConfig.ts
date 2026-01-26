@@ -3,7 +3,39 @@
  * =======================================
  * Block definitions, positions, colors, and flow connections
  * matching the reference block flow diagram.
+ *
+ * Layout uses a scalable coordinate system for responsive sizing.
  */
+
+// ═══════════════════════════════════════════════════════════════
+// LAYOUT CONSTANTS (scalable base units)
+// ═══════════════════════════════════════════════════════════════
+const GRID = {
+  // Base spacing unit - all positions are multiples of this
+  unit: 20,
+  // Standard block sizes
+  blockWidth: 130,
+  blockHeight: 70,
+  smallBlockWidth: 100,
+  smallBlockHeight: 55,
+  // Spacing between elements
+  horizontalGap: 50,
+  verticalGap: 30,
+  // Row positions (Y coordinates)
+  row1: 50,   // Chemical dosing
+  row2: 150,  // Primary separation path
+  row3: 260,  // Secondary separation
+  row4: 370,  // Polishing / Recirculation
+  row5: 480,  // Clean water discharge
+  // Column positions (X coordinates)
+  col1: 40,   // Feed section
+  col2: 220,  // Inlet manifold
+  col3: 400,  // Primary/Mech separation
+  col4: 580,  // Bypass / Outlet
+  col5: 760,  // Output handling
+  col6: 960,  // Final products
+  col7: 1160, // Cost boxes / DWER
+};
 
 // ═══════════════════════════════════════════════════════════════
 // COLOR PALETTE (matching reference diagram)
@@ -18,19 +50,19 @@ export const DIAGRAM_COLORS = {
     aux: '#5F9EA0',          // Chemical dosing, Bypass (cadet blue)
   },
   output: {
-    primary: '#A9A9A9',      // Output handling (dark gray)
-    secondary: '#D3D3D3',    // Final products (light gray)
+    primary: '#708090',      // Output handling (slate gray)
+    secondary: '#B8C4CE',    // Final products (light blue-gray)
   },
   utility: {
     flush: '#87CEEB',        // Fresh water flush (sky blue)
     recirculation: '#DC143C', // Recirculation boundary (crimson)
   },
   streams: {
-    oil: '#8B4513',          // Oil stream lines (saddle brown)
+    oil: '#CD853F',          // Oil stream lines (peru/tan)
     water: '#4169E1',        // Water stream lines (royal blue)
-    solids: '#696969',       // Solids stream lines (dim gray)
+    solids: '#808080',       // Solids stream lines (gray)
     chemical: '#9370DB',     // Chemical dosing lines (medium purple)
-    main: '#2F4F4F',         // Main process flow (dark slate gray)
+    main: '#40E0D0',         // Main process flow (turquoise)
   },
 };
 
@@ -59,18 +91,19 @@ export interface EquipmentBlock {
 }
 
 export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
-  // Feed Section (Left)
+  // ═══════════════════════════════════════════════════════════════
+  // FEED SECTION (Column 1)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'FEED-01',
     name: 'Suction and Feed',
-    shortName: 'Feed',
+    shortName: 'Suction and Feed',
     color: DIAGRAM_COLORS.feed.secondary,
-    x: 50,
-    y: 80,
-    width: 100,
-    height: 50,
+    x: GRID.col1,
+    y: GRID.row1,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'feed',
-    icon: '🔄',
     parameters: [
       { label: 'Flow', key: 'feedFlow', unit: 'm³/h' },
     ],
@@ -78,71 +111,70 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
   {
     id: 'PRE-01',
     name: 'Feed Conditioning / Pre-Treatment',
-    shortName: 'Pre-Treatment',
+    shortName: 'Feed Conditioning / Pre-Treatment',
     color: DIAGRAM_COLORS.feed.primary,
-    x: 50,
-    y: 160,
-    width: 100,
-    height: 60,
+    x: GRID.col1,
+    y: GRID.row2,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight + 10,
     category: 'feed',
-    icon: '⚗️',
   },
   {
     id: 'FLUSH-01',
     name: 'Fresh Water Flush',
-    shortName: 'Water Flush',
+    shortName: 'Fresh Water Flush',
     color: DIAGRAM_COLORS.utility.flush,
     textColor: '#1a1a1a',
-    x: 50,
-    y: 260,
-    width: 100,
-    height: 50,
+    x: GRID.col1,
+    y: GRID.row3,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'utility',
-    icon: '💧',
   },
 
-  // Inlet Section
+  // ═══════════════════════════════════════════════════════════════
+  // INLET & CHEMICAL SECTION (Column 2-3)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'MAN-IN',
     name: 'Inlet Manifold',
-    shortName: 'Inlet',
+    shortName: 'Inlet Manifold',
     color: DIAGRAM_COLORS.process.main,
-    x: 200,
-    y: 160,
-    width: 90,
-    height: 50,
+    x: GRID.col2,
+    y: GRID.row2,
+    width: GRID.smallBlockWidth + 20,
+    height: GRID.smallBlockHeight,
     category: 'process',
   },
   {
     id: 'CHEM-01',
     name: 'Chemical Dosing',
-    shortName: 'Chemicals',
+    shortName: 'Chemical Dosing',
     color: DIAGRAM_COLORS.process.aux,
-    x: 320,
-    y: 60,
-    width: 100,
-    height: 50,
+    x: GRID.col3,
+    y: GRID.row1,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'process',
-    icon: '🧪',
     parameters: [
       { label: 'Demulsifier', key: 'demulsifierRate', unit: 'ppm' },
     ],
   },
 
-  // Primary Separation Section
+  // ═══════════════════════════════════════════════════════════════
+  // SEPARATION SECTION (Column 3-4)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'PRIM-01',
     name: 'Primary Separation',
-    shortName: 'Primary Sep',
+    shortName: 'Primary Separation',
     color: DIAGRAM_COLORS.process.main,
-    x: 320,
-    y: 140,
-    width: 100,
-    height: 60,
+    x: GRID.col3,
+    y: GRID.row2,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight + 10,
     category: 'process',
-    icon: '⚙️',
     parameters: [
-      { label: 'Speed', key: 'bowlSpeed', unit: 'RPM' },
       { label: 'Efficiency', key: 'oilEff', unit: '%' },
     ],
   },
@@ -151,176 +183,176 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Bypass',
     shortName: 'Bypass',
     color: DIAGRAM_COLORS.process.aux,
-    x: 460,
-    y: 140,
-    width: 80,
-    height: 40,
+    x: GRID.col4,
+    y: GRID.row2,
+    width: GRID.smallBlockWidth,
+    height: GRID.smallBlockHeight,
     category: 'process',
   },
-
-  // Secondary Separation Section
   {
     id: 'MECH-01',
     name: 'Mechanical Separation',
-    shortName: 'Mech Sep',
+    shortName: 'Mechanical Separation',
     color: DIAGRAM_COLORS.process.main,
-    x: 320,
-    y: 240,
-    width: 100,
-    height: 60,
+    x: GRID.col3,
+    y: GRID.row3,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight + 10,
     category: 'process',
-    icon: '🔧',
   },
   {
     id: 'POLISH-01',
     name: 'Polishing Separation',
-    shortName: 'Polishing',
+    shortName: 'Polishing Separation',
     color: DIAGRAM_COLORS.process.main,
-    x: 320,
-    y: 340,
-    width: 100,
-    height: 60,
+    x: GRID.col3,
+    y: GRID.row4,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight + 10,
     category: 'process',
-    icon: '✨',
   },
 
-  // Recirculation
+  // ═══════════════════════════════════════════════════════════════
+  // RECIRCULATION (Column 2)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'RECIRC',
     name: 'Recirculation Loop',
-    shortName: 'Recirc',
+    shortName: 'Recirculation Loop',
     color: 'transparent',
     borderColor: DIAGRAM_COLORS.utility.recirculation,
-    x: 200,
-    y: 340,
-    width: 90,
-    height: 50,
+    x: GRID.col2,
+    y: GRID.row4,
+    width: GRID.smallBlockWidth + 20,
+    height: GRID.smallBlockHeight,
     category: 'utility',
-    icon: '🔁',
   },
 
-  // Outlet Section
+  // ═══════════════════════════════════════════════════════════════
+  // OUTLET MANIFOLD (Column 4)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'MAN-OUT',
     name: 'Outlet Manifold',
-    shortName: 'Outlet',
+    shortName: 'Outlet Manifold',
     color: DIAGRAM_COLORS.process.main,
-    x: 480,
-    y: 300,
-    width: 90,
-    height: 50,
+    x: GRID.col4,
+    y: GRID.row3 + 40,
+    width: GRID.smallBlockWidth + 20,
+    height: GRID.smallBlockHeight,
     category: 'process',
   },
 
-  // Output - Solids Path
+  // ═══════════════════════════════════════════════════════════════
+  // OUTPUT - SOLIDS PATH (Row 2)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'FIX-01',
     name: 'Fixation Pad',
-    shortName: 'Fixation',
+    shortName: 'Fixation Pad',
     color: DIAGRAM_COLORS.output.primary,
-    x: 620,
-    y: 140,
-    width: 100,
-    height: 50,
+    x: GRID.col5,
+    y: GRID.row2,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'output',
   },
   {
     id: 'SLUDGE-01',
     name: 'Dewatered Sludge',
-    shortName: 'Sludge',
-    description: 'Dryness: 20-35% w/w',
+    shortName: 'Dewatered Sludge',
+    description: 'Dryness 20-35% w/w',
     color: DIAGRAM_COLORS.output.secondary,
-    x: 760,
-    y: 140,
-    width: 110,
-    height: 50,
+    textColor: '#1a1a1a',
+    x: GRID.col6,
+    y: GRID.row2,
+    width: GRID.blockWidth + 10,
+    height: GRID.blockHeight,
     category: 'storage',
-    parameters: [
-      { label: 'Dryness', key: 'cakeDryness', unit: '%' },
-    ],
   },
 
-  // Output - Oil Path
+  // ═══════════════════════════════════════════════════════════════
+  // OUTPUT - OIL PATH (Row 3)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'HTANK-01',
     name: 'Horizontal Tanks',
-    shortName: 'Oil Tanks',
+    shortName: 'Horizontal Tanks',
     color: DIAGRAM_COLORS.output.primary,
-    x: 620,
-    y: 220,
-    width: 100,
-    height: 50,
+    x: GRID.col5,
+    y: GRID.row3,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'output',
-    icon: '🛢️',
   },
   {
     id: 'OIL-01',
     name: 'Recovered Oil',
-    shortName: 'Oil',
+    shortName: 'Recovered Oil',
     description: 'Water content <5%',
     color: DIAGRAM_COLORS.output.secondary,
-    x: 760,
-    y: 220,
-    width: 110,
-    height: 50,
+    textColor: '#1a1a1a',
+    x: GRID.col6,
+    y: GRID.row3,
+    width: GRID.blockWidth + 10,
+    height: GRID.blockHeight,
     category: 'storage',
-    parameters: [
-      { label: 'Volume', key: 'oilVolume', unit: 'm³' },
-    ],
   },
 
-  // Output - Water Path
+  // ═══════════════════════════════════════════════════════════════
+  // OUTPUT - WATER PATH (Row 4)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'EVAP-01',
     name: 'Evaporation Pond',
-    shortName: 'Evap Pond',
+    shortName: 'Evaporation Pond',
     color: DIAGRAM_COLORS.output.primary,
-    x: 620,
-    y: 300,
-    width: 100,
-    height: 50,
+    x: GRID.col5,
+    y: GRID.row4,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'output',
-    icon: '🌊',
   },
   {
     id: 'WATER-01',
     name: 'Treated Water',
-    shortName: 'Treated',
+    shortName: 'Treated Water',
     description: '<500 mg/L TPH',
     color: DIAGRAM_COLORS.output.secondary,
-    x: 760,
-    y: 300,
-    width: 110,
-    height: 50,
+    textColor: '#1a1a1a',
+    x: GRID.col6,
+    y: GRID.row4,
+    width: GRID.blockWidth + 10,
+    height: GRID.blockHeight,
     category: 'storage',
-    parameters: [
-      { label: 'TPH', key: 'waterQuality', unit: 'mg/L' },
-    ],
   },
 
-  // Clean Water Storage (DWER Discharge)
+  // ═══════════════════════════════════════════════════════════════
+  // CLEAN WATER DISCHARGE PATH (Row 5)
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'CLEAN-01',
     name: 'Clean Water Storage',
-    shortName: 'Clean Water',
+    shortName: 'Clean Water Storage',
     color: DIAGRAM_COLORS.utility.flush,
     textColor: '#1a1a1a',
-    x: 620,
-    y: 380,
-    width: 100,
-    height: 50,
+    x: GRID.col5,
+    y: GRID.row5,
+    width: GRID.blockWidth,
+    height: GRID.blockHeight,
     category: 'storage',
   },
   {
     id: 'DISCHARGE-01',
     name: 'Treated Water',
-    shortName: 'Discharge',
+    shortName: 'Treated Water',
     description: '<5 mg/L TPH',
     color: DIAGRAM_COLORS.output.secondary,
-    x: 760,
-    y: 380,
-    width: 110,
-    height: 50,
+    textColor: '#1a1a1a',
+    x: GRID.col6,
+    y: GRID.row5,
+    width: GRID.blockWidth + 10,
+    height: GRID.blockHeight,
     category: 'storage',
   },
   {
@@ -328,11 +360,12 @@ export const EQUIPMENT_BLOCKS: EquipmentBlock[] = [
     name: 'Discharged to land per DWER license',
     shortName: 'DWER Discharge',
     color: '#228B22',
-    x: 900,
-    y: 380,
-    width: 120,
-    height: 50,
+    x: GRID.col7,
+    y: GRID.row5,
+    width: GRID.blockWidth + 30,
+    height: GRID.blockHeight,
     category: 'output',
+    borderColor: '#DC143C',
   },
 ];
 
@@ -411,8 +444,8 @@ export const OUTPUT_BOXES: OutputBox[] = [
       { label: 'Disposal Cost:' },
       { label: 'Recoverable Cost:' },
     ],
-    x: 880,
-    y: 140,
+    x: GRID.col7,
+    y: GRID.row2,
   },
   {
     id: 'cost-oil',
@@ -421,8 +454,8 @@ export const OUTPUT_BOXES: OutputBox[] = [
       { label: 'Disposal Cost:' },
       { label: 'Recoverable Cost:' },
     ],
-    x: 880,
-    y: 220,
+    x: GRID.col7,
+    y: GRID.row3,
   },
   {
     id: 'evap-rate',
@@ -431,8 +464,8 @@ export const OUTPUT_BOXES: OutputBox[] = [
       { label: 'Possible evaporation' },
       { label: 'rate: 6-8ML/yr' },
     ],
-    x: 880,
-    y: 300,
+    x: GRID.col7,
+    y: GRID.row4,
   },
 ];
 
@@ -474,3 +507,6 @@ export function getConnectionWidth(type: FlowConnection['type']): number {
     default: return 2;
   }
 }
+
+// Export grid configuration for responsive calculations
+export const LAYOUT_CONFIG = GRID;

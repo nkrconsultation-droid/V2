@@ -15,6 +15,7 @@ import {
 
 interface FlowConnectionProps {
   connection: ConnectionType;
+  blockPositions?: Record<string, { x: number; y: number }>;
   isHighlighted?: boolean;
   animationEnabled?: boolean;
   flowRate?: number; // 0-1 for animation speed scaling
@@ -22,14 +23,23 @@ interface FlowConnectionProps {
 
 export function FlowConnection({
   connection,
+  blockPositions,
   isHighlighted = false,
   animationEnabled = true,
   flowRate = 0.5,
 }: FlowConnectionProps) {
-  const fromBlock = getBlockById(connection.from);
-  const toBlock = getBlockById(connection.to);
+  const baseFromBlock = getBlockById(connection.from);
+  const baseToBlock = getBlockById(connection.to);
 
-  if (!fromBlock || !toBlock) return null;
+  if (!baseFromBlock || !baseToBlock) return null;
+
+  // Apply dynamic positions if provided
+  const fromBlock = blockPositions?.[connection.from]
+    ? { ...baseFromBlock, x: blockPositions[connection.from].x, y: blockPositions[connection.from].y }
+    : baseFromBlock;
+  const toBlock = blockPositions?.[connection.to]
+    ? { ...baseToBlock, x: blockPositions[connection.to].x, y: blockPositions[connection.to].y }
+    : baseToBlock;
 
   // Calculate connection points
   const path = useMemo(() => {
