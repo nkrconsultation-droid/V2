@@ -4,14 +4,16 @@
  *
  * Main application with navigation between:
  * - Front Page (tile navigation)
+ * - Process Overview (block flow diagram)
  * - Full Simulator (process control)
  */
 
 import { useState, useCallback } from 'react';
 import FrontPage from './components/FrontPage';
 import CentrifugeProcessControl from './components/CentrifugeProcessControl';
+import ProcessOverview from './components/ProcessOverview';
 
-type Page = 'home' | 'simulator';
+type Page = 'home' | 'process-overview' | 'simulator';
 
 // Map FrontPage tile IDs to simulator tab IDs
 const TILE_TO_TAB_MAP: Record<string, string> = {
@@ -43,6 +45,9 @@ export default function App() {
   const handleNavigate = useCallback((page: string) => {
     if (page === 'home') {
       setCurrentPage('home');
+    } else if (page === 'process-overview') {
+      // Navigate to Process Overview page
+      setCurrentPage('process-overview');
     } else {
       // Map tile ID to tab ID and navigate to simulator
       const tabId = TILE_TO_TAB_MAP[page] || 'feed';
@@ -55,12 +60,38 @@ export default function App() {
     setCurrentPage('home');
   }, []);
 
+  // Handle navigation from Process Overview to simulator tabs
+  const handleProcessOverviewNavigate = useCallback((destination: string) => {
+    if (destination === 'simulator') {
+      setInitialTab('feed');
+      setCurrentPage('simulator');
+    } else {
+      setInitialTab(destination);
+      setCurrentPage('simulator');
+    }
+  }, []);
+
   // Render current page
   if (currentPage === 'home') {
     return (
       <FrontPage
         onNavigate={handleNavigate}
         plantStatus={plantStatus}
+      />
+    );
+  }
+
+  // Process Overview page
+  if (currentPage === 'process-overview') {
+    return (
+      <ProcessOverview
+        onNavigate={handleProcessOverviewNavigate}
+        onBackToHome={handleBackToHome}
+        simulationData={{
+          feedFlow: plantStatus.throughput,
+          oilEff: plantStatus.oilEfficiency,
+          isRunning: plantStatus.isRunning,
+        }}
       />
     );
   }
