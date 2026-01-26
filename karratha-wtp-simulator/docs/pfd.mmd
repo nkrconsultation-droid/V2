@@ -1,0 +1,114 @@
+%% Karratha WTP Process Flow Diagram
+%% Canonical PFD - DO NOT MODIFY without updating source of truth
+flowchart LR
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% INFLUENT GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Influent["Influent"]
+        N01["N01: TANKER"]
+        N02["N02: TIP LOCATION"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% PRETREATMENT GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Pretreatment["Pretreatment"]
+        N03["N03: COARSE FILTER (SCREEN/TROMMEL)"]
+        N04["N04: PRETREATMENT TANKS (X4)"]
+        N05["N05: FINE FILTERS (TROMMEL/SIMILAR)"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% SEPARATION GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Separation["Separation"]
+        N06["N06: DECANTER CENTRIFUGE"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% WATER GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Water["Water"]
+        N07["N07: WATER STORAGE TANK"]
+        N08["N08: DAF"]
+        N09["N09: POST DAF STORAGE TANK / BIO BUFFER"]
+        N11["N11: KTA PONDS"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% BIO GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Bio["Bio"]
+        N10["N10: MBR AEROBIC BIO TANK"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% OIL GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Oil["Oil"]
+        N12["N12: OIL STORAGE TANKS (X2)"]
+        N13["N13: OIL OUT"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% SOLIDS GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Solids["Solids"]
+        N14["N14: SOLIDS STORAGE"]
+        N15["N15: SOLIDS OUT"]
+        N16["N16: DAF AND DEC. FLUSH SLUDGE STORAGE TANK"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% UTILITIES GROUP
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph Utilities["Utilities"]
+        N17["N17: DIESEL BOILER (HEAT)"]
+        N18["N18: CHEMICALS: POLYMER, HCL, NAOH, Na2S, FeCl, DEMULSIFIER"]
+        N19["N19: CHEMICALS: PHOS ACID, NITROGEN SOURCE, CLEAN IN PLACE (CIP CHEM)"]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% MAINLINE EDGES (E01-E05)
+    %% ═══════════════════════════════════════════════════════════════
+    N01 -->|"influent"| N02
+    N02 -->|"influent"| N03
+    N03 -->|"screened influent"| N04
+    N04 -->|"conditioned feed"| N05
+    N05 -->|"filtered feed"| N06
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% WATER EDGES (E06-E10)
+    %% ═══════════════════════════════════════════════════════════════
+    N06 -->|"water phase"| N07
+    N07 -->|"to DAF"| N08
+    N08 -->|"clarified water"| N09
+    N09 -->|"bio feed"| N10
+    N10 -->|"treated water to ponds"| N11
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% OIL EDGES (E11-E12)
+    %% ═══════════════════════════════════════════════════════════════
+    N06 -->|"oil"| N12
+    N12 -->|"oil out"| N13
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% SOLIDS EDGES (E13-E14)
+    %% ═══════════════════════════════════════════════════════════════
+    N06 -->|"solids"| N14
+    N14 -->|"solids out"| N15
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% SLUDGE/FLUSH EDGES (E15-E17)
+    %% ═══════════════════════════════════════════════════════════════
+    N06 -->|"FLUSH OUT"| N16
+    N08 -->|"DAF sludge/float"| N16
+    N10 -->|"WASTE BIOLOGY (SLUDGE)"| N06
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% UTILITY EDGES (E18-E20) - Dashed lines
+    %% ═══════════════════════════════════════════════════════════════
+    N17 -.->|"heat"| N04
+    N18 -.->|"chemicals to pretreat"| N04
+    N19 -.->|"bio nutrients/CIP chem"| N10

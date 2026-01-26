@@ -29,6 +29,15 @@ interface FrontPageProps {
 
 const NAVIGATION_TILES: NavigationTile[] = [
   {
+    id: 'pfd-viewer',
+    title: 'Canonical PFD',
+    subtitle: 'L0 - Process Topology',
+    icon: '📐',
+    color: 'from-indigo-600 to-purple-800',
+    description: 'Source of truth process flow diagram with all 19 nodes and 20 edges',
+    status: 'online',
+  },
+  {
     id: 'process-overview',
     title: 'Process Flow',
     subtitle: 'L1 - Block Flow Diagram',
