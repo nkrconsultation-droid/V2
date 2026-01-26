@@ -170,25 +170,25 @@ export default function FrontPage({ onNavigate, plantStatus }: FrontPageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-slate-300 sticky top-0 z-50 shadow-sm">
+      <header className="bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center text-2xl shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-2xl shadow-lg">
                 🏭
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Karratha Water Treatment Plant</h1>
-                <p className="text-slate-500 text-sm">Delta-Canter 20-843A Three-Phase Tricanter System</p>
+                <h1 className="text-2xl font-bold text-white">Karratha Water Treatment Plant</h1>
+                <p className="text-slate-400 text-sm">Delta-Canter 20-843A Three-Phase Tricanter System</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-slate-800 font-medium">{currentTime}</div>
+              <div className="text-white font-medium">{currentTime}</div>
               <div className="flex items-center gap-2 justify-end mt-1">
                 <StatusIndicator status={plantStatus?.isRunning ? 'online' : 'offline'} />
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-slate-400">
                   {plantStatus?.isRunning ? 'System Running' : 'System Stopped'}
                 </span>
               </div>
@@ -198,34 +198,34 @@ export default function FrontPage({ onNavigate, plantStatus }: FrontPageProps) {
       </header>
 
       {/* Status Bar */}
-      <div className="bg-slate-100/80 border-b border-slate-300">
+      <div className="bg-slate-800/50 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
-                <span className="text-slate-600 text-sm">Throughput:</span>
-                <span className="text-sky-700 font-mono font-bold">
+                <span className="text-slate-400 text-sm">Throughput:</span>
+                <span className="text-cyan-400 font-mono font-bold">
                   {plantStatus?.throughput?.toFixed(1) || '15.0'} m³/h
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-600 text-sm">Oil Recovery:</span>
-                <span className="text-emerald-700 font-mono font-bold">
+                <span className="text-slate-400 text-sm">Oil Recovery:</span>
+                <span className="text-green-400 font-mono font-bold">
                   {plantStatus?.oilEfficiency?.toFixed(1) || '95.2'}%
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-600 text-sm">Active Alarms:</span>
-                <span className={`font-mono font-bold ${(plantStatus?.activeAlarms || 0) > 0 ? 'text-red-600' : 'text-emerald-700'}`}>
+                <span className="text-slate-400 text-sm">Active Alarms:</span>
+                <span className={`font-mono font-bold ${(plantStatus?.activeAlarms || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
                   {plantStatus?.activeAlarms || 0}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-sm font-medium border border-emerald-300">
+              <span className="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm font-medium border border-green-600/30">
                 License Compliant
               </span>
-              <span className="px-3 py-1 bg-sky-50 text-sky-800 rounded-full text-sm font-medium border border-sky-300">
+              <span className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm font-medium border border-blue-600/30">
                 Simulation Mode
               </span>
             </div>
@@ -261,8 +261,8 @@ export default function FrontPage({ onNavigate, plantStatus }: FrontPageProps) {
 
         {/* Section Title */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-900">Plant Areas</h2>
-          <p className="text-slate-600 text-sm">Select an area to view details (ISA-101 Display Hierarchy)</p>
+          <h2 className="text-xl font-semibold text-white">Plant Areas</h2>
+          <p className="text-slate-400 text-sm">Select an area to view details (ISA-101 Display Hierarchy)</p>
         </div>
 
         {/* Navigation Tiles Grid */}
@@ -304,27 +304,27 @@ export default function FrontPage({ onNavigate, plantStatus }: FrontPageProps) {
         </div>
 
         {/* Equipment Info Footer */}
-        <div className="mt-12 bg-white rounded-xl p-6 border border-slate-300 shadow-sm">
+        <div className="mt-12 bg-slate-800/50 rounded-xl p-6 border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h3 className="text-slate-900 font-semibold mb-2">Equipment</h3>
-              <div className="text-slate-600 text-sm space-y-1">
+              <h3 className="text-white font-semibold mb-2">Equipment</h3>
+              <div className="text-slate-400 text-sm space-y-1">
                 <p>SACOR Delta-Canter 20-843A</p>
                 <p>Three-Phase Tricanter</p>
                 <p>Bowl: 520mm × 1800mm</p>
               </div>
             </div>
             <div>
-              <h3 className="text-slate-900 font-semibold mb-2">Operating Parameters</h3>
-              <div className="text-slate-600 text-sm space-y-1">
+              <h3 className="text-white font-semibold mb-2">Operating Parameters</h3>
+              <div className="text-slate-400 text-sm space-y-1">
                 <p>Speed: 2,200 - 3,600 RPM</p>
                 <p>Capacity: 10 - 30 m³/h</p>
                 <p>Max G-Force: 3,000 G</p>
               </div>
             </div>
             <div>
-              <h3 className="text-slate-900 font-semibold mb-2">Performance Guarantees</h3>
-              <div className="text-slate-600 text-sm space-y-1">
+              <h3 className="text-white font-semibold mb-2">Performance Guarantees</h3>
+              <div className="text-slate-400 text-sm space-y-1">
                 <p>Oil Recovery: ≥95%</p>
                 <p>Centrate TPH: ≤500 mg/L</p>
                 <p>Cake Moisture: ≤20%</p>
