@@ -15,6 +15,7 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { EquipmentBlock } from './EquipmentBlock';
 import { FlowConnection } from './FlowConnection';
+import { NetworkTopology } from './NetworkTopology';
 import {
   EQUIPMENT_BLOCKS,
   FLOW_CONNECTIONS,
@@ -53,6 +54,7 @@ export default function ProcessOverview({
   });
 
   // UI state
+  const [viewMode, setViewMode] = useState<'block' | 'topology'>('block');
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [animationEnabled, setAnimationEnabled] = useState(true);
@@ -245,7 +247,44 @@ export default function ProcessOverview({
 
         {/* Controls */}
         <div className="flex items-center gap-3">
-          {/* Edit Mode */}
+          {/* View Mode Toggle */}
+          <div
+            className="flex rounded-lg overflow-hidden"
+            style={{ border: `1px solid ${DIAGRAM_COLORS.ui.border}` }}
+          >
+            <button
+              onClick={() => setViewMode('block')}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all"
+              style={{
+                backgroundColor: viewMode === 'block' ? DIAGRAM_COLORS.ui.accent : DIAGRAM_COLORS.ui.surface,
+                color: viewMode === 'block' ? '#fff' : DIAGRAM_COLORS.ui.textMuted,
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+              </svg>
+              Block
+            </button>
+            <button
+              onClick={() => setViewMode('topology')}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all"
+              style={{
+                backgroundColor: viewMode === 'topology' ? DIAGRAM_COLORS.ui.accent : DIAGRAM_COLORS.ui.surface,
+                color: viewMode === 'topology' ? '#fff' : DIAGRAM_COLORS.ui.textMuted,
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Topology
+            </button>
+          </div>
+
+          <div className="w-px h-6" style={{ backgroundColor: DIAGRAM_COLORS.ui.border }} />
+
+          {/* Edit Mode - only show for block view */}
+          {viewMode === 'block' && (
+          <>
           <button
             onClick={() => setEditMode(!editMode)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${editMode ? 'ring-2 ring-amber-500' : ''}`}
@@ -276,6 +315,8 @@ export default function ProcessOverview({
               </svg>
               <span>Reset</span>
             </button>
+          )}
+          </>
           )}
 
           <div className="w-px h-6" style={{ backgroundColor: DIAGRAM_COLORS.ui.border }} />
@@ -343,10 +384,21 @@ export default function ProcessOverview({
           className="rounded-xl overflow-hidden h-full"
           style={{
             backgroundColor: DIAGRAM_COLORS.ui.surface,
-            border: `1px solid ${editMode ? DIAGRAM_COLORS.ui.warning : DIAGRAM_COLORS.ui.border}`,
+            border: `1px solid ${editMode && viewMode === 'block' ? DIAGRAM_COLORS.ui.warning : DIAGRAM_COLORS.ui.border}`,
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)',
           }}
         >
+          {/* Network Topology View */}
+          {viewMode === 'topology' && (
+            <NetworkTopology
+              simulationData={simulationData}
+              highlightedPath={highlightedStream}
+              animationEnabled={animationEnabled}
+            />
+          )}
+
+          {/* Block Diagram View */}
+          {viewMode === 'block' && (
           <svg
             ref={svgRef}
             viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
@@ -489,6 +541,7 @@ export default function ProcessOverview({
               ))}
             </g>
           </svg>
+          )}
         </div>
       </main>
 
