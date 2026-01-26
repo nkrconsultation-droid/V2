@@ -739,16 +739,99 @@ export default function CentrifugeProcessControl() {
   const pendingRef = useRef({});
 
   const [totals, setTotals] = useState({ feed: 0, water: 0, oil: 0, solids: 0, energy: 0, runTime: 0 });
+
+  // ═══════════════════════════════════════════════════════════════
+  //    FEEDSTOCK TYPES & OIL VALUE MATRIX
+  // ═══════════════════════════════════════════════════════════════
+  const feedstockTypes = {
+    washWater: {
+      id: 'washWater',
+      name: 'Wash Water',
+      oilContent: 2.5,        // % typical oil content
+      solidsContent: 1.5,     // % typical solids
+      oilValue: 350,          // $/m³ recovered oil (lower grade, needs processing)
+      description: 'Equipment/tank wash water - lower grade oil',
+      color: 'text-blue-400',
+    },
+    refinerySlop: {
+      id: 'refinerySlop',
+      name: 'Refinery Slop Oil',
+      oilContent: 8.0,        // %
+      solidsContent: 3.0,     // %
+      oilValue: 450,          // $/m³ (medium grade)
+      description: 'Refinery process water/slop - medium grade',
+      color: 'text-purple-400',
+    },
+    tankBottoms: {
+      id: 'tankBottoms',
+      name: 'Tank Bottom Sludge',
+      oilContent: 15.0,       // %
+      solidsContent: 8.0,     // %
+      oilValue: 280,          // $/m³ (heavy, high sediment)
+      description: 'Storage tank sediment/BS&W - heavy, high sediment',
+      color: 'text-amber-400',
+    },
+    producedWater: {
+      id: 'producedWater',
+      name: 'Produced Water',
+      oilContent: 1.5,        // %
+      solidsContent: 0.5,     // %
+      oilValue: 400,          // $/m³ (light but dilute)
+      description: 'Oil/gas production water - light but dilute',
+      color: 'text-cyan-400',
+    },
+    lightCrude: {
+      id: 'lightCrude',
+      name: 'Light Crude Emulsion',
+      oilContent: 25.0,       // %
+      solidsContent: 2.0,     // %
+      oilValue: 520,          // $/m³ (premium, low sulfur)
+      description: 'Light crude/condensate emulsion - premium grade',
+      color: 'text-green-400',
+    },
+    heavyCrude: {
+      id: 'heavyCrude',
+      name: 'Heavy Crude Emulsion',
+      oilContent: 20.0,       // %
+      solidsContent: 5.0,     // %
+      oilValue: 380,          // $/m³ (discount for API gravity)
+      description: 'Heavy crude water cut - discounted for API',
+      color: 'text-orange-400',
+    },
+  };
+
+  // Transport destinations with costs
+  const transportDestinations = {
+    kalgoorlie: { name: 'Kalgoorlie Refinery', cost: 220, distance: '1,200 km' },
+    perth: { name: 'Perth (Kwinana)', cost: 280, distance: '1,500 km' },
+    local: { name: 'Local Processing', cost: 80, distance: '< 50 km' },
+    export: { name: 'Port Hedland (Export)', cost: 150, distance: '240 km' },
+  };
+
+  const [selectedFeedstock, setSelectedFeedstock] = useState<keyof typeof feedstockTypes>('refinerySlop');
+  const [selectedDestination, setSelectedDestination] = useState<keyof typeof transportDestinations>('kalgoorlie');
+
   // Australian market rates (WA commercial)
   const [costs, setCosts] = useState({
     elec: 0.28,              // $/kWh
     sludgeDisposal: 180,     // $/m³
     waterTreatment: 2.5,     // $/m³
-    oilValue: 450,           // $/m³ (value at destination)
-    oilTransport: 220,       // $/m³ ($0.22/L Karratha to Kalgoorlie)
+    oilValue: 450,           // $/m³ (value at destination) - updated by feedstock
+    oilTransport: 220,       // $/m³ ($0.22/L) - updated by destination
     pondDisposal: 3.5,       // $/m³ ($3.5/1000L evaporation pond)
     laborRate: 85,           // $/hour
   });
+
+  // Update costs when feedstock or destination changes
+  useEffect(() => {
+    const feedstock = feedstockTypes[selectedFeedstock];
+    const destination = transportDestinations[selectedDestination];
+    setCosts(prev => ({
+      ...prev,
+      oilValue: feedstock.oilValue,
+      oilTransport: destination.cost,
+    }));
+  }, [selectedFeedstock, selectedDestination]);
 
   // ═══════════════════════════════════════════════════════════════
   //    CAPITAL MODEL & INVESTMENT ANALYSIS
@@ -3916,18 +3999,114 @@ export default function CentrifugeProcessControl() {
               </div>
             </div>
 
-            {/* Costs & Targets */}
+            {/* Feedstock & Revenue */}
             <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-slate-800 rounded-lg p-5 border border-amber-900/50">
+                <h3 className="text-lg font-semibold text-amber-400 mb-4">🛢️ Feedstock Type & Oil Revenue</h3>
+
+                {/* Feedstock Selector */}
+                <div className="mb-4">
+                  <label className="block text-sm text-slate-400 mb-2">Feed Material</label>
+                  <select
+                    value={selectedFeedstock}
+                    onChange={(e) => setSelectedFeedstock(e.target.value as keyof typeof feedstockTypes)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    {Object.entries(feedstockTypes).map(([key, type]) => (
+                      <option key={key} value={key}>{type.name} - ${type.oilValue}/m³</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">{feedstockTypes[selectedFeedstock].description}</p>
+                </div>
+
+                {/* Feedstock Characteristics */}
+                <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <span className="text-xs text-slate-500">Typical Oil Content</span>
+                    <div className={`font-mono font-bold ${feedstockTypes[selectedFeedstock].color}`}>
+                      {feedstockTypes[selectedFeedstock].oilContent}%
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500">Typical Solids</span>
+                    <div className="font-mono font-bold text-amber-400">
+                      {feedstockTypes[selectedFeedstock].solidsContent}%
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500">Oil Value</span>
+                    <div className="font-mono font-bold text-green-400">
+                      ${feedstockTypes[selectedFeedstock].oilValue}/m³
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500">Per Liter</span>
+                    <div className="font-mono font-bold text-green-400">
+                      ${(feedstockTypes[selectedFeedstock].oilValue / 1000).toFixed(2)}/L
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transport Destination */}
+                <div className="mb-4">
+                  <label className="block text-sm text-slate-400 mb-2">Transport Destination</label>
+                  <select
+                    value={selectedDestination}
+                    onChange={(e) => setSelectedDestination(e.target.value as keyof typeof transportDestinations)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    {Object.entries(transportDestinations).map(([key, dest]) => (
+                      <option key={key} value={key}>{dest.name} - ${dest.cost}/m³ ({dest.distance})</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Net Oil Value Summary */}
+                <div className="p-3 bg-green-900/30 border border-green-700 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-300">Net Oil Value (after transport)</span>
+                    <span className="text-xl font-bold text-green-400">
+                      ${(costs.oilValue - costs.oilTransport).toLocaleString()}/m³
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    ${costs.oilValue}/m³ value − ${costs.oilTransport}/m³ transport = ${((costs.oilValue - costs.oilTransport) / 1000).toFixed(2)}/L net
+                  </div>
+                </div>
+              </div>
+
+              {/* Operating Costs */}
               <div className="bg-slate-800 rounded-lg p-5 border border-green-900/50">
                 <h3 className="text-lg font-semibold text-green-400 mb-4">💰 Operating Costs</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Electricity" value={costs.elec} onChange={v => setCosts(p => ({ ...p, elec: v }))} unit="$/kWh" step={0.01} />
-                  <Field label="Oil Value (at dest)" value={costs.oilValue} onChange={v => setCosts(p => ({ ...p, oilValue: v }))} unit="$/m³" />
-                  <Field label="Oil Transport" value={costs.oilTransport} onChange={v => setCosts(p => ({ ...p, oilTransport: v }))} unit="$/m³" />
                   <Field label="Sludge Disposal" value={costs.sludgeDisposal} onChange={v => setCosts(p => ({ ...p, sludgeDisposal: v }))} unit="$/m³" />
                   <Field label="Water Treatment" value={costs.waterTreatment} onChange={v => setCosts(p => ({ ...p, waterTreatment: v }))} unit="$/m³" />
                   <Field label="Pond Disposal" value={costs.pondDisposal} onChange={v => setCosts(p => ({ ...p, pondDisposal: v }))} unit="$/m³" />
                   <Field label="Labor Rate" value={costs.laborRate} onChange={v => setCosts(p => ({ ...p, laborRate: v }))} unit="$/h" />
+                </div>
+
+                {/* Price Reference */}
+                <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-xs font-semibold text-slate-400 mb-2">📊 Oil Price Reference (Brent ~$75/bbl)</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Light Sweet:</span>
+                      <span className="text-green-400">$400-520/m³</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Heavy Sour:</span>
+                      <span className="text-orange-400">$280-380/m³</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Slop Oil:</span>
+                      <span className="text-purple-400">$350-450/m³</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Tank Bottoms:</span>
+                      <span className="text-amber-400">$200-300/m³</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="bg-slate-800 rounded-lg p-5 border border-blue-900/50">
@@ -6109,10 +6288,11 @@ export default function CentrifugeProcessControl() {
                 </table>
 
                 <h2>📈 Annual Revenue (Mass Balance)</h2>
+                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">Feedstock: <strong>${feedstockTypes[selectedFeedstock].name}</strong> | Destination: <strong>${transportDestinations[selectedDestination].name}</strong></p>
                 <table>
                   <tr><th>Item</th><th>Volume</th><th>Amount</th></tr>
-                  <tr><td>Oil Value (at Kalgoorlie)</td><td>${annualOilRecovered.toFixed(0)} m³ @ $${costs.oilValue}/m³</td><td class="positive">+${formatCurrency(annualOilGrossRevenue, 2)}</td></tr>
-                  <tr><td>Transport (Karratha → Kalgoorlie)</td><td>${(annualOilRecovered * 1000).toFixed(0)} kL @ $0.22/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
+                  <tr><td>${feedstockTypes[selectedFeedstock].name} Oil Value</td><td>${annualOilRecovered.toFixed(0)} m³ @ $${costs.oilValue}/m³</td><td class="positive">+${formatCurrency(annualOilGrossRevenue, 2)}</td></tr>
+                  <tr><td>Transport → ${transportDestinations[selectedDestination].name}</td><td>${Math.round(annualOilRecovered).toLocaleString()} kL @ $${(costs.oilTransport / 1000).toFixed(2)}/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
                   <tr class="highlight"><td><strong>Net Oil Revenue</strong></td><td></td><td class="positive"><strong>+${formatCurrency(annualOilNetRevenue, 2)}</strong></td></tr>
                 </table>
 
@@ -6360,6 +6540,17 @@ export default function CentrifugeProcessControl() {
                 {/* Annual Revenue (from Mass Balance) */}
                 <div className="bg-slate-800 rounded-lg p-4 border border-green-900/50">
                   <h3 className="text-lg font-semibold text-green-400 mb-4">📈 Annual Revenue (Mass Balance)</h3>
+
+                  {/* Feedstock Badge */}
+                  <div className="mb-3 flex items-center gap-2 flex-wrap">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${feedstockTypes[selectedFeedstock].color} bg-slate-700`}>
+                      🛢️ {feedstockTypes[selectedFeedstock].name}
+                    </span>
+                    <span className="px-2 py-1 rounded text-xs font-medium text-cyan-400 bg-slate-700">
+                      🚛 → {transportDestinations[selectedDestination].name}
+                    </span>
+                  </div>
+
                   <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
                     <div className="text-xs text-slate-400 mb-2">Production Summary (Current Efficiency: {avgOilEff.toFixed(1)}%)</div>
                     <div className="grid grid-cols-3 gap-2 text-center">
@@ -6380,11 +6571,15 @@ export default function CentrifugeProcessControl() {
                   <table className="w-full text-sm">
                     <tbody>
                       <tr className="border-b border-slate-700">
-                        <td className="py-2">Oil value ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)</td>
+                        <td className="py-2">
+                          <span className={feedstockTypes[selectedFeedstock].color}>{feedstockTypes[selectedFeedstock].name}</span> oil ({annualOilRecovered.toFixed(0)} m³ @ ${costs.oilValue}/m³)
+                        </td>
                         <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilGrossRevenue, 2)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
-                        <td className="py-2 text-amber-400">Transport Karratha→Kalgoorlie ({(annualOilRecovered * 1000).toFixed(0)}kL @ $0.22/L)</td>
+                        <td className="py-2 text-amber-400">
+                          Transport → {transportDestinations[selectedDestination].name} ({annualOilRecovered.toLocaleString(undefined, {maximumFractionDigits: 0})} kL @ ${(costs.oilTransport / 1000).toFixed(2)}/L)
+                        </td>
                         <td className="py-2 text-right text-amber-400 font-mono">-{formatCurrency(annualOilTransportCost, 2)}</td>
                       </tr>
                       <tr className="bg-green-900/30">
