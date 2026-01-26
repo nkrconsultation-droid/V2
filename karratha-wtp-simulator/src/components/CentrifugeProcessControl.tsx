@@ -2686,7 +2686,9 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
         for (let i = 0; i < batchPhases.length; i++) {
           cum += batchPhases[i].volume;
           if (processed < cum) {
-            if (i !== batchPhase) {
+            // Use ref to check current phase (React state is async, can cause duplicate detections)
+            const currentTrackingPhase = currentPhaseDataRef.current?.phaseIndex;
+            if (i !== currentTrackingPhase) {
               // Phase transition - finalize current phase and start new one
               startPhaseTracking(i, simRef.current.time);
               setBatchPhase(i);
