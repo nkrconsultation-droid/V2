@@ -44,7 +44,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine, Legend } from 'recharts';
 
 // Extracted modules
 import { usePhaseTracking, ProcessDataSnapshot } from '../hooks/usePhaseTracking';
@@ -5765,8 +5765,127 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
         {activeTab === 'spc' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold">📉 SPC Charts</h2>
-            <div className="bg-slate-800 rounded-lg p-4 border border-green-900/50"><h3 className="text-lg font-semibold text-green-400 mb-4">Oil Efficiency X̄ Chart</h3><ResponsiveContainer width="100%" height={220}><LineChart data={kpiHistory}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#22c55e" domain={[Math.max(0, kpiStats.oilEff.mean - 4 * Math.max(kpiStats.oilEff.stdDev, 1)), Math.min(100, kpiStats.oilEff.mean + 4 * Math.max(kpiStats.oilEff.stdDev, 1))]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={kpiStats.oilEff.mean} stroke="#22c55e" label={{ value: 'CL', fill: '#22c55e', fontSize: 10 }} /><ReferenceLine y={Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev)} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'LCL', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={targets.oilEff} stroke="#3b82f6" strokeDasharray="3 3" label={{ value: 'Target', fill: '#3b82f6', fontSize: 10 }} /><Line type="monotone" dataKey="oilEff" stroke="#22c55e" dot={false} /></LineChart></ResponsiveContainer><div className="mt-2 grid grid-cols-4 gap-4 text-sm"><div>UCL: <span className="text-red-400">{(kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></div><div>CL: <span className="text-green-400">{kpiStats.oilEff.mean.toFixed(2)}%</span></div><div>LCL: <span className="text-red-400">{Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></div><div>Cp: <span className="text-cyan-400">{kpiStats.oilEff.stdDev > 0 ? ((100 - targets.oilEff) / (3 * kpiStats.oilEff.stdDev)).toFixed(2) : 'N/A'}</span></div></div></div>
-            <div className="bg-slate-800 rounded-lg p-4 border border-blue-900/50"><h3 className="text-lg font-semibold text-blue-400 mb-4">Water Quality X̄ Chart</h3><ResponsiveContainer width="100%" height={220}><LineChart data={kpiHistory}><CartesianGrid strokeDasharray="3 3" stroke="#374151" /><XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} /><YAxis stroke="#3b82f6" domain={[0, Math.max(200, kpiStats.wq.mean + 4 * Math.max(kpiStats.wq.stdDev, 10))]} /><Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }} /><ReferenceLine y={kpiStats.wq.mean + 3 * kpiStats.wq.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10 }} /><ReferenceLine y={kpiStats.wq.mean} stroke="#3b82f6" label={{ value: 'CL', fill: '#3b82f6', fontSize: 10 }} /><ReferenceLine y={targets.waterQuality} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Target', fill: '#22c55e', fontSize: 10 }} /><Line type="monotone" dataKey="wq" stroke="#3b82f6" dot={false} /></LineChart></ResponsiveContainer></div>
+            <div className="bg-slate-800 rounded-lg p-4 border border-green-900/50">
+              <h3 className="text-lg font-semibold text-green-400 mb-4">Oil Efficiency X̄ Chart</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={kpiHistory} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} />
+                  <YAxis
+                    stroke="#22c55e"
+                    domain={[Math.max(0, kpiStats.oilEff.mean - 4 * Math.max(kpiStats.oilEff.stdDev, 1)), Math.min(100, kpiStats.oilEff.mean + 4 * Math.max(kpiStats.oilEff.stdDev, 1))]}
+                    tickFormatter={(value) => `${value.toFixed(1)}%`}
+                    tickCount={6}
+                    width={60}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }}
+                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Oil Efficiency']}
+                    labelFormatter={(label) => `Time: ${label}`}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    wrapperStyle={{ paddingBottom: '10px' }}
+                  />
+                  <ReferenceLine y={kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={kpiStats.oilEff.mean} stroke="#22c55e" label={{ value: 'CL', fill: '#22c55e', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev)} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'LCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={targets.oilEff} stroke="#3b82f6" strokeDasharray="3 3" label={{ value: 'Target', fill: '#3b82f6', fontSize: 10, position: 'right' }} />
+                  <Line type="monotone" dataKey="oilEff" stroke="#22c55e" dot={false} name="Oil Efficiency %" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+
+              {/* Control Limits Legend */}
+              <div className="mt-4 p-3 bg-slate-900/50 rounded-lg border border-slate-700">
+                <div className="text-xs text-slate-400 mb-2 font-semibold">CONTROL LIMITS (3-sigma)</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>UCL: <span className="text-red-400 font-mono">{(kpiStats.oilEff.mean + 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-green-400"></div>
+                    <span>CL: <span className="text-green-400 font-mono">{kpiStats.oilEff.mean.toFixed(2)}%</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>LCL: <span className="text-red-400 font-mono">{Math.max(0, kpiStats.oilEff.mean - 3 * kpiStats.oilEff.stdDev).toFixed(2)}%</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-400 border-dashed border-t-2 border-blue-400"></div>
+                    <span>Target: <span className="text-blue-400 font-mono">{targets.oilEff}%</span></span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-700 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>Cp: <span className="text-cyan-400 font-mono">{kpiStats.oilEff.stdDev > 0 ? ((100 - targets.oilEff) / (3 * kpiStats.oilEff.stdDev)).toFixed(2) : 'N/A'}</span></div>
+                  <div>Mean: <span className="text-slate-300 font-mono">{kpiStats.oilEff.mean.toFixed(2)}%</span></div>
+                  <div>Std Dev: <span className="text-slate-300 font-mono">{kpiStats.oilEff.stdDev.toFixed(2)}</span></div>
+                  <div>Range: <span className="text-slate-300 font-mono">{kpiStats.oilEff.min.toFixed(1)} - {kpiStats.oilEff.max.toFixed(1)}%</span></div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4 border border-blue-900/50">
+              <h3 className="text-lg font-semibold text-blue-400 mb-4">Water Quality X̄ Chart</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={kpiHistory} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="time" stroke="#9ca3af" tick={{ fontSize: 10 }} />
+                  <YAxis
+                    stroke="#3b82f6"
+                    domain={[0, Math.max(200, kpiStats.wq.mean + 4 * Math.max(kpiStats.wq.stdDev, 10))]}
+                    tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0)}
+                    tickCount={6}
+                    width={60}
+                    label={{ value: 'ppm', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9ca3af', fontSize: 10 } }}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }}
+                    formatter={(value: number) => [`${value.toFixed(1)} ppm`, 'Oil in Water']}
+                    labelFormatter={(label) => `Time: ${label}`}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    wrapperStyle={{ paddingBottom: '10px' }}
+                  />
+                  <ReferenceLine y={kpiStats.wq.mean + 3 * kpiStats.wq.stdDev} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'UCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={kpiStats.wq.mean} stroke="#3b82f6" label={{ value: 'CL', fill: '#3b82f6', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={Math.max(0, kpiStats.wq.mean - 3 * kpiStats.wq.stdDev)} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'LCL', fill: '#ef4444', fontSize: 10, position: 'right' }} />
+                  <ReferenceLine y={targets.waterQuality} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Target', fill: '#22c55e', fontSize: 10, position: 'right' }} />
+                  <Line type="monotone" dataKey="wq" stroke="#3b82f6" dot={false} name="Oil in Water (ppm)" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+
+              {/* Control Limits Legend */}
+              <div className="mt-4 p-3 bg-slate-900/50 rounded-lg border border-slate-700">
+                <div className="text-xs text-slate-400 mb-2 font-semibold">CONTROL LIMITS (3-sigma)</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>UCL: <span className="text-red-400 font-mono">{(kpiStats.wq.mean + 3 * kpiStats.wq.stdDev).toFixed(1)} ppm</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-blue-400"></div>
+                    <span>CL: <span className="text-blue-400 font-mono">{kpiStats.wq.mean.toFixed(1)} ppm</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-red-400 border-dashed border-t-2 border-red-400"></div>
+                    <span>LCL: <span className="text-red-400 font-mono">{Math.max(0, kpiStats.wq.mean - 3 * kpiStats.wq.stdDev).toFixed(1)} ppm</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-0.5 bg-green-400 border-dashed border-t-2 border-green-400"></div>
+                    <span>Target: <span className="text-green-400 font-mono">{targets.waterQuality} ppm</span></span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-700 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>Cp: <span className="text-cyan-400 font-mono">{kpiStats.wq.stdDev > 0 ? (targets.waterQuality / (3 * kpiStats.wq.stdDev)).toFixed(2) : 'N/A'}</span></div>
+                  <div>Mean: <span className="text-slate-300 font-mono">{kpiStats.wq.mean.toFixed(1)} ppm</span></div>
+                  <div>Std Dev: <span className="text-slate-300 font-mono">{kpiStats.wq.stdDev.toFixed(1)}</span></div>
+                  <div>Range: <span className="text-slate-300 font-mono">{kpiStats.wq.min.toFixed(0)} - {kpiStats.wq.max.toFixed(0)} ppm</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
