@@ -532,6 +532,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [batchPhase, setBatchPhase] = useState(0);
   const batchPhaseRef = useRef(0); // Ref for use inside animation loop to avoid stale closures
+  const pendingPhaseRef = useRef<{ phase: number; detectedAt: number } | null>(null); // 10-second debounce for phase transitions
   const [tankVolume, setTankVolume] = useState(55);
 
   // Batch phases imported from constants
@@ -2156,6 +2157,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     const vol = (tank.level / 100) * TANK.volume;
     simRef.current = { time: 0, vol, phase: 0 };
     batchPhaseRef.current = 0; // Initialize ref for animation loop
+    pendingPhaseRef.current = null; // Clear any pending phase transition
     setIsBatchMode(true); setBatchPhase(0); setTankVolume(vol); setSimTime(0);
     // Initialize phase data tracking for report
     initializePhaseData();
@@ -2462,11 +2464,24 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             // Use ref to check current phase (React state is async, can cause duplicate detections)
             const currentTrackingPhase = currentPhaseDataRef.current?.phaseIndex;
             if (i !== currentTrackingPhase) {
-              // Phase transition - finalize current phase and start new one
-              startPhaseTracking(i, simRef.current.time);
-              batchPhaseRef.current = i; // Update ref immediately for animation loop
-              setBatchPhase(i); // Update state for UI
-              addEvent('PHASE', batchPhases[i].name);
+              // Phase transition detected - apply 10-second debounce rule
+              const PHASE_DEBOUNCE_SECONDS = 10;
+
+              if (pendingPhaseRef.current === null || pendingPhaseRef.current.phase !== i) {
+                // New pending phase detected - start tracking when it was first seen
+                pendingPhaseRef.current = { phase: i, detectedAt: simRef.current.time };
+              } else if (simRef.current.time - pendingPhaseRef.current.detectedAt >= PHASE_DEBOUNCE_SECONDS) {
+                // Phase has been stable for 10+ seconds - commit the transition
+                startPhaseTracking(i, simRef.current.time);
+                batchPhaseRef.current = i; // Update ref immediately for animation loop
+                setBatchPhase(i); // Update state for UI
+                addEvent('PHASE', batchPhases[i].name);
+                pendingPhaseRef.current = null; // Clear pending after transition
+              }
+              // If < 10 seconds, keep waiting (do nothing, continue tracking current phase)
+            } else {
+              // Current phase matches detected phase - clear any pending transition
+              pendingPhaseRef.current = null;
             }
             break;
           }
