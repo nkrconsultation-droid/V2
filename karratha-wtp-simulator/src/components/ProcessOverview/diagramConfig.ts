@@ -74,19 +74,19 @@ export const DIAGRAM_COLORS = {
     chemical: '#8B5CF6',    // Violet
     main: '#06B6D4',        // Cyan
   },
-  // UI colors (sleek grey theme)
+  // UI colors
   ui: {
-    background: '#e2e5ea',
-    surface: '#ffffff',
-    border: '#c9cdd5',
-    borderLight: '#b8bec9',
-    text: '#1a1f2e',
-    textMuted: '#4b5563',
-    accent: '#0284c7',
-    accentHover: '#0369a1',
-    success: '#16a34a',
-    warning: '#b45309',
-    error: '#dc2626',
+    background: '#0F172A',
+    surface: '#1E293B',
+    border: '#334155',
+    borderLight: '#475569',
+    text: '#F8FAFC',
+    textMuted: '#94A3B8',
+    accent: '#06B6D4',
+    accentHover: '#22D3EE',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
   },
 };
 

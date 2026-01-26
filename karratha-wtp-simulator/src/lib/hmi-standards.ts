@@ -48,28 +48,28 @@ export const ISA101_LEVELS = {
 // Gray background with color reserved for abnormal conditions
 // ═══════════════════════════════════════════════════════════════════════════
 export const HP_HMI_COLORS = {
-  // Background colors (sleek grey palette)
+  // Background colors (neutral grays)
   background: {
-    primary: '#e2e5ea',      // Main display background (medium grey)
-    secondary: '#ffffff',    // Panel/card background (white)
-    tertiary: '#d1d5dc',     // Elevated elements
-    surface: '#ebeef2',      // Surface level
+    primary: '#3d3d3d',      // Main display background (dark gray)
+    secondary: '#4a4a4a',    // Panel/card background
+    tertiary: '#5a5a5a',     // Elevated elements
+    surface: '#2d2d2d',      // Deepest background level
   },
 
-  // Text colors (high contrast)
+  // Text colors
   text: {
-    primary: '#1a1f2e',      // Primary text (near black)
-    secondary: '#4b5563',    // Secondary/label text
-    muted: '#6b7280',        // Disabled/inactive text
-    emphasis: '#0f172a',     // Important values (darkest)
+    primary: '#e0e0e0',      // Primary text (light gray)
+    secondary: '#a0a0a0',    // Secondary/label text
+    muted: '#707070',        // Disabled/inactive text
+    emphasis: '#ffffff',     // Important values
   },
 
-  // Process values - NORMAL state
+  // Process values - NORMAL state (muted colors)
   normal: {
-    value: '#1e293b',        // Normal process value text
-    equipment: '#c4c9d4',    // Normal equipment fill
-    pipe: '#8b95a5',         // Normal piping
-    border: '#c9cdd5',       // Normal borders
+    value: '#c0c0c0',        // Normal process value text
+    equipment: '#606060',    // Normal equipment fill
+    pipe: '#505050',         // Normal piping
+    border: '#4a4a4a',       // Normal borders
   },
 
   // ABNORMAL states (color used sparingly for attention)
@@ -112,12 +112,12 @@ export const HP_HMI_COLORS = {
 
   // Interactive elements
   interactive: {
-    button: '#d4d8e0',       // Button background
-    buttonHover: '#c1c7d2',  // Button hover
-    buttonActive: '#3b82f6', // Active/selected (blue)
-    input: '#ffffff',        // Input field background
-    inputBorder: '#b8bec9',  // Input border (visible)
-    inputFocus: '#3b82f6',   // Focus ring (blue)
+    button: '#505860',       // Button background
+    buttonHover: '#606870',  // Button hover
+    buttonActive: '#4080c0', // Active/selected
+    input: '#404040',        // Input field background
+    inputBorder: '#606060',  // Input border
+    inputFocus: '#4080c0',   // Focus ring
   },
 } as const;
 
@@ -333,60 +333,60 @@ export const NAVIGATION_STRUCTURE = {
 // ═══════════════════════════════════════════════════════════════════════════
 export const HP_HMI_CLASSES = {
   // Backgrounds
-  bgPrimary: 'bg-[#e2e5ea]',
-  bgSecondary: 'bg-white',
-  bgTertiary: 'bg-[#d1d5dc]',
-  bgSurface: 'bg-[#ebeef2]',
+  bgPrimary: 'bg-[#3d3d3d]',
+  bgSecondary: 'bg-[#4a4a4a]',
+  bgTertiary: 'bg-[#5a5a5a]',
+  bgSurface: 'bg-[#2d2d2d]',
 
-  // Text (high contrast)
-  textPrimary: 'text-[#1a1f2e]',
-  textSecondary: 'text-[#4b5563]',
-  textMuted: 'text-[#6b7280]',
-  textEmphasis: 'text-[#0f172a] font-semibold',
+  // Text
+  textPrimary: 'text-[#e0e0e0]',
+  textSecondary: 'text-[#a0a0a0]',
+  textMuted: 'text-[#707070]',
+  textEmphasis: 'text-white font-medium',
 
   // Cards/Panels
-  card: 'bg-white border border-[#c9cdd5] rounded-lg shadow-sm',
-  cardHeader: 'px-4 py-2 border-b border-[#c9cdd5]',
+  card: 'bg-[#4a4a4a] border border-[#5a5a5a] rounded-lg',
+  cardHeader: 'px-4 py-2 border-b border-[#5a5a5a]',
   cardContent: 'p-4',
 
   // Process values
-  valueNormal: 'text-[#1e293b] font-mono',
-  valueWarning: 'text-[#b45309] font-mono font-bold',
-  valueAlarm: 'text-[#dc2626] font-mono font-bold animate-pulse',
+  valueNormal: 'text-[#c0c0c0] font-mono',
+  valueWarning: 'text-[#ffcc00] font-mono font-bold',
+  valueAlarm: 'text-[#ff3333] font-mono font-bold animate-pulse',
 
   // Equipment
-  equipmentNormal: 'fill-[#c4c9d4] stroke-[#8b95a5]',
-  equipmentRunning: 'fill-[#c4c9d4] stroke-[#16a34a]',
-  equipmentFaulted: 'fill-[#fecaca] stroke-[#dc2626]',
+  equipmentNormal: 'fill-[#606060] stroke-[#808080]',
+  equipmentRunning: 'fill-[#606060] stroke-[#33cc33]',
+  equipmentFaulted: 'fill-[#802020] stroke-[#ff3333]',
 
   // Inputs
-  input: 'bg-white border border-[#b8bec9] rounded px-3 py-2 text-[#1a1f2e] focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] focus:outline-none',
+  input: 'bg-[#404040] border border-[#606060] rounded px-3 py-2 text-[#e0e0e0] focus:border-[#4080c0] focus:ring-1 focus:ring-[#4080c0] focus:outline-none',
 
   // Buttons
-  buttonPrimary: 'bg-[#d4d8e0] hover:bg-[#c1c7d2] active:bg-[#3b82f6] text-[#1a1f2e] px-4 py-2 rounded transition-colors',
-  buttonDanger: 'bg-[#dc2626] hover:bg-[#b91c1c] text-white px-4 py-2 rounded transition-colors',
+  buttonPrimary: 'bg-[#505860] hover:bg-[#606870] active:bg-[#4080c0] text-[#e0e0e0] px-4 py-2 rounded transition-colors',
+  buttonDanger: 'bg-[#803030] hover:bg-[#904040] text-white px-4 py-2 rounded transition-colors',
 
   // Alarm badges
-  alarmCritical: 'bg-[#dc2626] text-white px-2 py-1 rounded text-xs font-bold animate-pulse',
-  alarmHigh: 'bg-[#ea580c] text-white px-2 py-1 rounded text-xs font-bold',
-  alarmMedium: 'bg-[#b45309] text-white px-2 py-1 rounded text-xs font-medium',
-  alarmLow: 'bg-[#0284c7] text-white px-2 py-1 rounded text-xs',
+  alarmCritical: 'bg-[#ff3333] text-white px-2 py-1 rounded text-xs font-bold animate-pulse',
+  alarmHigh: 'bg-[#ff6600] text-white px-2 py-1 rounded text-xs font-bold',
+  alarmMedium: 'bg-[#cc9900] text-black px-2 py-1 rounded text-xs font-medium',
+  alarmLow: 'bg-[#66ccff] text-black px-2 py-1 rounded text-xs',
 
   // Status indicators
-  statusRunning: 'text-[#16a34a]',
-  statusStopped: 'text-[#4b5563]',
-  statusFaulted: 'text-[#dc2626]',
+  statusRunning: 'text-[#33cc33]',
+  statusStopped: 'text-[#808080]',
+  statusFaulted: 'text-[#ff3333]',
 
   // Analog bars
-  barContainer: 'bg-[#d1d5dc] rounded overflow-hidden',
-  barFillNormal: 'bg-[#4b5563]',
-  barFillWarning: 'bg-[#b45309]',
-  barFillAlarm: 'bg-[#dc2626]',
+  barContainer: 'bg-[#2d2d2d] rounded overflow-hidden',
+  barFillNormal: 'bg-[#607080]',
+  barFillWarning: 'bg-[#cc9900]',
+  barFillAlarm: 'bg-[#cc3300]',
 
   // Tab navigation
-  tabList: 'flex gap-1 bg-[#d1d5dc] p-1 rounded-lg',
-  tabItem: 'px-4 py-2 rounded text-[#4b5563] hover:bg-[#c1c7d2] transition-colors',
-  tabItemActive: 'px-4 py-2 rounded bg-white text-[#1a1f2e] shadow-sm',
+  tabList: 'flex gap-1 bg-[#2d2d2d] p-1 rounded-lg',
+  tabItem: 'px-4 py-2 rounded text-[#a0a0a0] hover:bg-[#4a4a4a] transition-colors',
+  tabItemActive: 'px-4 py-2 rounded bg-[#505860] text-white',
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════

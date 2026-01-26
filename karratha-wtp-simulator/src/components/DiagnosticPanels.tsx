@@ -34,9 +34,9 @@ interface CascadeMapProps {
 export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact = false }: CascadeMapProps) {
   if (!cascadeState) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-4">
-        <h3 className="text-slate-900 font-semibold mb-2">Cascade Control</h3>
-        <p className="text-slate-500 text-sm">No cascade data available</p>
+      <div className="bg-slate-800 rounded-lg p-4">
+        <h3 className="text-white font-semibold mb-2">Cascade Control</h3>
+        <p className="text-slate-400 text-sm">No cascade data available</p>
       </div>
     );
   }
@@ -48,12 +48,12 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
     CASCADE: 'bg-blue-500',
     SLAVE_ONLY: 'bg-cyan-500',
     CONSTRAINT: 'bg-orange-500',
-    OFF: 'bg-slate-400',
+    OFF: 'bg-slate-500',
     HOLD: 'bg-yellow-600',
   };
 
   const sequenceColors: Record<string, string> = {
-    IDLE: 'text-slate-500',
+    IDLE: 'text-slate-400',
     CASCADE_ACTIVE: 'text-green-400',
     CASCADE_READY: 'text-cyan-400',
     CONSTRAINT_OVERRIDE: 'text-orange-400',
@@ -76,10 +76,10 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
 
   if (compact) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-3">
+      <div className="bg-slate-800 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-700 text-xs font-medium">CASCADE</span>
-          <span className={`text-xs font-mono ${sequenceColors[cascadeState.sequenceState] || 'text-slate-500'}`}>
+          <span className="text-slate-300 text-xs font-medium">CASCADE</span>
+          <span className={`text-xs font-mono ${sequenceColors[cascadeState.sequenceState] || 'text-slate-400'}`}>
             {cascadeState.sequenceState}
           </span>
         </div>
@@ -114,10 +114,10 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
   }
 
   return (
-    <div className="bg-white border border-slate-300 rounded-lg p-4">
+    <div className="bg-slate-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-slate-900 font-semibold">Cascade Control Map</h3>
-        <span className={`px-2 py-1 rounded text-xs font-mono ${sequenceColors[cascadeState.sequenceState] || 'text-slate-500'} bg-slate-100`}>
+        <h3 className="text-white font-semibold">Cascade Control Map</h3>
+        <span className={`px-2 py-1 rounded text-xs font-mono ${sequenceColors[cascadeState.sequenceState] || 'text-slate-400'} bg-slate-700`}>
           {cascadeState.sequenceState}
         </span>
       </div>
@@ -133,15 +133,15 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div>
             <span className="text-slate-500 text-xs">SP</span>
-            <div className="text-slate-900 font-mono">{oiwTarget.toFixed(0)} ppm</div>
+            <div className="text-white font-mono">{oiwTarget.toFixed(0)} ppm</div>
           </div>
           <div>
             <span className="text-slate-500 text-xs">PV</span>
-            <div className="text-slate-900 font-mono">{cascadeState.lastOiW?.toFixed(1) || '--'} ppm</div>
+            <div className="text-white font-mono">{cascadeState.lastOiW?.toFixed(1) || '--'} ppm</div>
           </div>
           <div>
             <span className="text-slate-500 text-xs">OP</span>
-            <div className="text-slate-900 font-mono">{cascadeState.masterDemand?.toFixed(1) || '--'}%</div>
+            <div className="text-white font-mono">{cascadeState.masterDemand?.toFixed(1) || '--'}%</div>
           </div>
         </div>
       </div>
@@ -163,10 +163,10 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
             </span>
           </div>
           <div className="text-[10px] text-slate-500">Temperature</div>
-          <div className="text-slate-900 font-mono text-sm">
+          <div className="text-white font-mono text-sm">
             {slaveStates?.tic?.pv?.toFixed(1) || '--'}°C
           </div>
-          <div className="text-slate-500 font-mono text-xs">
+          <div className="text-slate-400 font-mono text-xs">
             SP: {cascadeState.tempSP?.toFixed(1) || '--'}°C
           </div>
         </div>
@@ -180,10 +180,10 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
             </span>
           </div>
           <div className="text-[10px] text-slate-500">Feed Flow</div>
-          <div className="text-slate-900 font-mono text-sm">
+          <div className="text-white font-mono text-sm">
             {slaveStates?.fic?.pv?.toFixed(2) || '--'} m³/hr
           </div>
-          <div className="text-slate-500 font-mono text-xs">
+          <div className="text-slate-400 font-mono text-xs">
             SP: {cascadeState.flowSP?.toFixed(2) || '--'}
           </div>
         </div>
@@ -197,10 +197,10 @@ export function CascadeMap({ cascadeState, slaveStates, oiwTarget = 15, compact 
             </span>
           </div>
           <div className="text-[10px] text-slate-500">Bowl Speed</div>
-          <div className="text-slate-900 font-mono text-sm">
+          <div className="text-white font-mono text-sm">
             {slaveStates?.sic?.pv?.toFixed(0) || '--'} RPM
           </div>
-          <div className="text-slate-500 font-mono text-xs">
+          <div className="text-slate-400 font-mono text-xs">
             SP: {cascadeState.speedSP?.toFixed(0) || '--'}
           </div>
         </div>
@@ -232,9 +232,9 @@ interface MassBalancePanelProps {
 export function MassBalancePanel({ result, compact = false }: MassBalancePanelProps) {
   if (!result) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-4">
-        <h3 className="text-slate-900 font-semibold mb-2">Mass Balance</h3>
-        <p className="text-slate-500 text-sm">No mass balance data</p>
+      <div className="bg-slate-800 rounded-lg p-4">
+        <h3 className="text-white font-semibold mb-2">Mass Balance</h3>
+        <p className="text-slate-400 text-sm">No mass balance data</p>
       </div>
     );
   }
@@ -248,9 +248,9 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
 
   if (compact) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-3">
+      <div className="bg-slate-800 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-700 text-xs font-medium">MASS BALANCE</span>
+          <span className="text-slate-300 text-xs font-medium">MASS BALANCE</span>
           <span className={`text-xs px-2 py-0.5 rounded ${statusColors[result.status]}`}>
             {result.closure.toFixed(1)}%
           </span>
@@ -258,15 +258,15 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
         <div className="grid grid-cols-3 gap-1 text-xs">
           <div className="text-center">
             <div className="text-slate-500 text-[10px]">IN</div>
-            <div className="text-slate-900 font-mono">{result.totalIn.toFixed(0)}</div>
+            <div className="text-white font-mono">{result.totalIn.toFixed(0)}</div>
           </div>
           <div className="text-center">
             <div className="text-slate-500 text-[10px]">OUT</div>
-            <div className="text-slate-900 font-mono">{result.totalOut.toFixed(0)}</div>
+            <div className="text-white font-mono">{result.totalOut.toFixed(0)}</div>
           </div>
           <div className="text-center">
             <div className="text-slate-500 text-[10px]">ERR</div>
-            <div className={`font-mono ${Math.abs(result.closureErrorPct) > 2 ? 'text-orange-400' : 'text-slate-900'}`}>
+            <div className={`font-mono ${Math.abs(result.closureErrorPct) > 2 ? 'text-orange-400' : 'text-white'}`}>
               {result.closureErrorPct.toFixed(1)}%
             </div>
           </div>
@@ -276,9 +276,9 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
   }
 
   return (
-    <div className="bg-white border border-slate-300 rounded-lg p-4">
+    <div className="bg-slate-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-slate-900 font-semibold">Mass Balance Validation</h3>
+        <h3 className="text-white font-semibold">Mass Balance Validation</h3>
         <span className={`px-2 py-1 rounded text-xs ${statusColors[result.status]}`}>
           {result.status}
         </span>
@@ -286,23 +286,23 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
 
       {/* Overall balance */}
       <div className="grid grid-cols-4 gap-2 mb-4 text-sm">
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500 text-xs">Total In</div>
-          <div className="text-slate-900 font-mono">{result.totalIn.toFixed(1)} kg/hr</div>
+          <div className="text-white font-mono">{result.totalIn.toFixed(1)} kg/hr</div>
         </div>
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500 text-xs">Total Out</div>
-          <div className="text-slate-900 font-mono">{result.totalOut.toFixed(1)} kg/hr</div>
+          <div className="text-white font-mono">{result.totalOut.toFixed(1)} kg/hr</div>
         </div>
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500 text-xs">Closure</div>
           <div className={`font-mono ${result.toleranceExceeded ? 'text-orange-400' : 'text-green-400'}`}>
             {result.closure.toFixed(2)}%
           </div>
         </div>
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500 text-xs">Error</div>
-          <div className={`font-mono ${Math.abs(result.closureErrorPct) > 2 ? 'text-orange-400' : 'text-slate-900'}`}>
+          <div className={`font-mono ${Math.abs(result.closureErrorPct) > 2 ? 'text-orange-400' : 'text-white'}`}>
             {result.closureError.toFixed(1)} kg/hr
           </div>
         </div>
@@ -310,7 +310,7 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
 
       {/* Component balances */}
       <div className="text-xs mb-4">
-        <div className="text-slate-500 mb-2">Component Balances</div>
+        <div className="text-slate-400 mb-2">Component Balances</div>
         <div className="space-y-1">
           {[
             { name: 'Water', data: result.waterBalance, color: 'blue' },
@@ -319,13 +319,13 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
           ].map(({ name, data, color }) => (
             <div key={name} className="flex items-center gap-2">
               <span className={`w-16 text-${color}-400`}>{name}</span>
-              <div className="flex-1 bg-slate-100 rounded-full h-2">
+              <div className="flex-1 bg-slate-700 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full ${data.valid ? `bg-${color}-500` : 'bg-red-500'}`}
                   style={{ width: `${Math.min(100, data.closure)}%` }}
                 />
               </div>
-              <span className={`w-16 text-right font-mono ${data.valid ? 'text-slate-900' : 'text-red-400'}`}>
+              <span className={`w-16 text-right font-mono ${data.valid ? 'text-white' : 'text-red-400'}`}>
                 {data.closure.toFixed(1)}%
               </span>
             </div>
@@ -335,17 +335,17 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
 
       {/* Quality metrics */}
       <div className="grid grid-cols-3 gap-2 text-xs">
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500">Centrate Solids</div>
           <div className={`font-mono ${result.centrateSolids > 0.5 ? 'text-orange-400' : 'text-green-400'}`}>
             {result.centrateSolids.toFixed(3)}%
           </div>
         </div>
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500">Cake Moisture</div>
-          <div className="text-slate-900 font-mono">{result.cakeMoisture.toFixed(1)}%</div>
+          <div className="text-white font-mono">{result.cakeMoisture.toFixed(1)}%</div>
         </div>
-        <div className="bg-slate-100 rounded p-2">
+        <div className="bg-slate-700 rounded p-2">
           <div className="text-slate-500">Oil Recovery</div>
           <div className={`font-mono ${result.oilRecovery < 85 ? 'text-orange-400' : 'text-green-400'}`}>
             {result.oilRecovery.toFixed(1)}%
@@ -356,10 +356,10 @@ export function MassBalancePanel({ result, compact = false }: MassBalancePanelPr
       {/* Alerts */}
       {result.alerts.length > 0 && (
         <div className="mt-3 text-xs">
-          <div className="text-slate-500 mb-1">Active Alerts ({result.alerts.length})</div>
+          <div className="text-slate-400 mb-1">Active Alerts ({result.alerts.length})</div>
           <div className="max-h-20 overflow-y-auto space-y-1">
             {result.alerts.slice(0, 3).map((alert, i) => (
-              <div key={i} className={`px-2 py-1 rounded ${statusColors[alert.severity] || 'bg-slate-100'}`}>
+              <div key={i} className={`px-2 py-1 rounded ${statusColors[alert.severity] || 'bg-slate-700'}`}>
                 [{alert.severity}] {alert.message}
               </div>
             ))}
@@ -402,18 +402,18 @@ export function AlarmBanner({ alarms, onAcknowledge }: AlarmBannerProps) {
   const unacknowledged = activeAlarms.filter(a => !a.acknowledged).length;
 
   return (
-    <div className={`${priorityColors[highestPriority] || 'bg-slate-200'} border rounded px-3 py-2`}>
+    <div className={`${priorityColors[highestPriority] || 'bg-slate-600'} border rounded px-3 py-2`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded-full ${unacknowledged > 0 ? 'animate-pulse' : ''} bg-white/80`}></div>
-          <span className="text-slate-900 font-medium text-sm">
+          <span className="text-white font-medium text-sm">
             {activeAlarms.length} Active Alarm{activeAlarms.length !== 1 ? 's' : ''}
           </span>
           {unacknowledged > 0 && (
-            <span className="text-slate-900/80 text-xs">({unacknowledged} unack)</span>
+            <span className="text-white/80 text-xs">({unacknowledged} unack)</span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-900/80">
+        <div className="flex items-center gap-2 text-xs text-white/80">
           <span>{activeAlarms[0]?.tag}: {activeAlarms[0]?.message}</span>
           {onAcknowledge && unacknowledged > 0 && (
             <button
@@ -464,11 +464,11 @@ export function AlarmList({ alarms, onAcknowledge, maxItems = 10 }: AlarmListPro
   };
 
   return (
-    <div className="bg-white border border-slate-300 rounded-lg p-4">
-      <h3 className="text-slate-900 font-semibold mb-3">Alarm Summary</h3>
+    <div className="bg-slate-800 rounded-lg p-4">
+      <h3 className="text-white font-semibold mb-3">Alarm Summary</h3>
 
       {displayAlarms.length === 0 ? (
-        <p className="text-slate-500 text-sm">No alarms in history</p>
+        <p className="text-slate-400 text-sm">No alarms in history</p>
       ) : (
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {displayAlarms.map(alarm => (
@@ -476,14 +476,14 @@ export function AlarmList({ alarms, onAcknowledge, maxItems = 10 }: AlarmListPro
               key={alarm.id}
               className={`flex items-center gap-2 p-2 rounded text-xs ${
                 alarm.active
-                  ? priorityColors[alarm.priority] || 'bg-slate-100'
-                  : 'bg-slate-100/50 text-slate-500'
+                  ? priorityColors[alarm.priority] || 'bg-slate-700'
+                  : 'bg-slate-700/50 text-slate-500'
               }`}
             >
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                 alarm.active
-                  ? priorityColors[alarm.priority] || 'bg-slate-200'
-                  : 'bg-slate-200'
+                  ? priorityColors[alarm.priority] || 'bg-slate-600'
+                  : 'bg-slate-600'
               }`}>
                 {priorityLabels[alarm.priority] || 'INFO'}
               </span>
@@ -529,9 +529,9 @@ interface ConstraintPanelProps {
 export function ConstraintPanel({ result, compact = false }: ConstraintPanelProps) {
   if (!result) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-4">
-        <h3 className="text-slate-900 font-semibold mb-2">Constraints</h3>
-        <p className="text-slate-500 text-sm">No constraint data</p>
+      <div className="bg-slate-800 rounded-lg p-4">
+        <h3 className="text-white font-semibold mb-2">Constraints</h3>
+        <p className="text-slate-400 text-sm">No constraint data</p>
       </div>
     );
   }
@@ -549,9 +549,9 @@ export function ConstraintPanel({ result, compact = false }: ConstraintPanelProp
 
   if (compact) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-3">
+      <div className="bg-slate-800 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-700 text-xs font-medium">CONSTRAINTS</span>
+          <span className="text-slate-300 text-xs font-medium">CONSTRAINTS</span>
           <span className={`text-xs px-2 py-0.5 rounded ${statusColors[result.status]}`}>
             {result.status}
           </span>
@@ -559,13 +559,13 @@ export function ConstraintPanel({ result, compact = false }: ConstraintPanelProp
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <span className="text-slate-500">Violated:</span>
-            <span className={`ml-1 font-mono ${violatedConstraints.length > 0 ? 'text-orange-400' : 'text-slate-900'}`}>
+            <span className={`ml-1 font-mono ${violatedConstraints.length > 0 ? 'text-orange-400' : 'text-white'}`}>
               {violatedConstraints.length}
             </span>
           </div>
           <div>
             <span className="text-slate-500">Interlocks:</span>
-            <span className={`ml-1 font-mono ${triggeredInterlocks.length > 0 ? 'text-red-400' : 'text-slate-900'}`}>
+            <span className={`ml-1 font-mono ${triggeredInterlocks.length > 0 ? 'text-red-400' : 'text-white'}`}>
               {triggeredInterlocks.length}
             </span>
           </div>
@@ -580,15 +580,15 @@ export function ConstraintPanel({ result, compact = false }: ConstraintPanelProp
   }
 
   return (
-    <div className="bg-white border border-slate-300 rounded-lg p-4">
+    <div className="bg-slate-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-slate-900 font-semibold">Equipment Constraints</h3>
+        <h3 className="text-white font-semibold">Equipment Constraints</h3>
         <span className={`px-2 py-1 rounded text-xs ${statusColors[result.status]}`}>
           {result.status}
         </span>
       </div>
 
-      <p className="text-sm text-slate-700 mb-4">{result.statusMessage}</p>
+      <p className="text-sm text-slate-300 mb-4">{result.statusMessage}</p>
 
       {/* Enforced limits */}
       {Object.keys(result.enforcedLimits).length > 0 && (
@@ -596,17 +596,17 @@ export function ConstraintPanel({ result, compact = false }: ConstraintPanelProp
           <div className="text-yellow-400 text-xs font-medium mb-1">ENFORCED LIMITS</div>
           <div className="space-y-1">
             {result.enforcedLimits.speed !== undefined && (
-              <div className="text-xs text-slate-900">
+              <div className="text-xs text-white">
                 Bowl Speed: ≤ {result.enforcedLimits.speed} RPM
               </div>
             )}
             {result.enforcedLimits.feedRate !== undefined && (
-              <div className={`text-xs ${result.enforcedLimits.feedRate === 0 ? 'text-red-400 font-bold' : 'text-slate-900'}`}>
+              <div className={`text-xs ${result.enforcedLimits.feedRate === 0 ? 'text-red-400 font-bold' : 'text-white'}`}>
                 Feed Rate: {result.enforcedLimits.feedRate === 0 ? 'STOPPED' : `≤ ${result.enforcedLimits.feedRate} m³/hr`}
               </div>
             )}
             {result.enforcedLimits.differential !== undefined && (
-              <div className="text-xs text-slate-900">
+              <div className="text-xs text-white">
                 Differential: ≤ {result.enforcedLimits.differential} RPM
               </div>
             )}
@@ -622,7 +622,7 @@ export function ConstraintPanel({ result, compact = false }: ConstraintPanelProp
             {violatedConstraints.map(c => (
               <div key={c.id} className="flex items-center gap-2 text-xs bg-orange-500/10 rounded px-2 py-1">
                 <span className="font-mono text-orange-400">{c.id}</span>
-                <span className="text-slate-900">{c.description}</span>
+                <span className="text-white">{c.description}</span>
                 <span className="text-orange-400 font-mono ml-auto">
                   {c.currentValue.toFixed(1)} {c.unit}
                 </span>
@@ -640,7 +640,7 @@ export function ConstraintPanel({ result, compact = false }: ConstraintPanelProp
             {triggeredInterlocks.map(i => (
               <div key={i.id} className="flex items-center gap-2 text-xs bg-red-500/10 rounded px-2 py-1">
                 <span className="font-mono text-red-400">{i.id}</span>
-                <span className="text-slate-900">{i.description}</span>
+                <span className="text-white">{i.description}</span>
                 <span className="text-red-300 text-[10px] ml-auto">
                   {i.resetRequired ? 'RESET REQUIRED' : 'AUTO-RESET'}
                 </span>
@@ -665,9 +665,9 @@ interface IntegrityPanelProps {
 export function IntegrityPanel({ report, compact = false }: IntegrityPanelProps) {
   if (!report) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-4">
-        <h3 className="text-slate-900 font-semibold mb-2">Calculation Integrity</h3>
-        <p className="text-slate-500 text-sm">No integrity data</p>
+      <div className="bg-slate-800 rounded-lg p-4">
+        <h3 className="text-white font-semibold mb-2">Calculation Integrity</h3>
+        <p className="text-slate-400 text-sm">No integrity data</p>
       </div>
     );
   }
@@ -676,7 +676,7 @@ export function IntegrityPanel({ report, compact = false }: IntegrityPanelProps)
     VALID: 'text-green-400 bg-green-500/20',
     WARNING: 'text-yellow-400 bg-yellow-500/20',
     INVALID: 'text-red-400 bg-red-500/20',
-    MISSING: 'text-slate-500 bg-slate-400/20',
+    MISSING: 'text-slate-400 bg-slate-500/20',
     STALE: 'text-orange-400 bg-orange-500/20',
   };
 
@@ -684,18 +684,18 @@ export function IntegrityPanel({ report, compact = false }: IntegrityPanelProps)
 
   if (compact) {
     return (
-      <div className="bg-white border border-slate-300 rounded-lg p-3">
+      <div className="bg-slate-800 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-700 text-xs font-medium">INTEGRITY</span>
+          <span className="text-slate-300 text-xs font-medium">INTEGRITY</span>
           <span className={`text-xs px-2 py-0.5 rounded ${statusColors[report.overallStatus]}`}>
             {report.overallStatus}
           </span>
         </div>
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex">
+        <div className="h-2 bg-slate-700 rounded-full overflow-hidden flex">
           <div className="bg-green-500 h-full" style={{ width: `${(report.validCount / total) * 100}%` }} />
           <div className="bg-yellow-500 h-full" style={{ width: `${(report.warningCount / total) * 100}%` }} />
           <div className="bg-red-500 h-full" style={{ width: `${(report.invalidCount / total) * 100}%` }} />
-          <div className="bg-slate-400 h-full" style={{ width: `${(report.missingCount / total) * 100}%` }} />
+          <div className="bg-slate-500 h-full" style={{ width: `${(report.missingCount / total) * 100}%` }} />
           <div className="bg-orange-500 h-full" style={{ width: `${(report.staleCount / total) * 100}%` }} />
         </div>
         <div className="mt-1 flex justify-between text-[10px] text-slate-500">
@@ -708,9 +708,9 @@ export function IntegrityPanel({ report, compact = false }: IntegrityPanelProps)
   }
 
   return (
-    <div className="bg-white border border-slate-300 rounded-lg p-4">
+    <div className="bg-slate-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-slate-900 font-semibold">Calculation Integrity</h3>
+        <h3 className="text-white font-semibold">Calculation Integrity</h3>
         <span className={`px-2 py-1 rounded text-xs ${statusColors[report.overallStatus]}`}>
           {report.overallStatus}
         </span>
@@ -720,33 +720,33 @@ export function IntegrityPanel({ report, compact = false }: IntegrityPanelProps)
       <div className="grid grid-cols-5 gap-2 mb-4 text-center text-xs">
         <div className="bg-green-500/20 rounded p-2">
           <div className="text-green-400">Valid</div>
-          <div className="text-slate-900 font-mono text-lg">{report.validCount}</div>
+          <div className="text-white font-mono text-lg">{report.validCount}</div>
         </div>
         <div className="bg-yellow-500/20 rounded p-2">
           <div className="text-yellow-400">Warning</div>
-          <div className="text-slate-900 font-mono text-lg">{report.warningCount}</div>
+          <div className="text-white font-mono text-lg">{report.warningCount}</div>
         </div>
         <div className="bg-red-500/20 rounded p-2">
           <div className="text-red-400">Invalid</div>
-          <div className="text-slate-900 font-mono text-lg">{report.invalidCount}</div>
+          <div className="text-white font-mono text-lg">{report.invalidCount}</div>
         </div>
-        <div className="bg-slate-400/20 rounded p-2">
-          <div className="text-slate-500">Missing</div>
-          <div className="text-slate-900 font-mono text-lg">{report.missingCount}</div>
+        <div className="bg-slate-500/20 rounded p-2">
+          <div className="text-slate-400">Missing</div>
+          <div className="text-white font-mono text-lg">{report.missingCount}</div>
         </div>
         <div className="bg-orange-500/20 rounded p-2">
           <div className="text-orange-400">Stale</div>
-          <div className="text-slate-900 font-mono text-lg">{report.staleCount}</div>
+          <div className="text-white font-mono text-lg">{report.staleCount}</div>
         </div>
       </div>
 
       {/* Messages */}
       {report.messages.length > 0 && (
         <div>
-          <div className="text-slate-500 text-xs mb-2">Issues Detected</div>
+          <div className="text-slate-400 text-xs mb-2">Issues Detected</div>
           <div className="max-h-32 overflow-y-auto space-y-1">
             {report.messages.map((msg, i) => (
-              <div key={i} className="text-xs p-2 bg-slate-100 rounded font-mono">
+              <div key={i} className="text-xs p-2 bg-slate-700 rounded font-mono">
                 {msg}
               </div>
             ))}
@@ -771,7 +771,7 @@ export function DataSourceLegend({ compact = false }: DataSourceLegendProps) {
     { symbol: '◆', source: 'CALCULATED', description: 'Physics-derived', color: 'text-blue-400' },
     { symbol: '■', source: 'MODELED', description: 'Empirical model', color: 'text-purple-400' },
     { symbol: '○', source: 'ESTIMATED', description: 'Estimate only', color: 'text-yellow-400' },
-    { symbol: '△', source: 'ASSUMED', description: 'Default value', color: 'text-slate-500' },
+    { symbol: '△', source: 'ASSUMED', description: 'Default value', color: 'text-slate-400' },
   ];
 
   if (compact) {
@@ -787,13 +787,13 @@ export function DataSourceLegend({ compact = false }: DataSourceLegendProps) {
   }
 
   return (
-    <div className="bg-white border border-slate-300 rounded-lg p-3">
-      <div className="text-slate-500 text-xs mb-2">Data Source Legend</div>
+    <div className="bg-slate-800 rounded-lg p-3">
+      <div className="text-slate-400 text-xs mb-2">Data Source Legend</div>
       <div className="grid grid-cols-5 gap-2 text-xs">
         {sources.map(s => (
           <div key={s.source} className="text-center">
             <div className={`text-lg ${s.color}`}>{s.symbol}</div>
-            <div className="text-slate-700">{s.source}</div>
+            <div className="text-slate-300">{s.source}</div>
           </div>
         ))}
       </div>
@@ -817,7 +817,7 @@ export function LabeledValueDisplay({ label, value, precision = 2 }: LabeledValu
     CALCULATED: 'text-blue-400',
     MODELED: 'text-purple-400',
     ESTIMATED: 'text-yellow-400',
-    ASSUMED: 'text-slate-500',
+    ASSUMED: 'text-slate-400',
     UNKNOWN: 'text-red-400',
   };
 
@@ -837,9 +837,9 @@ export function LabeledValueDisplay({ label, value, precision = 2 }: LabeledValu
 
   return (
     <div className="flex items-center justify-between">
-      <span className="text-slate-500 text-sm">{label}</span>
+      <span className="text-slate-400 text-sm">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="text-slate-900 font-mono">{value.value.toFixed(precision)} {value.unit}</span>
+        <span className="text-white font-mono">{value.value.toFixed(precision)} {value.unit}</span>
         <span className={`${sourceColors[value.source]}`} title={value.basis}>
           {sourceSymbols[value.source]}
         </span>
