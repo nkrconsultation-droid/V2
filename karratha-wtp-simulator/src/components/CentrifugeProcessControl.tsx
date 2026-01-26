@@ -2464,14 +2464,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             // Use ref to check current phase (React state is async, can cause duplicate detections)
             const currentTrackingPhase = currentPhaseDataRef.current?.phaseIndex;
             if (i !== currentTrackingPhase) {
-              // Phase transition detected - apply 10-second debounce rule
-              const PHASE_DEBOUNCE_SECONDS = 10;
+              // Phase transition detected - apply 60-second debounce rule
+              const PHASE_DEBOUNCE_SECONDS = 60;
 
               if (pendingPhaseRef.current === null || pendingPhaseRef.current.phase !== i) {
                 // New pending phase detected - start tracking when it was first seen
                 pendingPhaseRef.current = { phase: i, detectedAt: simRef.current.time };
               } else if (simRef.current.time - pendingPhaseRef.current.detectedAt >= PHASE_DEBOUNCE_SECONDS) {
-                // Phase has been stable for 10+ seconds - commit the transition
+                // Phase has been stable for 60+ seconds - commit the transition
                 startPhaseTracking(i, simRef.current.time);
                 batchPhaseRef.current = i; // Update ref immediately for animation loop
                 setBatchPhase(i); // Update state for UI
