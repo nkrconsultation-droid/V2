@@ -6112,7 +6112,7 @@ export default function CentrifugeProcessControl() {
                 <table>
                   <tr><th>Item</th><th>Volume</th><th>Amount</th></tr>
                   <tr><td>Oil Value (at Kalgoorlie)</td><td>${annualOilRecovered.toFixed(0)} m³ @ $${costs.oilValue}/m³</td><td class="positive">+${formatCurrency(annualOilGrossRevenue, 2)}</td></tr>
-                  <tr><td>Transport (Karratha → Kalgoorlie)</td><td>${(annualOilRecovered * 1000).toFixed(0)} kL @ $0.22/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
+                  <tr><td>Transport (Karratha → Kalgoorlie)</td><td>${Math.round(annualOilRecovered).toLocaleString()} kL @ $0.22/L</td><td class="negative">-${formatCurrency(annualOilTransportCost, 2)}</td></tr>
                   <tr class="highlight"><td><strong>Net Oil Revenue</strong></td><td></td><td class="positive"><strong>+${formatCurrency(annualOilNetRevenue, 2)}</strong></td></tr>
                 </table>
 
@@ -6384,7 +6384,7 @@ export default function CentrifugeProcessControl() {
                         <td className="py-2 text-right text-green-400 font-mono">+{formatCurrency(annualOilGrossRevenue, 2)}</td>
                       </tr>
                       <tr className="border-b border-slate-700">
-                        <td className="py-2 text-amber-400">Transport Karratha→Kalgoorlie ({(annualOilRecovered * 1000).toFixed(0)}kL @ $0.22/L)</td>
+                        <td className="py-2 text-amber-400">Transport Karratha→Kalgoorlie ({annualOilRecovered.toLocaleString(undefined, {maximumFractionDigits: 0})} kL @ $0.22/L)</td>
                         <td className="py-2 text-right text-amber-400 font-mono">-{formatCurrency(annualOilTransportCost, 2)}</td>
                       </tr>
                       <tr className="bg-green-900/30">
