@@ -2861,49 +2861,49 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900">
+    <div className="min-h-screen bg-slate-200 text-slate-900">
       {/* Ambient background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-gray-200/50 via-transparent to-gray-200/30 pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-300/40 via-transparent to-slate-300/30 pointer-events-none" />
 
       {/* Header */}
-      <header className="relative z-10 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
+      <header className="relative z-10 backdrop-blur-xl bg-white/95 border-b border-slate-300 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6">
           {/* Top bar */}
           <div className="flex items-center justify-between h-16">
             {/* Logo & Status */}
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
                   <span className="text-xl">⟳</span>
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-gray-900">Centrifuge Control</h1>
-                  <div className="text-xs text-gray-500">Delta-Canter 20-843A</div>
+                  <h1 className="text-lg font-semibold text-slate-900">Centrifuge Control</h1>
+                  <div className="text-xs text-slate-500">Delta-Canter 20-843A</div>
                 </div>
               </div>
 
               {/* Status pill */}
               <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                 isRunning
-                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                  : 'bg-gray-100 text-gray-600 border border-gray-200'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                  : 'bg-slate-100 text-slate-600 border border-slate-300'
               }`}>
-                <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                 <span className="text-sm font-medium">{isRunning ? 'Running' : 'Stopped'}</span>
               </div>
 
               {/* Batch mode indicator */}
               {isBatchMode && (
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-purple-100 border border-purple-200">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-violet-50 border border-violet-300">
                   <span className="text-lg">{batchPhases[batchPhase]?.icon}</span>
                   <div>
-                    <div className="text-sm font-medium text-purple-700">{batchPhases[batchPhase]?.name}</div>
-                    <div className="text-xs text-purple-600">Phase {batchPhase + 1}/{batchPhases.length} · {batchProgress.pct.toFixed(0)}%</div>
+                    <div className="text-sm font-medium text-violet-800">{batchPhases[batchPhase]?.name}</div>
+                    <div className="text-xs text-violet-600">Phase {batchPhase + 1}/{batchPhases.length} · {batchProgress.pct.toFixed(0)}%</div>
                   </div>
                 </div>
               )}
               {!isBatchMode && isRunning && (
-                <div className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium">
+                <div className="px-4 py-2 rounded-full bg-sky-50 text-sky-800 border border-sky-300 text-sm font-medium">
                   Manual Mode
                 </div>
               )}
@@ -2912,16 +2912,16 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             {/* Controls */}
             <div className="flex items-center gap-4">
               {/* Time display */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 border border-gray-200">
-                <span className="text-gray-500 text-sm">⏱</span>
-                <span className="font-mono text-gray-800 text-sm">{formatTime(simTime)}</span>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 border border-slate-300">
+                <span className="text-slate-500 text-sm">⏱</span>
+                <span className="font-mono text-slate-800 text-sm">{formatTime(simTime)}</span>
               </div>
 
               {/* Speed selector */}
               <select
                 value={simSpeed}
                 onChange={e => setSimSpeed(+e.target.value)}
-                className="px-4 py-2 rounded-xl bg-gray-100 border border-gray-200 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-sm text-slate-800 focus:ring-2 focus:ring-sky-500/50 cursor-pointer"
               >
                 <option value={1}>1× Real</option>
                 <option value={10}>10× Fast</option>
@@ -2934,8 +2934,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 onClick={() => setIsRunning(!isRunning)}
                 className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all ${
                   isRunning
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
-                    : 'bg-emerald-500 text-gray-800 hover:bg-emerald-400'
+                    ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-300'
+                    : 'bg-emerald-500 text-white hover:bg-emerald-400'
                 }`}
               >
                 {isRunning ? '⏹ Stop' : '▶ Start'}
@@ -2943,7 +2943,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
 
               <button
                 onClick={() => { if (window.confirm('Reset entire session? This will clear all data, trends, chemical usage, and filter statistics.')) dailyReset(); }}
-                className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all text-sm border border-gray-200"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-all text-sm border border-slate-300"
                 title="Reset all simulation data"
               >
                 ↺ Reset
@@ -2958,14 +2958,14 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                   activeTab === tab.id
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    ? 'bg-sky-50 text-sky-800 border border-sky-300 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 } ${tab.id === 'alarms' && alarms.length ? 'text-red-600' : ''}`}
               >
-                <span className={`text-base ${activeTab === tab.id ? 'opacity-100' : 'opacity-50'}`}>{tab.icon}</span>
+                <span className={`text-base ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`}>{tab.icon}</span>
                 <span>{tab.label}</span>
                 {activeTab === tab.id && (
-                  <div className="w-1 h-1 rounded-full bg-blue-500" />
+                  <div className="w-1 h-1 rounded-full bg-sky-500" />
                 )}
               </button>
             ))}
