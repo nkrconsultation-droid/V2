@@ -531,6 +531,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
   // ═══════════════════════════════════════════════════════════════
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [batchPhase, setBatchPhase] = useState(0);
+  const batchPhaseRef = useRef(0); // Ref for use inside animation loop to avoid stale closures
   const [tankVolume, setTankVolume] = useState(55);
 
   // Batch phases imported from constants
@@ -2154,6 +2155,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     setFeedProps(p => ({ ...p, waterFraction: tank.water / 100, oilFraction: tank.oil / 100, solidsFraction: tank.sediment / 100 }));
     const vol = (tank.level / 100) * TANK.volume;
     simRef.current = { time: 0, vol, phase: 0 };
+    batchPhaseRef.current = 0; // Initialize ref for animation loop
     setIsBatchMode(true); setBatchPhase(0); setTankVolume(vol); setSimTime(0);
     // Initialize phase data tracking for report
     initializePhaseData();
@@ -2233,8 +2235,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
       setSimTime(simRef.current.time);
 
       let waterFrac = feedProps.waterFraction, oilFrac = feedProps.oilFraction, solidsFrac = feedProps.solidsFraction;
-      if (isBatchMode && batchPhases[batchPhase]) {
-        const ph = batchPhases[batchPhase];
+      if (isBatchMode && batchPhases[batchPhaseRef.current]) {
+        const ph = batchPhases[batchPhaseRef.current];
         waterFrac = ph.water / 100; oilFrac = ph.oil / 100; solidsFrac = ph.sediment / 100;
         setLoops(p => ({ ...p, TIC: { ...p.TIC, sp: ph.temp }, FIC: { ...p.FIC, sp: ph.flow }, SIC: { ...p.SIC, sp: ph.rpm } }));
       }
@@ -2462,7 +2464,8 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
             if (i !== currentTrackingPhase) {
               // Phase transition - finalize current phase and start new one
               startPhaseTracking(i, simRef.current.time);
-              setBatchPhase(i);
+              batchPhaseRef.current = i; // Update ref immediately for animation loop
+              setBatchPhase(i); // Update state for UI
               addEvent('PHASE', batchPhases[i].name);
             }
             break;
@@ -2511,7 +2514,7 @@ export default function CentrifugeProcessControl({ initialTab = 'feed' }: Centri
     };
     frameRef.current = requestAnimationFrame(tick);
     return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
-  }, [isRunning, simSpeed, feedProps, disturbances, equipment, loops, calcPID, calcEfficiency, isBatchMode, batchPhase, batchPhases, selectedOilTank, oilTanks, addEvent, updateSmoothedValues, startPhaseTracking, updatePhaseData, finalizePhaseData, costs, chemCosts, filterCosts]);
+  }, [isRunning, simSpeed, feedProps, disturbances, equipment, loops, calcPID, calcEfficiency, isBatchMode, batchPhases, selectedOilTank, oilTanks, addEvent, updateSmoothedValues, startPhaseTracking, updatePhaseData, finalizePhaseData, costs, chemCosts, filterCosts]);
 
   const batchProgress = useMemo(() => { const total = batchPhases.reduce((s, p) => s + p.volume, 0); return { pct: Math.min(100, ((total - tankVolume) / total) * 100), remain: tankVolume }; }, [batchPhases, tankVolume]);
   const kpiStats = useMemo(() => ({ oilEff: calcStats(kpiHistory, 'oilEff'), solidsEff: calcStats(kpiHistory, 'solidsEff'), wq: calcStats(kpiHistory, 'wq'), flow: calcStats(kpiHistory, 'flow'), vib: calcStats(kpiHistory, 'vib'), pH: calcStats(kpiHistory, 'pH'), turbidity: calcStats(kpiHistory, 'turbidity') }), [kpiHistory]);
