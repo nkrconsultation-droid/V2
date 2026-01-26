@@ -102,8 +102,8 @@ export default function App() {
       {/* Back to Home Button */}
       <button
         onClick={handleBackToHome}
-        className="fixed top-4 left-4 z-[100] bg-white/95 hover:bg-gray-100
-                   text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200
+        className="fixed top-4 left-4 z-[100] bg-white hover:bg-slate-50
+                   text-slate-700 px-4 py-2 rounded-lg shadow-lg border border-slate-300
                    flex items-center gap-2 transition-all hover:scale-105 backdrop-blur-sm"
       >
         <span className="text-lg">←</span>
