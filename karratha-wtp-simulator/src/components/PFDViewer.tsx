@@ -3,16 +3,22 @@
  * ============================================
  * Renders the Karratha WTP canonical PFD using Mermaid
  * Source of truth for process topology
+ *
+ * Features:
+ * - Mouse wheel zoom
+ * - Pinch-to-zoom (touch)
+ * - Drag-to-pan
+ * - A3 landscape print with CWY title block
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
 
 interface PFDViewerProps {
   onBackToHome: () => void;
 }
 
-// Canonical PFD Mermaid diagram with flow fractions - matches docs/pfd.mmd
+// Canonical PFD Mermaid diagram with flow fractions
 const PFD_DIAGRAM = `
 flowchart LR
 
@@ -124,22 +130,148 @@ const EDGE_TYPES = [
 // Track render ID globally to avoid conflicts
 let renderCounter = 0;
 
+// Print styles for A3 landscape with CWY title block
+const getPrintStyles = () => `
+  @media print {
+    @page {
+      size: A3 landscape;
+      margin: 10mm;
+    }
+
+    body * {
+      visibility: hidden;
+    }
+
+    #print-container, #print-container * {
+      visibility: visible;
+    }
+
+    #print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 410mm;
+      height: 287mm;
+      background: white !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+  }
+`;
+
 export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
   const renderIdRef = useRef<string>(`pfd-${++renderCounter}-${Date.now()}`);
+  const lastTouchDistance = useRef<number | null>(null);
 
-  const handleZoomIn = () => setZoom(z => Math.min(z + 0.25, 3));
-  const handleZoomOut = () => setZoom(z => Math.max(z - 0.25, 0.25));
-  const handleZoomReset = () => setZoom(1);
-  const handleFitToScreen = () => setZoom(0.5);
+  // Zoom constraints
+  const MIN_ZOOM = 0.1;
+  const MAX_ZOOM = 4;
+  const ZOOM_SENSITIVITY = 0.001;
 
+  // Handle mouse wheel zoom
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = -e.deltaY * ZOOM_SENSITIVITY;
+    setZoom(z => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * (1 + delta * 10))));
+  }, []);
+
+  // Handle mouse down for panning
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 0) { // Left click only
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  }, [pan]);
+
+  // Handle mouse move for panning
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  }, [isDragging, dragStart]);
+
+  // Handle mouse up
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Handle touch start for pinch zoom
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastTouchDistance.current = distance;
+    } else if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - pan.x,
+        y: e.touches[0].clientY - pan.y,
+      });
+    }
+  }, [pan]);
+
+  // Handle touch move for pinch zoom and pan
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      e.preventDefault();
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = distance / lastTouchDistance.current;
+      setZoom(z => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * delta)));
+      lastTouchDistance.current = distance;
+    } else if (e.touches.length === 1 && isDragging) {
+      setPan({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y,
+      });
+    }
+  }, [isDragging, dragStart]);
+
+  // Handle touch end
+  const handleTouchEnd = useCallback(() => {
+    lastTouchDistance.current = null;
+    setIsDragging(false);
+  }, []);
+
+  // Zoom controls
+  const handleZoomIn = () => setZoom(z => Math.min(MAX_ZOOM, z * 1.25));
+  const handleZoomOut = () => setZoom(z => Math.max(MIN_ZOOM, z / 1.25));
+  const handleZoomReset = () => { setZoom(0.6); setPan({ x: 0, y: 0 }); };
+  const handleFitToScreen = () => { setZoom(0.35); setPan({ x: 0, y: 0 }); };
+
+  // Print function
+  const handlePrint = useCallback(() => {
+    setShowPrintPreview(true);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setShowPrintPreview(false), 500);
+    }, 100);
+  }, []);
+
+  // Initialize mermaid and render
   useEffect(() => {
     let isMounted = true;
 
-    // Initialize mermaid with dark theme
     mermaid.initialize({
       startOnLoad: false,
       theme: 'dark',
@@ -170,7 +302,6 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
     const renderDiagram = async () => {
       try {
-        // Use unique ID to avoid conflicts on re-render
         const { svg } = await mermaid.render(renderIdRef.current, PFD_DIAGRAM);
         if (isMounted) {
           setSvgContent(svg);
@@ -188,18 +319,139 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
     return () => {
       isMounted = false;
-      // Cleanup: remove the mermaid-generated element if it exists
       const element = document.getElementById(renderIdRef.current);
-      if (element) {
-        element.remove();
-      }
+      if (element) element.remove();
     };
   }, []);
 
+  // Add print styles to document
+  useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = getPrintStyles();
+    document.head.appendChild(styleEl);
+    return () => { document.head.removeChild(styleEl); };
+  }, []);
+
+  const currentDate = new Date().toLocaleDateString('en-AU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Print Preview Container */}
+      {showPrintPreview && (
+        <div id="print-container" className="fixed inset-0 bg-white z-[9999] p-4">
+          {/* CWY Title Block - A3 Landscape */}
+          <div className="w-full h-full border-2 border-black flex flex-col">
+            {/* Main Drawing Area */}
+            <div className="flex-1 p-4 overflow-hidden">
+              <div
+                className="w-full h-full"
+                style={{ background: '#f8fafc' }}
+                dangerouslySetInnerHTML={svgContent ? { __html: svgContent.replace(/style="[^"]*background[^"]*"/g, 'style="background: transparent"') } : undefined}
+              />
+            </div>
+
+            {/* CWY Standard Title Block */}
+            <div className="border-t-2 border-black">
+              <div className="flex">
+                {/* Left Section - Company Info */}
+                <div className="w-64 border-r-2 border-black p-2">
+                  <div className="text-center">
+                    <div className="font-bold text-lg">CWY</div>
+                    <div className="text-xs">WATER SOLUTIONS</div>
+                    <div className="text-xs mt-1 text-gray-600">ABN: XX XXX XXX XXX</div>
+                  </div>
+                </div>
+
+                {/* Center Section - Drawing Title */}
+                <div className="flex-1 border-r-2 border-black">
+                  <div className="border-b border-black p-2">
+                    <div className="text-center">
+                      <div className="font-bold text-xl">KARRATHA WATER TREATMENT PLANT</div>
+                      <div className="font-semibold text-lg">PROCESS FLOW DIAGRAM - CANONICAL</div>
+                    </div>
+                  </div>
+                  <div className="flex text-xs">
+                    <div className="flex-1 border-r border-black p-1">
+                      <span className="font-semibold">PROJECT:</span> Karratha WTP
+                    </div>
+                    <div className="flex-1 border-r border-black p-1">
+                      <span className="font-semibold">CLIENT:</span> Rio Tinto
+                    </div>
+                    <div className="flex-1 p-1">
+                      <span className="font-semibold">LOCATION:</span> Karratha, WA
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Section - Drawing Info */}
+                <div className="w-72">
+                  <div className="grid grid-cols-2 text-xs">
+                    <div className="border-b border-r border-black p-1">
+                      <span className="font-semibold">DWG NO:</span>
+                    </div>
+                    <div className="border-b border-black p-1 font-mono">
+                      CWY-KAR-PFD-001
+                    </div>
+                    <div className="border-b border-r border-black p-1">
+                      <span className="font-semibold">REV:</span>
+                    </div>
+                    <div className="border-b border-black p-1 font-mono">
+                      A
+                    </div>
+                    <div className="border-b border-r border-black p-1">
+                      <span className="font-semibold">DATE:</span>
+                    </div>
+                    <div className="border-b border-black p-1 font-mono">
+                      {currentDate}
+                    </div>
+                    <div className="border-b border-r border-black p-1">
+                      <span className="font-semibold">SCALE:</span>
+                    </div>
+                    <div className="border-b border-black p-1 font-mono">
+                      NTS
+                    </div>
+                    <div className="border-b border-r border-black p-1">
+                      <span className="font-semibold">DRAWN:</span>
+                    </div>
+                    <div className="border-b border-black p-1 font-mono">
+                      CLAUDE
+                    </div>
+                    <div className="border-r border-black p-1">
+                      <span className="font-semibold">SHEET:</span>
+                    </div>
+                    <div className="p-1 font-mono">
+                      1 OF 1
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Revision History */}
+              <div className="border-t border-black flex text-xs">
+                <div className="w-16 border-r border-black p-1 font-semibold text-center bg-gray-100">REV</div>
+                <div className="w-24 border-r border-black p-1 font-semibold text-center bg-gray-100">DATE</div>
+                <div className="flex-1 border-r border-black p-1 font-semibold bg-gray-100">DESCRIPTION</div>
+                <div className="w-20 border-r border-black p-1 font-semibold text-center bg-gray-100">BY</div>
+                <div className="w-20 p-1 font-semibold text-center bg-gray-100">CHK</div>
+              </div>
+              <div className="flex text-xs">
+                <div className="w-16 border-r border-black p-1 text-center">A</div>
+                <div className="w-24 border-r border-black p-1 text-center">{currentDate}</div>
+                <div className="flex-1 border-r border-black p-1">ISSUED FOR REVIEW - CANONICAL PFD WITH FLOW FRACTIONS</div>
+                <div className="w-20 border-r border-black p-1 text-center">CL</div>
+                <div className="w-20 p-1 text-center">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
+      <header className="bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50 no-print">
         <div className="max-w-full mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -223,14 +475,23 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* Print Button */}
+              <button
+                onClick={handlePrint}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg
+                           flex items-center gap-2 transition-all border border-emerald-500"
+                title="Print A3 Landscape"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Print A3</span>
+              </button>
               <span className="px-3 py-1 bg-indigo-600/20 text-indigo-400 rounded-full text-sm font-medium border border-indigo-600/30">
                 19 Nodes
               </span>
               <span className="px-3 py-1 bg-purple-600/20 text-purple-400 rounded-full text-sm font-medium border border-purple-600/30">
                 20 Edges
-              </span>
-              <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm font-medium border border-emerald-600/30">
-                Source of Truth
               </span>
             </div>
           </div>
@@ -238,7 +499,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className="p-6 no-print">
         <div className="flex gap-6">
           {/* Diagram Container */}
           <div className="flex-1 bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
@@ -250,10 +511,10 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <button
                     onClick={handleZoomOut}
                     className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors"
-                    title="Zoom Out"
+                    title="Zoom Out (or scroll down)"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
                     </svg>
                   </button>
                   <span className="text-slate-300 text-sm font-mono w-14 text-center">
@@ -262,19 +523,19 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <button
                     onClick={handleZoomIn}
                     className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors"
-                    title="Zoom In"
+                    title="Zoom In (or scroll up)"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                     </svg>
                   </button>
                   <div className="w-px h-5 bg-slate-600" />
                   <button
                     onClick={handleZoomReset}
                     className="px-2 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors text-xs"
-                    title="Reset Zoom"
+                    title="Reset View"
                   >
-                    100%
+                    Reset
                   </button>
                   <button
                     onClick={handleFitToScreen}
@@ -285,11 +546,25 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   </button>
                 </div>
                 <div className="text-sm text-slate-400">
-                  <span>Scroll to pan</span>
+                  <span>Scroll to zoom • Drag to pan</span>
                 </div>
               </div>
             </div>
-            <div className="flex-1 p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+
+            {/* Zoomable/Pannable Viewport */}
+            <div
+              ref={viewportRef}
+              className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing"
+              style={{ height: 'calc(100vh - 220px)' }}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {error ? (
                 <div className="text-red-400 text-center py-8">
                   <p className="text-xl mb-2">Render Error</p>
@@ -300,18 +575,19 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <div className="animate-spin w-8 h-8 border-2 border-slate-600 border-t-cyan-500 rounded-full mx-auto mb-4" />
                   <p>Rendering diagram...</p>
                 </div>
-              ) : null}
-              <div
-                ref={containerRef}
-                className="mermaid-container"
-                style={{
-                  minHeight: '500px',
-                  transform: `scale(${zoom})`,
-                  transformOrigin: 'top left',
-                  transition: 'transform 0.2s ease-out',
-                }}
-                dangerouslySetInnerHTML={svgContent ? { __html: svgContent } : undefined}
-              />
+              ) : (
+                <div
+                  ref={containerRef}
+                  className="mermaid-container"
+                  style={{
+                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                    transformOrigin: '0 0',
+                    transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                    willChange: 'transform',
+                  }}
+                  dangerouslySetInnerHTML={{ __html: svgContent }}
+                />
+              )}
             </div>
           </div>
 
@@ -397,15 +673,18 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               </div>
             </div>
 
-            {/* Info Box */}
+            {/* Controls Help */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
-              <h3 className="text-white font-semibold mb-2">About This Diagram</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Canonical PFD with typical flow fractions. Actual values vary with feed composition.
-              </p>
+              <h3 className="text-white font-semibold mb-2">Controls</h3>
+              <div className="text-slate-400 text-sm space-y-1">
+                <p><span className="text-slate-300">Scroll:</span> Zoom in/out</p>
+                <p><span className="text-slate-300">Drag:</span> Pan view</p>
+                <p><span className="text-slate-300">Pinch:</span> Zoom (touch)</p>
+                <p><span className="text-slate-300">Print:</span> A3 landscape</p>
+              </div>
               <div className="mt-3 pt-3 border-t border-slate-700">
                 <p className="text-slate-500 text-xs">
-                  Files: <code className="text-cyan-400">docs/pfd.mmd</code>, <code className="text-cyan-400">docs/pfd.graph.json</code>
+                  DWG: <code className="text-cyan-400">CWY-KAR-PFD-001</code>
                 </p>
               </div>
             </div>
