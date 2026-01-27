@@ -161,20 +161,49 @@ const STREAM_TYPES = [
 // Track render ID globally
 let renderCounter = 0;
 
-// Print styles for A3 landscape
+// Print styles for A3 landscape (420mm x 297mm)
 const getPrintStyles = () => `
   @media print {
-    @page { size: A3 landscape; margin: 8mm; }
-    body * { visibility: hidden; }
-    #print-container, #print-container * { visibility: visible; }
-    #print-container {
-      position: absolute; left: 0; top: 0;
-      width: 410mm; height: 287mm;
+    @page {
+      size: A3 landscape;
+      margin: 0;
+    }
+
+    html, body {
+      width: 420mm;
+      height: 297mm;
+      margin: 0;
+      padding: 0;
+    }
+
+    body * {
+      visibility: hidden;
+    }
+
+    #print-area, #print-area * {
+      visibility: visible !important;
+    }
+
+    #print-area {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 420mm;
+      height: 297mm;
       background: white !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      color-adjust: exact;
     }
-    .no-print { display: none !important; }
+
+    #print-area svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .no-print {
+      display: none !important;
+    }
   }
 `;
 
@@ -284,14 +313,55 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
     }
   }, []);
 
-  // Export SVG
+  // Export SVG with proper dimensions for A3 landscape
   const handleExportSVG = useCallback(() => {
     if (!svgContent) return;
-    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+
+    // Parse the SVG to get dimensions
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+    const svgEl = doc.querySelector('svg');
+
+    if (svgEl) {
+      // Get current dimensions or estimate
+      const width = svgEl.getAttribute('width') || '1200';
+      const height = svgEl.getAttribute('height') || '800';
+      const numWidth = parseFloat(width);
+      const numHeight = parseFloat(height);
+
+      // Set A3 landscape dimensions (420mm x 297mm) with proper viewBox
+      svgEl.setAttribute('width', '420mm');
+      svgEl.setAttribute('height', '297mm');
+      svgEl.setAttribute('viewBox', `0 0 ${numWidth} ${numHeight}`);
+      svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+      // Add white background rect
+      const bgRect = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgRect.setAttribute('width', '100%');
+      bgRect.setAttribute('height', '100%');
+      bgRect.setAttribute('fill', 'white');
+      svgEl.insertBefore(bgRect, svgEl.firstChild);
+
+      // Add title block info as text
+      const titleGroup = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
+      titleGroup.setAttribute('transform', `translate(10, ${numHeight - 60})`);
+      titleGroup.innerHTML = `
+        <rect x="0" y="0" width="${numWidth - 20}" height="50" fill="none" stroke="#000" stroke-width="2"/>
+        <text x="10" y="20" font-family="Arial" font-size="12" font-weight="bold">CWY-KAR-PFD-001 Rev B</text>
+        <text x="10" y="35" font-family="Arial" font-size="10">KARRATHA WATER TREATMENT PLANT - PROCESS FLOW DIAGRAM</text>
+        <text x="${numWidth - 150}" y="20" font-family="Arial" font-size="10">DATE: ${new Date().toLocaleDateString('en-AU')}</text>
+        <text x="${numWidth - 150}" y="35" font-family="Arial" font-size="10">SCALE: NTS | SHEET: 1 OF 1</text>
+      `;
+      svgEl.appendChild(titleGroup);
+    }
+
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(doc);
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'CWY-KAR-PFD-001.svg';
+    a.download = 'CWY-KAR-PFD-001-RevB.svg';
     a.click();
     URL.revokeObjectURL(url);
   }, [svgContent]);
@@ -380,66 +450,132 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* Print Preview */}
+      {/* Print Area - A3 Landscape (420mm x 297mm) */}
       {showPrintPreview && (
-        <div id="print-container" className="fixed inset-0 bg-white z-[9999] p-2">
-          <div className="w-full h-full border-2 border-black flex flex-col">
-            <div className="flex-1 p-4 bg-slate-50 overflow-hidden flex items-center justify-center">
-              <div
-                className="max-w-full max-h-full"
-                dangerouslySetInnerHTML={svgContent ? {
-                  __html: svgContent
-                    .replace(/fill="transparent"/g, 'fill="none"')
-                    .replace(/background[^;]*;/g, '')
-                } : undefined}
-              />
+        <div
+          id="print-area"
+          style={{
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            width: '420mm',
+            height: '297mm',
+            backgroundColor: 'white',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '8mm',
+            boxSizing: 'border-box',
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          {/* Drawing Area */}
+          <div
+            style={{
+              flex: 1,
+              border: '2px solid black',
+              borderBottom: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10mm',
+              overflow: 'hidden',
+              backgroundColor: '#fafafa',
+            }}
+          >
+            <div
+              style={{ maxWidth: '100%', maxHeight: '100%' }}
+              dangerouslySetInnerHTML={svgContent ? {
+                __html: svgContent
+                  .replace(/fill="transparent"/g, 'fill="white"')
+                  .replace(/rgba\(30,41,59,0\.3\)/g, '#f0f0f0')
+                  .replace(/rgba\(15,23,42,0\.9\)/g, '#ffffff')
+                  .replace(/#f1f5f9/g, '#1a1a1a')
+                  .replace(/#e2e8f0/g, '#1a1a1a')
+                  .replace(/#94a3b8/g, '#444444')
+              } : undefined}
+            />
+          </div>
+
+          {/* CWY Title Block */}
+          <div style={{ border: '2px solid black', backgroundColor: 'white' }}>
+            {/* Main Title Row */}
+            <div style={{ display: 'flex', borderBottom: '1px solid black' }}>
+              {/* Company Logo Section */}
+              <div style={{
+                width: '50mm',
+                borderRight: '2px solid black',
+                padding: '3mm',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <div style={{ fontSize: '24pt', fontWeight: 'bold' }}>CWY</div>
+                <div style={{ fontSize: '8pt', fontWeight: '600' }}>WATER SOLUTIONS</div>
+                <div style={{ fontSize: '6pt', color: '#666', marginTop: '2mm' }}>ABN: XX XXX XXX XXX</div>
+              </div>
+
+              {/* Title Section */}
+              <div style={{ flex: 1, borderRight: '2px solid black' }}>
+                <div style={{ borderBottom: '1px solid black', padding: '3mm', textAlign: 'center' }}>
+                  <div style={{ fontSize: '14pt', fontWeight: 'bold' }}>KARRATHA WATER TREATMENT PLANT</div>
+                  <div style={{ fontSize: '11pt', fontWeight: '600' }}>PROCESS FLOW DIAGRAM - CANONICAL</div>
+                </div>
+                <div style={{ display: 'flex', fontSize: '8pt' }}>
+                  <div style={{ flex: 1, borderRight: '1px solid black', padding: '2mm' }}>
+                    <b>PROJECT:</b> Karratha WTP Oily Water Treatment
+                  </div>
+                  <div style={{ flex: 1, borderRight: '1px solid black', padding: '2mm' }}>
+                    <b>CLIENT:</b> Rio Tinto Iron Ore
+                  </div>
+                  <div style={{ flex: 1, padding: '2mm' }}>
+                    <b>LOCATION:</b> Karratha, Western Australia
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawing Info Section */}
+              <div style={{ width: '60mm' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '8pt' }}>
+                  <div style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '1.5mm', fontWeight: 'bold' }}>DWG NO:</div>
+                  <div style={{ borderBottom: '1px solid black', padding: '1.5mm', fontFamily: 'monospace' }}>CWY-KAR-PFD-001</div>
+                  <div style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '1.5mm', fontWeight: 'bold' }}>REV:</div>
+                  <div style={{ borderBottom: '1px solid black', padding: '1.5mm', fontFamily: 'monospace' }}>B</div>
+                  <div style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '1.5mm', fontWeight: 'bold' }}>DATE:</div>
+                  <div style={{ borderBottom: '1px solid black', padding: '1.5mm', fontFamily: 'monospace' }}>{currentDate}</div>
+                  <div style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '1.5mm', fontWeight: 'bold' }}>SCALE:</div>
+                  <div style={{ borderBottom: '1px solid black', padding: '1.5mm', fontFamily: 'monospace' }}>NTS</div>
+                  <div style={{ borderRight: '1px solid black', padding: '1.5mm', fontWeight: 'bold' }}>SHEET:</div>
+                  <div style={{ padding: '1.5mm', fontFamily: 'monospace' }}>1 OF 1</div>
+                </div>
+              </div>
             </div>
-            <div className="border-t-2 border-black text-black">
-              <div className="flex">
-                <div className="w-56 border-r-2 border-black p-2 text-center">
-                  <div className="font-bold text-xl">CWY</div>
-                  <div className="text-xs font-semibold">WATER SOLUTIONS</div>
-                </div>
-                <div className="flex-1 border-r-2 border-black">
-                  <div className="border-b border-black p-2 text-center">
-                    <div className="font-bold text-lg">KARRATHA WATER TREATMENT PLANT</div>
-                    <div className="font-semibold">PROCESS FLOW DIAGRAM - CANONICAL</div>
-                  </div>
-                  <div className="flex text-xs">
-                    <div className="flex-1 border-r border-black p-1"><b>PROJECT:</b> Karratha WTP</div>
-                    <div className="flex-1 border-r border-black p-1"><b>CLIENT:</b> Rio Tinto</div>
-                    <div className="flex-1 p-1"><b>LOCATION:</b> Karratha, WA</div>
-                  </div>
-                </div>
-                <div className="w-64 text-xs">
-                  <div className="grid grid-cols-2">
-                    <div className="border-b border-r border-black p-1 font-bold">DWG NO:</div>
-                    <div className="border-b border-black p-1 font-mono">CWY-KAR-PFD-001</div>
-                    <div className="border-b border-r border-black p-1 font-bold">REV:</div>
-                    <div className="border-b border-black p-1 font-mono">B</div>
-                    <div className="border-b border-r border-black p-1 font-bold">DATE:</div>
-                    <div className="border-b border-black p-1 font-mono">{currentDate}</div>
-                    <div className="border-b border-r border-black p-1 font-bold">SCALE:</div>
-                    <div className="border-b border-black p-1 font-mono">NTS</div>
-                    <div className="border-r border-black p-1 font-bold">SHEET:</div>
-                    <div className="p-1 font-mono">1 OF 1</div>
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-black flex text-xs">
-                <div className="w-12 border-r border-black p-1 font-bold text-center bg-gray-100">REV</div>
-                <div className="w-20 border-r border-black p-1 font-bold text-center bg-gray-100">DATE</div>
-                <div className="flex-1 border-r border-black p-1 font-bold bg-gray-100">DESCRIPTION</div>
-                <div className="w-16 border-r border-black p-1 font-bold text-center bg-gray-100">BY</div>
-                <div className="w-16 p-1 font-bold text-center bg-gray-100">CHK</div>
-              </div>
-              <div className="flex text-xs">
-                <div className="w-12 border-r border-black p-1 text-center">B</div>
-                <div className="w-20 border-r border-black p-1 text-center">{currentDate}</div>
-                <div className="flex-1 border-r border-black p-1">REORGANIZED LAYOUT WITH BOLD STYLING</div>
-                <div className="w-16 border-r border-black p-1 text-center">AI</div>
-                <div className="w-16 p-1 text-center">-</div>
-              </div>
+
+            {/* Revision History */}
+            <div style={{ display: 'flex', fontSize: '7pt', borderTop: '1px solid black' }}>
+              <div style={{ width: '10mm', borderRight: '1px solid black', padding: '1mm', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5' }}>REV</div>
+              <div style={{ width: '18mm', borderRight: '1px solid black', padding: '1mm', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5' }}>DATE</div>
+              <div style={{ flex: 1, borderRight: '1px solid black', padding: '1mm', fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>DESCRIPTION</div>
+              <div style={{ width: '15mm', borderRight: '1px solid black', padding: '1mm', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5' }}>DRAWN</div>
+              <div style={{ width: '15mm', borderRight: '1px solid black', padding: '1mm', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5' }}>CHK</div>
+              <div style={{ width: '15mm', padding: '1mm', fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5' }}>APPR</div>
+            </div>
+            <div style={{ display: 'flex', fontSize: '7pt' }}>
+              <div style={{ width: '10mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>B</div>
+              <div style={{ width: '18mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>{currentDate}</div>
+              <div style={{ flex: 1, borderRight: '1px solid black', padding: '1mm' }}>REORGANIZED LAYOUT - BOLD STYLING - FLOW FRACTIONS</div>
+              <div style={{ width: '15mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>AI</div>
+              <div style={{ width: '15mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>-</div>
+              <div style={{ width: '15mm', padding: '1mm', textAlign: 'center' }}>-</div>
+            </div>
+            <div style={{ display: 'flex', fontSize: '7pt' }}>
+              <div style={{ width: '10mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>A</div>
+              <div style={{ width: '18mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>27/01/2026</div>
+              <div style={{ flex: 1, borderRight: '1px solid black', padding: '1mm' }}>ISSUED FOR REVIEW - CANONICAL PFD</div>
+              <div style={{ width: '15mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>AI</div>
+              <div style={{ width: '15mm', borderRight: '1px solid black', padding: '1mm', textAlign: 'center' }}>-</div>
+              <div style={{ width: '15mm', padding: '1mm', textAlign: 'center' }}>-</div>
             </div>
           </div>
         </div>
