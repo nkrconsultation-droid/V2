@@ -121,12 +121,18 @@ const EDGE_TYPES = [
   { name: 'Utility', style: 'dashed', color: '#ec4899' },
 ];
 
+// Track render ID globally to avoid conflicts
+let renderCounter = 0;
+
 export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isRendered, setIsRendered] = useState(false);
+  const [svgContent, setSvgContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const renderIdRef = useRef<string>(`pfd-${++renderCounter}-${Date.now()}`);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Initialize mermaid with dark theme
     mermaid.initialize({
       startOnLoad: false,
@@ -157,21 +163,31 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
     });
 
     const renderDiagram = async () => {
-      if (containerRef.current) {
-        try {
-          containerRef.current.innerHTML = '';
-          const { svg } = await mermaid.render('pfd-diagram', PFD_DIAGRAM);
-          containerRef.current.innerHTML = svg;
-          setIsRendered(true);
+      try {
+        // Use unique ID to avoid conflicts on re-render
+        const { svg } = await mermaid.render(renderIdRef.current, PFD_DIAGRAM);
+        if (isMounted) {
+          setSvgContent(svg);
           setError(null);
-        } catch (err) {
-          console.error('Mermaid render error:', err);
+        }
+      } catch (err) {
+        console.error('Mermaid render error:', err);
+        if (isMounted) {
           setError('Failed to render diagram');
         }
       }
     };
 
     renderDiagram();
+
+    return () => {
+      isMounted = false;
+      // Cleanup: remove the mermaid-generated element if it exists
+      const element = document.getElementById(renderIdRef.current);
+      if (element) {
+        element.remove();
+      }
+    };
   }, []);
 
   return (
@@ -234,7 +250,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <p className="text-xl mb-2">Render Error</p>
                   <p className="text-sm">{error}</p>
                 </div>
-              ) : !isRendered ? (
+              ) : !svgContent ? (
                 <div className="text-slate-400 text-center py-8">
                   <div className="animate-spin w-8 h-8 border-2 border-slate-600 border-t-cyan-500 rounded-full mx-auto mb-4" />
                   <p>Rendering diagram...</p>
@@ -244,6 +260,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                 ref={containerRef}
                 className="mermaid-container flex justify-center"
                 style={{ minHeight: '500px' }}
+                dangerouslySetInnerHTML={svgContent ? { __html: svgContent } : undefined}
               />
             </div>
           </div>
