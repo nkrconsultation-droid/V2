@@ -12,7 +12,7 @@ interface PFDViewerProps {
   onBackToHome: () => void;
 }
 
-// Canonical PFD Mermaid diagram - matches docs/pfd.mmd
+// Canonical PFD Mermaid diagram with flow fractions - matches docs/pfd.mmd
 const PFD_DIAGRAM = `
 flowchart LR
 
@@ -67,37 +67,37 @@ flowchart LR
         N19["N19: CHEMICALS:<br/>PHOS ACID, NITROGEN,<br/>CIP CHEM"]
     end
 
-    %% MAINLINE EDGES
-    N01 -->|"influent"| N02
-    N02 -->|"influent"| N03
-    N03 -->|"screened influent"| N04
-    N04 -->|"conditioned feed"| N05
-    N05 -->|"filtered feed"| N06
+    %% MAINLINE EDGES (100% influent flow)
+    N01 -->|"100%<br/>influent"| N02
+    N02 -->|"100%<br/>influent"| N03
+    N03 -->|"99%<br/>screened"| N04
+    N04 -->|"99%<br/>conditioned"| N05
+    N05 -->|"98%<br/>filtered"| N06
 
-    %% WATER EDGES
-    N06 -->|"water phase"| N07
-    N07 -->|"to DAF"| N08
-    N08 -->|"clarified water"| N09
-    N09 -->|"bio feed"| N10
-    N10 -->|"treated water to ponds"| N11
+    %% WATER EDGES (~85% of feed becomes water phase)
+    N06 -->|"83%<br/>water phase"| N07
+    N07 -->|"83%<br/>to DAF"| N08
+    N08 -->|"81%<br/>clarified"| N09
+    N09 -->|"81%<br/>bio feed"| N10
+    N10 -->|"80%<br/>treated"| N11
 
-    %% OIL EDGES
-    N06 -->|"oil"| N12
-    N12 -->|"oil out"| N13
+    %% OIL EDGES (~10% oil recovery)
+    N06 -->|"10%<br/>oil"| N12
+    N12 -->|"10%<br/>oil out"| N13
 
-    %% SOLIDS EDGES
-    N06 -->|"solids"| N14
-    N14 -->|"solids out"| N15
+    %% SOLIDS EDGES (~5% solids)
+    N06 -->|"5%<br/>solids"| N14
+    N14 -->|"5%<br/>solids out"| N15
 
-    %% SLUDGE/FLUSH EDGES
-    N06 -->|"FLUSH OUT"| N16
-    N08 -->|"DAF sludge/float"| N16
-    N10 -->|"WASTE BIOLOGY"| N06
+    %% SLUDGE/FLUSH EDGES (recycle/waste streams)
+    N06 -->|"2%<br/>flush"| N16
+    N08 -->|"2%<br/>DAF float"| N16
+    N10 -->|"1%<br/>WAS"| N06
 
     %% UTILITY EDGES (dashed)
     N17 -.->|"heat"| N04
     N18 -.->|"chemicals"| N04
-    N19 -.->|"bio nutrients"| N10
+    N19 -.->|"nutrients"| N10
 `;
 
 // Node metadata for legend
@@ -128,7 +128,13 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
   const renderIdRef = useRef<string>(`pfd-${++renderCounter}-${Date.now()}`);
+
+  const handleZoomIn = () => setZoom(z => Math.min(z + 0.25, 3));
+  const handleZoomOut = () => setZoom(z => Math.max(z - 0.25, 0.25));
+  const handleZoomReset = () => setZoom(1);
+  const handleFitToScreen = () => setZoom(0.5);
 
   useEffect(() => {
     let isMounted = true;
@@ -235,16 +241,55 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
       <main className="p-6">
         <div className="flex gap-6">
           {/* Diagram Container */}
-          <div className="flex-1 bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+          <div className="flex-1 bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
             <div className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
               <h2 className="text-white font-semibold">Mermaid Flowchart</h2>
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <span>Scroll to pan</span>
-                <span className="text-slate-600">|</span>
-                <span>LR Layout</span>
+              <div className="flex items-center gap-4">
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-2 bg-slate-700/50 rounded-lg p-1">
+                  <button
+                    onClick={handleZoomOut}
+                    className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors"
+                    title="Zoom Out"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <span className="text-slate-300 text-sm font-mono w-14 text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button
+                    onClick={handleZoomIn}
+                    className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors"
+                    title="Zoom In"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                  <div className="w-px h-5 bg-slate-600" />
+                  <button
+                    onClick={handleZoomReset}
+                    className="px-2 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors text-xs"
+                    title="Reset Zoom"
+                  >
+                    100%
+                  </button>
+                  <button
+                    onClick={handleFitToScreen}
+                    className="px-2 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 rounded transition-colors text-xs"
+                    title="Fit to Screen"
+                  >
+                    Fit
+                  </button>
+                </div>
+                <div className="text-sm text-slate-400">
+                  <span>Scroll to pan</span>
+                </div>
               </div>
             </div>
-            <div className="p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+            <div className="flex-1 p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
               {error ? (
                 <div className="text-red-400 text-center py-8">
                   <p className="text-xl mb-2">Render Error</p>
@@ -258,8 +303,13 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               ) : null}
               <div
                 ref={containerRef}
-                className="mermaid-container flex justify-center"
-                style={{ minHeight: '500px' }}
+                className="mermaid-container"
+                style={{
+                  minHeight: '500px',
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'top left',
+                  transition: 'transform 0.2s ease-out',
+                }}
                 dangerouslySetInnerHTML={svgContent ? { __html: svgContent } : undefined}
               />
             </div>
@@ -312,12 +362,46 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               </div>
             </div>
 
+            {/* Flow Balance */}
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+              <div className="bg-slate-800/80 border-b border-slate-700 px-4 py-3">
+                <h3 className="text-white font-semibold">Flow Balance (Typical)</h3>
+              </div>
+              <div className="p-3 space-y-2 text-sm">
+                <div className="flex justify-between text-slate-300">
+                  <span>Influent Feed</span>
+                  <span className="font-mono text-cyan-400">100%</span>
+                </div>
+                <div className="h-px bg-slate-700 my-2" />
+                <div className="flex justify-between text-slate-400">
+                  <span>Water to Ponds</span>
+                  <span className="font-mono text-blue-400">~80%</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Oil Recovered</span>
+                  <span className="font-mono text-amber-400">~10%</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Solids Out</span>
+                  <span className="font-mono text-slate-400">~5%</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Sludge/Flush</span>
+                  <span className="font-mono text-gray-400">~5%</span>
+                </div>
+                <div className="h-px bg-slate-700 my-2" />
+                <div className="flex justify-between text-slate-300">
+                  <span>Total</span>
+                  <span className="font-mono text-emerald-400">100%</span>
+                </div>
+              </div>
+            </div>
+
             {/* Info Box */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
               <h3 className="text-white font-semibold mb-2">About This Diagram</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                This is the canonical Process Flow Diagram for the Karratha Water Treatment Plant.
-                It represents the source of truth for process topology.
+                Canonical PFD with typical flow fractions. Actual values vary with feed composition.
               </p>
               <div className="mt-3 pt-3 border-t border-slate-700">
                 <p className="text-slate-500 text-xs">
