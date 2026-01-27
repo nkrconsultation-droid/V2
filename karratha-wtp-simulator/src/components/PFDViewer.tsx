@@ -21,116 +21,132 @@ interface PFDViewerProps {
   onBackToHome: () => void;
 }
 
-// Reorganized PFD with cleaner layout - TB (top-bottom) with logical grouping
+// Improved BFD with enhanced visual clarity
+// - 50% larger scale, generous padding, increased spacing
+// - Bold 11-12pt sans-serif fonts with high contrast
+// - 2-3px flow lines with clear arrows
+// - Light backgrounds (15-20% opacity) with distinct stream colors
 const PFD_DIAGRAM = `
 flowchart TB
     %% ============================================
-    %% INFLUENT SECTION (Top)
+    %% INFLUENT SECTION
     %% ============================================
-    subgraph INLET[" INFLUENT RECEIVING "]
+    subgraph INLET["&nbsp;&nbsp;&nbsp; INFLUENT RECEIVING &nbsp;&nbsp;&nbsp;"]
         direction LR
-        N01(["N01: TANKER"])
-        N02["N02: TIP LOCATION"]
+        N01(["&nbsp;&nbsp; N01 &nbsp;&nbsp;<br/><b>TANKER</b>&nbsp;&nbsp;"])
+        N02["&nbsp;&nbsp; N02 &nbsp;&nbsp;<br/><b>TIP LOCATION</b>&nbsp;&nbsp;"]
     end
 
     %% ============================================
     %% PRETREATMENT SECTION
     %% ============================================
-    subgraph PRETREAT[" PRETREATMENT "]
+    subgraph PRETREAT["&nbsp;&nbsp;&nbsp; PRETREATMENT &nbsp;&nbsp;&nbsp;"]
         direction LR
-        N03["N03: COARSE FILTER\\n(SCREEN/TROMMEL)"]
-        N04["N04: PRETREATMENT\\nTANKS (X4)"]
-        N05["N05: FINE FILTERS\\n(TROMMEL/SIMILAR)"]
+        N03["&nbsp; N03 &nbsp;<br/><b>COARSE FILTER</b><br/><i>Screen/Trommel</i>&nbsp;"]
+        N04["&nbsp; N04 &nbsp;<br/><b>PRETREATMENT</b><br/><b>TANKS (×4)</b>&nbsp;"]
+        N05["&nbsp; N05 &nbsp;<br/><b>FINE FILTERS</b><br/><i>Trommel/Similar</i>&nbsp;"]
     end
 
     %% ============================================
-    %% UTILITIES (Side)
+    %% UTILITIES SECTION
     %% ============================================
-    subgraph UTIL[" UTILITIES "]
+    subgraph UTIL["&nbsp;&nbsp;&nbsp; UTILITIES &nbsp;&nbsp;&nbsp;"]
         direction TB
-        N17{{"N17: DIESEL\\nBOILER"}}
-        N18{{"N18: CHEMICALS\\nPOLYMER, HCL,\\nNAOH, Na2S,\\nFeCl, DEMULSIFIER"}}
-        N19{{"N19: CHEMICALS\\nPHOS ACID,\\nNITROGEN, CIP"}}
+        N17{{"&nbsp; N17 &nbsp;<br/><b>DIESEL</b><br/><b>BOILER</b>&nbsp;"}}
+        N18{{"&nbsp; N18 &nbsp;<br/><b>CHEMICALS</b><br/><i>Polymer, HCl</i><br/><i>NaOH, Na₂S</i><br/><i>FeCl, Demulsifier</i>&nbsp;"}}
+        N19{{"&nbsp; N19 &nbsp;<br/><b>CHEMICALS</b><br/><i>Phos Acid</i><br/><i>Nitrogen, CIP</i>&nbsp;"}}
     end
 
     %% ============================================
-    %% SEPARATION SECTION (Center)
+    %% SEPARATION SECTION
     %% ============================================
-    subgraph SEP[" THREE-PHASE SEPARATION "]
-        N06["N06: DECANTER\\nCENTRIFUGE"]
+    subgraph SEP["&nbsp;&nbsp;&nbsp; THREE-PHASE SEPARATION &nbsp;&nbsp;&nbsp;"]
+        N06["&nbsp;&nbsp; N06 &nbsp;&nbsp;<br/><b>DECANTER</b><br/><b>CENTRIFUGE</b>&nbsp;&nbsp;"]
     end
 
     %% ============================================
-    %% OUTPUT STREAMS (Bottom - Three Columns)
+    %% SOLIDS HANDLING
     %% ============================================
-    subgraph SOLIDS[" SOLIDS HANDLING "]
+    subgraph SOLIDS["&nbsp;&nbsp;&nbsp; SOLIDS HANDLING &nbsp;&nbsp;&nbsp;"]
         direction TB
-        N14[("N14: SOLIDS\\nSTORAGE")]
-        N15(["N15: SOLIDS OUT"])
-        N16[("N16: SLUDGE\\nSTORAGE")]
+        N14[("&nbsp; N14 &nbsp;<br/><b>SOLIDS</b><br/><b>STORAGE</b>&nbsp;")]
+        N15(["&nbsp; N15 &nbsp;<br/><b>SOLIDS OUT</b>&nbsp;"])
+        N16[("&nbsp; N16 &nbsp;<br/><b>SLUDGE</b><br/><b>STORAGE</b>&nbsp;")]
     end
 
-    subgraph OIL[" OIL RECOVERY "]
+    %% ============================================
+    %% OIL RECOVERY
+    %% ============================================
+    subgraph OIL["&nbsp;&nbsp;&nbsp; OIL RECOVERY &nbsp;&nbsp;&nbsp;"]
         direction TB
-        N12[("N12: OIL STORAGE\\nTANKS (X2)")]
-        N13(["N13: OIL OUT"])
+        N12[("&nbsp; N12 &nbsp;<br/><b>OIL STORAGE</b><br/><b>TANKS (×2)</b>&nbsp;")]
+        N13(["&nbsp; N13 &nbsp;<br/><b>OIL OUT</b>&nbsp;"])
     end
 
-    subgraph WATER[" WATER TREATMENT "]
+    %% ============================================
+    %% WATER TREATMENT
+    %% ============================================
+    subgraph WATER["&nbsp;&nbsp;&nbsp; WATER TREATMENT &nbsp;&nbsp;&nbsp;"]
         direction TB
-        N07[("N07: WATER\\nSTORAGE")]
-        N08["N08: DAF"]
-        N09[("N09: POST DAF\\nBIO BUFFER")]
-        N10["N10: MBR\\nAEROBIC BIO"]
-        N11(["N11: KTA PONDS"])
+        N07[("&nbsp; N07 &nbsp;<br/><b>WATER</b><br/><b>STORAGE</b>&nbsp;")]
+        N08["&nbsp; N08 &nbsp;<br/><b>DAF</b>&nbsp;"]
+        N09[("&nbsp; N09 &nbsp;<br/><b>POST DAF</b><br/><b>BIO BUFFER</b>&nbsp;")]
+        N10["&nbsp; N10 &nbsp;<br/><b>MBR</b><br/><b>AEROBIC BIO</b>&nbsp;"]
+        N11(["&nbsp; N11 &nbsp;<br/><b>KTA PONDS</b>&nbsp;"])
     end
 
     %% ============================================
-    %% MAIN FLOW CONNECTIONS
+    %% MAIN FLOW CONNECTIONS (thick blue arrows)
     %% ============================================
-    N01 ==>|"100%"| N02
-    N02 ==>|"100%"| N03
-    N03 ==>|"99%"| N04
-    N04 ==>|"99%"| N05
-    N05 ==>|"98%"| N06
+    N01 ==>|"<b>100%</b>"| N02
+    N02 ==>|"<b>100%</b>"| N03
+    N03 ==>|"<b>99%</b>"| N04
+    N04 ==>|"<b>99%</b>"| N05
+    N05 ==>|"<b>98%</b>"| N06
 
     %% ============================================
-    %% SEPARATION OUTPUTS
+    %% WATER STREAM (blue arrows)
     %% ============================================
-    N06 -->|"5% solids"| N14
-    N14 -->|"5%"| N15
-
-    N06 ==>|"10% oil"| N12
-    N12 ==>|"10%"| N13
-
-    N06 ==>|"83% water"| N07
-    N07 ==>|"83%"| N08
-    N08 ==>|"81%"| N09
-    N09 ==>|"81%"| N10
-    N10 ==>|"80%"| N11
+    N06 ==>|"<b>83%</b><br/>water"| N07
+    N07 ==>|"<b>83%</b>"| N08
+    N08 ==>|"<b>81%</b>"| N09
+    N09 ==>|"<b>81%</b>"| N10
+    N10 ==>|"<b>80%</b>"| N11
 
     %% ============================================
-    %% SLUDGE/RECYCLE STREAMS
+    %% OIL STREAM (amber arrows)
     %% ============================================
-    N06 -.->|"2% flush"| N16
-    N08 -.->|"2% float"| N16
-    N10 -.->|"1% WAS"| N06
+    N06 -->|"<b>10%</b><br/>oil"| N12
+    N12 -->|"<b>10%</b>"| N13
 
     %% ============================================
-    %% UTILITY CONNECTIONS
+    %% SOLIDS STREAM (gray arrows)
+    %% ============================================
+    N06 -->|"<b>5%</b><br/>solids"| N14
+    N14 -->|"<b>5%</b>"| N15
+
+    %% ============================================
+    %% SLUDGE/RECYCLE (dashed gray)
+    %% ============================================
+    N06 -.->|"<i>2%</i><br/>flush"| N16
+    N08 -.->|"<i>2%</i><br/>float"| N16
+    N10 -.->|"<i>1%</i><br/>WAS"| N06
+
+    %% ============================================
+    %% UTILITY CONNECTIONS (dashed purple)
     %% ============================================
     N17 -.->|"heat"| N04
     N18 -.->|"chem"| N04
     N19 -.->|"nutrients"| N10
 
     %% ============================================
-    %% STYLING
+    %% NODE STYLING - Light fills with bold borders
     %% ============================================
-    classDef interface fill:none,stroke:#f97316,stroke-width:4px,color:#f97316,font-weight:bold
-    classDef process fill:none,stroke:#0ea5e9,stroke-width:3px,color:#e2e8f0,font-weight:bold
-    classDef storage fill:none,stroke:#10b981,stroke-width:3px,color:#e2e8f0,font-weight:bold
-    classDef utility fill:none,stroke:#a855f7,stroke-width:2px,stroke-dasharray:5 5,color:#a855f7,font-weight:bold
-    classDef separation fill:none,stroke:#f59e0b,stroke-width:4px,color:#fbbf24,font-weight:bold
+    classDef interface fill:#fef3e2,stroke:#ea580c,stroke-width:3px,color:#9a3412,font-weight:bold,font-size:12px
+    classDef process fill:#e0f2fe,stroke:#0284c7,stroke-width:3px,color:#075985,font-weight:bold,font-size:12px
+    classDef storage fill:#d1fae5,stroke:#059669,stroke-width:3px,color:#065f46,font-weight:bold,font-size:12px
+    classDef utility fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,stroke-dasharray:5 5,color:#6b21a8,font-weight:bold,font-size:11px
+    classDef separation fill:#fef9c3,stroke:#ca8a04,stroke-width:4px,color:#854d0e,font-weight:bold,font-size:13px
 
     class N01,N02,N13,N15,N11 interface
     class N03,N04,N05,N08,N10 process
@@ -138,24 +154,32 @@ flowchart TB
     class N17,N18,N19 utility
     class N06 separation
 
-    linkStyle default stroke-width:3px
+    %% Link styling - distinct colors per stream type
+    linkStyle 0,1,2,3,4 stroke:#0284c7,stroke-width:4px
+    linkStyle 5,6,7,8,9 stroke:#0ea5e9,stroke-width:3px
+    linkStyle 10,11 stroke:#d97706,stroke-width:3px
+    linkStyle 12,13 stroke:#64748b,stroke-width:3px
+    linkStyle 14,15,16 stroke:#6b7280,stroke-width:2px,stroke-dasharray:8 4
+    linkStyle 17,18,19 stroke:#9333ea,stroke-width:2px,stroke-dasharray:6 3
 `;
 
-// Node metadata for legend
+// Node metadata for legend - improved colors with light fills
 const NODE_GROUPS = [
-  { name: 'Interface (In/Out)', color: '#f97316', count: 5, shape: 'stadium' },
-  { name: 'Process Units', color: '#0ea5e9', count: 5, shape: 'rect' },
-  { name: 'Storage Tanks', color: '#10b981', count: 5, shape: 'cylinder' },
-  { name: 'Utilities', color: '#a855f7', count: 3, shape: 'hexagon' },
-  { name: 'Separation', color: '#f59e0b', count: 1, shape: 'rect-bold' },
+  { name: 'Interface (In/Out)', color: '#ea580c', fill: '#fef3e2', count: 5 },
+  { name: 'Process Units', color: '#0284c7', fill: '#e0f2fe', count: 5 },
+  { name: 'Storage Tanks', color: '#059669', fill: '#d1fae5', count: 5 },
+  { name: 'Utilities', color: '#9333ea', fill: '#f3e8ff', count: 3 },
+  { name: 'Separation', color: '#ca8a04', fill: '#fef9c3', count: 1 },
 ];
 
+// Stream types with distinct colors
 const STREAM_TYPES = [
-  { name: 'Main Process', style: 'thick', color: '#94a3b8' },
-  { name: 'Oil Stream', style: 'thick', color: '#f59e0b' },
-  { name: 'Water Stream', style: 'thick', color: '#0ea5e9' },
-  { name: 'Solids/Sludge', style: 'dashed', color: '#64748b' },
-  { name: 'Utilities', style: 'dashed', color: '#a855f7' },
+  { name: 'Main Flow', style: 'thick', color: '#0284c7', width: 4 },
+  { name: 'Water Stream', style: 'thick', color: '#0ea5e9', width: 3 },
+  { name: 'Oil Stream', style: 'thick', color: '#d97706', width: 3 },
+  { name: 'Solids Stream', style: 'solid', color: '#64748b', width: 3 },
+  { name: 'Recycle/Sludge', style: 'dashed', color: '#6b7280', width: 2 },
+  { name: 'Utility Lines', style: 'dashed', color: '#9333ea', width: 2 },
 ];
 
 // Track render ID globally
@@ -381,31 +405,44 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: 'base',
       themeVariables: {
-        primaryColor: 'transparent',
-        primaryTextColor: '#f1f5f9',
+        // High contrast text colors
+        primaryTextColor: '#1e293b',
+        secondaryTextColor: '#334155',
+        tertiaryTextColor: '#475569',
+        // Node styling
+        primaryColor: '#f8fafc',
         primaryBorderColor: '#64748b',
-        lineColor: '#94a3b8',
-        secondaryColor: 'transparent',
-        tertiaryColor: 'transparent',
-        background: 'transparent',
-        mainBkg: 'transparent',
-        nodeBorder: '#64748b',
-        clusterBkg: 'rgba(30,41,59,0.3)',
-        clusterBorder: '#475569',
-        titleColor: '#f1f5f9',
-        edgeLabelBackground: 'rgba(15,23,42,0.9)',
-        fontFamily: 'ui-monospace, monospace',
+        secondaryColor: '#f1f5f9',
+        tertiaryColor: '#e2e8f0',
+        // Backgrounds - light with subtle opacity
+        background: '#ffffff',
+        mainBkg: '#f8fafc',
+        nodeBorder: '#475569',
+        // Subgraph styling - 15-20% opacity backgrounds
+        clusterBkg: 'rgba(100,116,139,0.12)',
+        clusterBorder: '#64748b',
+        // Text and labels
+        titleColor: '#0f172a',
+        edgeLabelBackground: 'rgba(255,255,255,0.95)',
+        // Bold sans-serif font
+        fontFamily: 'Arial, Helvetica, sans-serif',
         fontSize: '14px',
+        // Line colors
+        lineColor: '#475569',
       },
       flowchart: {
         htmlLabels: true,
         curve: 'basis',
-        nodeSpacing: 60,
-        rankSpacing: 70,
-        padding: 20,
+        // Increased spacing (50% larger)
+        nodeSpacing: 100,
+        rankSpacing: 120,
+        // Generous padding
+        padding: 25,
         useMaxWidth: false,
+        // Wrapping
+        wrappingWidth: 200,
       },
       securityLevel: 'loose',
     });
@@ -701,7 +738,10 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
             <div className="space-y-1.5">
               {NODE_GROUPS.map(g => (
                 <div key={g.name} className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded border-2" style={{ borderColor: g.color }} />
+                  <div
+                    className="w-4 h-4 rounded border-2"
+                    style={{ backgroundColor: g.fill, borderColor: g.color }}
+                  />
                   <span className="text-slate-300 text-xs flex-1">{g.name}</span>
                   <span className="text-slate-500 text-xs">{g.count}</span>
                 </div>
