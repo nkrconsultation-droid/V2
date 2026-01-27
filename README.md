@@ -25,7 +25,7 @@ Version 15 - Delta-Canter 20-843A Three-Phase Tricanter
 # 1. Open PowerShell or Command Prompt
 
 # 2. Navigate to your project
-cd C:\Users\kelto\Documents\GITHUB\V2\karratha-wtp-simulator
+cd C:\Users\kelto\source\repos\nkrconsultation-droid\V2\karratha-wtp-simulator
 
 # 3. Install dependencies (first time only)
 npm install
@@ -38,13 +38,13 @@ Then open **http://localhost:5173** in your browser (Edge, Chrome, etc.)
 
 ### Alternative: Double-Click Launch
 
-From `C:\Users\kelto\Documents\GITHUB\V2`:
+From `C:\Users\kelto\source\repos\nkrconsultation-droid\V2`:
 - **PowerShell**: Right-click `run.ps1` → "Run with PowerShell"
 - **Command Prompt**: Double-click `run.bat`
 
 ## For Visual Studio Code Users
 
-1. Open folder: `C:\Users\kelto\Documents\GITHUB\V2`
+1. Open folder: `C:\Users\kelto\source\repos\nkrconsultation-droid\V2`
 2. Open terminal: `Ctrl+`` ` (backtick) or Terminal → New Terminal
 3. Run:
    ```
@@ -57,7 +57,7 @@ From `C:\Users\kelto\Documents\GITHUB\V2`:
 ## Project Structure
 
 ```
-C:\Users\kelto\Documents\GITHUB\V2\
+C:\Users\kelto\source\repos\nkrconsultation-droid\V2\
 ├── README.md                    # This file
 ├── package.json                 # Root convenience scripts
 ├── run.ps1                      # PowerShell launcher
@@ -130,7 +130,7 @@ C:\Users\kelto\Documents\GITHUB\V2\
 ## Building for Production
 
 ```powershell
-cd C:\Users\kelto\Documents\GITHUB\V2\karratha-wtp-simulator
+cd C:\Users\kelto\source\repos\nkrconsultation-droid\V2\karratha-wtp-simulator
 npm run build
 ```
 
