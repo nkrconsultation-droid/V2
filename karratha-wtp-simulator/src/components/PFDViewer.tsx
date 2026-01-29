@@ -9,6 +9,7 @@
  * - Equipment status synced with process control
  * - Live mass balance from calculated KPIs
  * - Animated flow particles based on real throughput
+ * - Dynamic fit-to-view based on viewport size
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -39,121 +40,169 @@ interface PFDViewerProps {
 // ============================================
 // GRAPH DATA - Process Topology
 // ============================================
-const DEFAULT_GRAPH: { nodes: GraphNode[]; edges: GraphEdge[] } = {
-  nodes: [
-    { id: 'N01', label: 'TANKER', group: 'Influent', type: 'interface' },
-    { id: 'N02', label: 'TIP LOCATION', group: 'Influent', type: 'process' },
-    { id: 'N03', label: 'COARSE FILTER\n(Screen/Trommel)', group: 'Pretreatment', type: 'process' },
-    { id: 'N04', label: 'PRETREATMENT\nTANKS (x4)', group: 'Pretreatment', type: 'storage' },
-    { id: 'N05', label: 'FINE FILTERS\n(Trommel/Similar)', group: 'Pretreatment', type: 'process' },
-    { id: 'N06', label: 'DECANTER\nCENTRIFUGE', group: 'Separation', type: 'process' },
-    { id: 'N07', label: 'WATER\nSTORAGE', group: 'Water', type: 'storage' },
-    { id: 'N08', label: 'DAF', group: 'Water', type: 'process' },
-    { id: 'N09', label: 'POST DAF\nBIO BUFFER', group: 'Water', type: 'storage' },
-    { id: 'N10', label: 'MBR\nAEROBIC BIO', group: 'Bio', type: 'process' },
-    { id: 'N11', label: 'KTA PONDS', group: 'Water', type: 'interface' },
-    { id: 'N12', label: 'OIL STORAGE\nTANKS (x2)', group: 'Oil', type: 'storage' },
-    { id: 'N13', label: 'OIL OUT', group: 'Oil', type: 'interface' },
-    { id: 'N14', label: 'SOLIDS\nSTORAGE', group: 'Solids', type: 'storage' },
-    { id: 'N15', label: 'SOLIDS OUT', group: 'Solids', type: 'interface' },
-    { id: 'N16', label: 'SLUDGE\nSTORAGE', group: 'Solids', type: 'storage' },
-    { id: 'N17', label: 'DIESEL\nBOILER', group: 'Utilities', type: 'utility' },
-    { id: 'N18', label: 'CHEMICALS\nPolymer, HCl, NaOH\nNa2S, FeCl, Demulsifier', group: 'Utilities', type: 'utility' },
-    { id: 'N19', label: 'CHEMICALS\nPhos Acid, N-Source\nCIP', group: 'Utilities', type: 'utility' },
-  ],
-  edges: [
-    { id: 'E01', source: 'N01', target: 'N02', label: 'influent', type: 'mainline' },
-    { id: 'E02', source: 'N02', target: 'N03', label: 'influent', type: 'mainline' },
-    { id: 'E03', source: 'N03', target: 'N04', label: 'screened', type: 'mainline' },
-    { id: 'E04', source: 'N04', target: 'N05', label: 'conditioned', type: 'mainline' },
-    { id: 'E05', source: 'N05', target: 'N06', label: 'filtered', type: 'mainline' },
-    { id: 'E06', source: 'N06', target: 'N07', label: 'water', type: 'water' },
-    { id: 'E07', source: 'N07', target: 'N08', label: 'to DAF', type: 'water' },
-    { id: 'E08', source: 'N08', target: 'N09', label: 'clarified', type: 'water' },
-    { id: 'E09', source: 'N09', target: 'N10', label: 'bio feed', type: 'water' },
-    { id: 'E10', source: 'N10', target: 'N11', label: 'treated', type: 'water' },
-    { id: 'E11', source: 'N06', target: 'N12', label: 'oil', type: 'oil' },
-    { id: 'E12', source: 'N12', target: 'N13', label: 'oil out', type: 'oil' },
-    { id: 'E13', source: 'N06', target: 'N14', label: 'solids', type: 'solids' },
-    { id: 'E14', source: 'N14', target: 'N15', label: 'solids out', type: 'solids' },
-    { id: 'E15', source: 'N06', target: 'N16', label: 'flush', type: 'sludge_flush' },
-    { id: 'E16', source: 'N08', target: 'N16', label: 'DAF float', type: 'sludge_flush' },
-    { id: 'E17', source: 'N10', target: 'N06', label: 'WAS', type: 'sludge_flush' },
-    { id: 'E18', source: 'N17', target: 'N04', label: 'heat', type: 'utility' },
-    { id: 'E19', source: 'N18', target: 'N04', label: 'chem', type: 'utility' },
-    { id: 'E20', source: 'N19', target: 'N10', label: 'nutrients', type: 'utility' },
-  ],
-};
+const NODES: GraphNode[] = [
+  { id: 'N01', label: 'TANKER', group: 'Influent', type: 'interface' },
+  { id: 'N02', label: 'TIP LOCATION', group: 'Influent', type: 'process' },
+  { id: 'N03', label: 'COARSE FILTER\n(Screen/Trommel)', group: 'Pretreatment', type: 'process' },
+  { id: 'N04', label: 'PRETREATMENT\nTANKS (x4)', group: 'Pretreatment', type: 'storage' },
+  { id: 'N05', label: 'FINE FILTERS\n(Trommel/Similar)', group: 'Pretreatment', type: 'process' },
+  { id: 'N06', label: 'DECANTER\nCENTRIFUGE', group: 'Separation', type: 'process' },
+  { id: 'N07', label: 'WATER\nSTORAGE', group: 'Water', type: 'storage' },
+  { id: 'N08', label: 'DAF', group: 'Water', type: 'process' },
+  { id: 'N09', label: 'POST DAF\nBIO BUFFER', group: 'Water', type: 'storage' },
+  { id: 'N10', label: 'MBR\nAEROBIC BIO', group: 'Bio', type: 'process' },
+  { id: 'N11', label: 'KTA PONDS', group: 'Water', type: 'interface' },
+  { id: 'N12', label: 'OIL STORAGE\nTANKS (x2)', group: 'Oil', type: 'storage' },
+  { id: 'N13', label: 'OIL OUT', group: 'Oil', type: 'interface' },
+  { id: 'N14', label: 'SOLIDS\nSTORAGE', group: 'Solids', type: 'storage' },
+  { id: 'N15', label: 'SOLIDS OUT', group: 'Solids', type: 'interface' },
+  { id: 'N16', label: 'SLUDGE\nSTORAGE', group: 'Solids', type: 'storage' },
+  { id: 'N17', label: 'DIESEL\nBOILER', group: 'Utilities', type: 'utility' },
+  { id: 'N18', label: 'CHEMICALS\nPolymer, HCl, NaOH\nNa2S, FeCl, Demulsifier', group: 'Utilities', type: 'utility' },
+  { id: 'N19', label: 'CHEMICALS\nPhos Acid, N-Source\nCIP', group: 'Utilities', type: 'utility' },
+];
+
+const EDGES: GraphEdge[] = [
+  { id: 'E01', source: 'N01', target: 'N02', label: 'influent', type: 'mainline' },
+  { id: 'E02', source: 'N02', target: 'N03', label: 'influent', type: 'mainline' },
+  { id: 'E03', source: 'N03', target: 'N04', label: 'screened', type: 'mainline' },
+  { id: 'E04', source: 'N04', target: 'N05', label: 'conditioned', type: 'mainline' },
+  { id: 'E05', source: 'N05', target: 'N06', label: 'filtered', type: 'mainline' },
+  { id: 'E06', source: 'N06', target: 'N07', label: 'water', type: 'water' },
+  { id: 'E07', source: 'N07', target: 'N08', label: 'to DAF', type: 'water' },
+  { id: 'E08', source: 'N08', target: 'N09', label: 'clarified', type: 'water' },
+  { id: 'E09', source: 'N09', target: 'N10', label: 'bio feed', type: 'water' },
+  { id: 'E10', source: 'N10', target: 'N11', label: 'treated', type: 'water' },
+  { id: 'E11', source: 'N06', target: 'N12', label: 'oil', type: 'oil' },
+  { id: 'E12', source: 'N12', target: 'N13', label: 'oil out', type: 'oil' },
+  { id: 'E13', source: 'N06', target: 'N14', label: 'solids', type: 'solids' },
+  { id: 'E14', source: 'N14', target: 'N15', label: 'solids out', type: 'solids' },
+  { id: 'E15', source: 'N06', target: 'N16', label: 'flush', type: 'sludge_flush' },
+  { id: 'E16', source: 'N08', target: 'N16', label: 'DAF float', type: 'sludge_flush' },
+  { id: 'E17', source: 'N10', target: 'N06', label: 'WAS', type: 'sludge_flush' },
+  { id: 'E18', source: 'N17', target: 'N04', label: 'heat', type: 'utility' },
+  { id: 'E19', source: 'N18', target: 'N04', label: 'chem', type: 'utility' },
+  { id: 'E20', source: 'N19', target: 'N10', label: 'nutrients', type: 'utility' },
+];
 
 // ============================================
-// LAYOUT
+// LAYOUT CONFIGURATION
 // ============================================
-const LAYOUT = {
-  positions: {
-    N12: { x: 1300, y: 120 }, N13: { x: 1520, y: 120 },
-    N17: { x: 580, y: 260 }, N18: { x: 800, y: 260 },
-    N01: { x: 100, y: 420 }, N02: { x: 290, y: 420 }, N03: { x: 480, y: 420 },
-    N04: { x: 690, y: 420 }, N05: { x: 900, y: 420 }, N06: { x: 1120, y: 420 },
-    N14: { x: 1400, y: 580 }, N15: { x: 1620, y: 580 }, N16: { x: 1620, y: 420 },
-    N07: { x: 1120, y: 740 }, N08: { x: 1300, y: 740 }, N09: { x: 1480, y: 740 },
-    N10: { x: 1660, y: 740 }, N11: { x: 1860, y: 740 },
-    N19: { x: 1660, y: 900 },
-  } as Record<string, { x: number; y: number }>,
-  nodeWidth: 120,
-  nodeHeight: 70,
-  canvasWidth: 2000,
-  canvasHeight: 1000,
+const NODE_WIDTH = 120;
+const NODE_HEIGHT = 70;
+const CANVAS_WIDTH = 2000;
+const CANVAS_HEIGHT = 1000;
+
+const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
+  N12: { x: 1300, y: 120 }, N13: { x: 1520, y: 120 },
+  N17: { x: 580, y: 260 }, N18: { x: 800, y: 260 },
+  N01: { x: 100, y: 420 }, N02: { x: 290, y: 420 }, N03: { x: 480, y: 420 },
+  N04: { x: 690, y: 420 }, N05: { x: 900, y: 420 }, N06: { x: 1120, y: 420 },
+  N14: { x: 1400, y: 580 }, N15: { x: 1620, y: 580 }, N16: { x: 1620, y: 420 },
+  N07: { x: 1120, y: 740 }, N08: { x: 1300, y: 740 }, N09: { x: 1480, y: 740 },
+  N10: { x: 1660, y: 740 }, N11: { x: 1860, y: 740 },
+  N19: { x: 1660, y: 900 },
 };
 
-// ============================================
-// EDGE ROUTES (orthogonal waypoints)
-// ============================================
-const EDGE_ROUTES: Record<string, { waypoints: Array<{ x: number; y: number }> }> = {
-  E01: { waypoints: [] }, E02: { waypoints: [] }, E03: { waypoints: [] },
-  E04: { waypoints: [] }, E05: { waypoints: [] }, E06: { waypoints: [] },
-  E07: { waypoints: [] }, E08: { waypoints: [] }, E09: { waypoints: [] },
-  E10: { waypoints: [] }, E11: { waypoints: [{ x: 1120, y: 120 }] },
-  E12: { waypoints: [] }, E13: { waypoints: [{ x: 1400, y: 420 }] },
-  E14: { waypoints: [] }, E15: { waypoints: [] },
-  E16: { waypoints: [{ x: 1620, y: 740 }] },
-  E17: { waypoints: [{ x: 1860, y: 740 }, { x: 1860, y: 260 }, { x: 1120, y: 260 }] },
-  E18: { waypoints: [{ x: 580, y: 360 }, { x: 690, y: 360 }] },
-  E19: { waypoints: [{ x: 800, y: 360 }, { x: 690, y: 360 }] },
-  E20: { waypoints: [] },
+const EDGE_WAYPOINTS: Record<string, Array<{ x: number; y: number }>> = {
+  E11: [{ x: 1120, y: 120 }],
+  E13: [{ x: 1400, y: 420 }],
+  E16: [{ x: 1620, y: 740 }],
+  E17: [{ x: 1860, y: 740 }, { x: 1860, y: 260 }, { x: 1120, y: 260 }],
+  E18: [{ x: 580, y: 360 }, { x: 690, y: 360 }],
+  E19: [{ x: 800, y: 360 }, { x: 690, y: 360 }],
 };
 
 // ============================================
 // STYLING
 // ============================================
-const STYLES = {
-  node: {
-    interface: { fill: '#fef3e2', stroke: '#ea580c', textColor: '#9a3412' },
-    process: { fill: '#e0f2fe', stroke: '#0284c7', textColor: '#075985' },
-    storage: { fill: '#d1fae5', stroke: '#059669', textColor: '#065f46' },
-    utility: { fill: '#f3e8ff', stroke: '#9333ea', textColor: '#6b21a8' },
-  },
-  edge: {
-    mainline: { stroke: '#0284c7', strokeWidth: 4, dash: '', particle: '#60a5fa' },
-    water: { stroke: '#0ea5e9', strokeWidth: 3, dash: '', particle: '#7dd3fc' },
-    oil: { stroke: '#d97706', strokeWidth: 3, dash: '', particle: '#fbbf24' },
-    solids: { stroke: '#64748b', strokeWidth: 3, dash: '', particle: '#94a3b8' },
-    sludge_flush: { stroke: '#78716c', strokeWidth: 2, dash: '8,4', particle: '#a8a29e' },
-    utility: { stroke: '#9333ea', strokeWidth: 2, dash: '6,3', particle: '#c084fc' },
-  },
-  groups: {
-    Influent: { color: '#ea580c', bg: 'rgba(234,88,12,0.06)' },
-    Pretreatment: { color: '#0284c7', bg: 'rgba(2,132,199,0.06)' },
-    Separation: { color: '#ca8a04', bg: 'rgba(202,138,4,0.10)' },
-    Water: { color: '#0ea5e9', bg: 'rgba(14,165,233,0.06)' },
-    Bio: { color: '#10b981', bg: 'rgba(16,185,129,0.06)' },
-    Oil: { color: '#d97706', bg: 'rgba(217,119,6,0.06)' },
-    Solids: { color: '#64748b', bg: 'rgba(100,116,139,0.06)' },
-    Utilities: { color: '#9333ea', bg: 'rgba(147,51,234,0.06)' },
-  } as Record<string, { color: string; bg: string }>,
+const NODE_STYLES: Record<string, { fill: string; stroke: string; textColor: string }> = {
+  interface: { fill: '#fef3e2', stroke: '#ea580c', textColor: '#9a3412' },
+  process: { fill: '#e0f2fe', stroke: '#0284c7', textColor: '#075985' },
+  storage: { fill: '#d1fae5', stroke: '#059669', textColor: '#065f46' },
+  utility: { fill: '#f3e8ff', stroke: '#9333ea', textColor: '#6b21a8' },
+};
+
+const EDGE_STYLES: Record<string, { stroke: string; strokeWidth: number; dash: string; particle: string }> = {
+  mainline: { stroke: '#0284c7', strokeWidth: 4, dash: '', particle: '#60a5fa' },
+  water: { stroke: '#0ea5e9', strokeWidth: 3, dash: '', particle: '#7dd3fc' },
+  oil: { stroke: '#d97706', strokeWidth: 3, dash: '', particle: '#fbbf24' },
+  solids: { stroke: '#64748b', strokeWidth: 3, dash: '', particle: '#94a3b8' },
+  sludge_flush: { stroke: '#78716c', strokeWidth: 2, dash: '8,4', particle: '#a8a29e' },
+  utility: { stroke: '#9333ea', strokeWidth: 2, dash: '6,3', particle: '#c084fc' },
+};
+
+const GROUP_STYLES: Record<string, { color: string; bg: string }> = {
+  Influent: { color: '#ea580c', bg: 'rgba(234,88,12,0.06)' },
+  Pretreatment: { color: '#0284c7', bg: 'rgba(2,132,199,0.06)' },
+  Separation: { color: '#ca8a04', bg: 'rgba(202,138,4,0.10)' },
+  Water: { color: '#0ea5e9', bg: 'rgba(14,165,233,0.06)' },
+  Bio: { color: '#10b981', bg: 'rgba(16,185,129,0.06)' },
+  Oil: { color: '#d97706', bg: 'rgba(217,119,6,0.06)' },
+  Solids: { color: '#64748b', bg: 'rgba(100,116,139,0.06)' },
+  Utilities: { color: '#9333ea', bg: 'rgba(147,51,234,0.06)' },
 };
 
 // ============================================
-// EQUIPMENT SYMBOLS
+// HELPER FUNCTIONS
+// ============================================
+const buildOrthogonalPath = (
+  sourceId: string,
+  targetId: string,
+  waypoints: Array<{ x: number; y: number }> = []
+): string => {
+  const source = NODE_POSITIONS[sourceId];
+  const target = NODE_POSITIONS[targetId];
+  if (!source || !target) return '';
+
+  const hw = NODE_WIDTH / 2;
+  const hh = NODE_HEIGHT / 2;
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+
+  if (waypoints.length === 0) {
+    let sx = source.x, sy = source.y, tx = target.x, ty = target.y;
+    if (Math.abs(dx) > Math.abs(dy) * 0.5) {
+      sx = source.x + (dx > 0 ? hw : -hw);
+      tx = target.x + (dx > 0 ? -hw : hw);
+    } else {
+      sy = source.y + (dy > 0 ? hh : -hh);
+      ty = target.y + (dy > 0 ? -hh : hh);
+    }
+    if (Math.abs(dx) > 50 && Math.abs(dy) > 50) {
+      const midX = (sx + tx) / 2;
+      return `M${sx},${sy} L${midX},${sy} L${midX},${ty} L${tx},${ty}`;
+    }
+    return `M${sx},${sy} L${tx},${ty}`;
+  }
+
+  const points: Array<{ x: number; y: number }> = [];
+  const firstWp = waypoints[0];
+  if (Math.abs(firstWp.x - source.x) < 10) {
+    points.push({ x: source.x, y: source.y + (firstWp.y > source.y ? hh : -hh) });
+  } else {
+    points.push({ x: source.x + (firstWp.x > source.x ? hw : -hw), y: source.y });
+  }
+  points.push(...waypoints);
+  const lastWp = waypoints[waypoints.length - 1];
+  if (Math.abs(lastWp.x - target.x) < 10) {
+    points.push({ x: target.x, y: target.y + (lastWp.y < target.y ? -hh : hh) });
+  } else {
+    points.push({ x: target.x + (lastWp.x < target.x ? -hw : hw), y: target.y });
+  }
+
+  return points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+};
+
+const formatTime = (seconds: number): string => {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
+
+// ============================================
+// COMPONENTS
 // ============================================
 const EquipmentSymbol = ({ type, width, height }: { type: string; width: number; height: number }) => {
   const hw = width / 2;
@@ -198,62 +247,7 @@ const EquipmentSymbol = ({ type, width, height }: { type: string; width: number;
   }
 };
 
-// ============================================
-// PATH BUILDER
-// ============================================
-const buildOrthogonalPath = (
-  source: { x: number; y: number },
-  target: { x: number; y: number },
-  waypoints: Array<{ x: number; y: number }>
-): string => {
-  const hw = LAYOUT.nodeWidth / 2;
-  const hh = LAYOUT.nodeHeight / 2;
-  const dx = target.x - source.x;
-  const dy = target.y - source.y;
-
-  if (waypoints.length === 0) {
-    let sx = source.x, sy = source.y, tx = target.x, ty = target.y;
-    if (Math.abs(dx) > Math.abs(dy) * 0.5) {
-      sx = source.x + (dx > 0 ? hw : -hw);
-      tx = target.x + (dx > 0 ? -hw : hw);
-    } else {
-      sy = source.y + (dy > 0 ? hh : -hh);
-      ty = target.y + (dy > 0 ? -hh : hh);
-    }
-    if (Math.abs(dx) > 50 && Math.abs(dy) > 50) {
-      const midX = (sx + tx) / 2;
-      return `M${sx},${sy} L${midX},${sy} L${midX},${ty} L${tx},${ty}`;
-    }
-    return `M${sx},${sy} L${tx},${ty}`;
-  }
-
-  const points: Array<{ x: number; y: number }> = [];
-  const firstWp = waypoints[0];
-  if (Math.abs(firstWp.x - source.x) < 10) {
-    points.push({ x: source.x, y: source.y + (firstWp.y > source.y ? hh : -hh) });
-  } else {
-    points.push({ x: source.x + (firstWp.x > source.x ? hw : -hw), y: source.y });
-  }
-  points.push(...waypoints);
-  const lastWp = waypoints[waypoints.length - 1];
-  if (Math.abs(lastWp.x - target.x) < 10) {
-    points.push({ x: target.x, y: target.y + (lastWp.y < target.y ? -hh : hh) });
-  } else {
-    points.push({ x: target.x + (lastWp.x < target.x ? -hw : hw), y: target.y });
-  }
-
-  return points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-};
-
-// ============================================
-// FLOW PARTICLE COMPONENT
-// ============================================
-const FlowParticles = ({
-  pathId,
-  color,
-  isRunning,
-  flowRate,
-}: {
+const FlowParticles = ({ pathId, color, isRunning, flowRate }: {
   pathId: string;
   color: string;
   isRunning: boolean;
@@ -261,7 +255,6 @@ const FlowParticles = ({
 }) => {
   if (!isRunning || flowRate <= 0) return null;
 
-  // Scale particles based on actual flow rate
   const particleCount = Math.max(1, Math.min(6, Math.ceil(flowRate / 2)));
   const duration = Math.max(1, 10 / Math.max(flowRate, 0.1));
 
@@ -286,22 +279,11 @@ const FlowParticles = ({
 // MAIN COMPONENT
 // ============================================
 export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
-  const graph = DEFAULT_GRAPH;
-
-  // Get simulation state from context
+  // Simulation context
   const {
-    isRunning,
-    simSpeed,
-    simTime,
-    kpis,
-    flowRates,
-    tankLevels,
-    equipmentStatus,
-    totals,
-    start,
-    stop,
-    reset,
-    setSpeed,
+    isRunning, simSpeed, simTime, kpis,
+    flowRates, tankLevels, equipmentStatus, totals,
+    start, stop, reset, setSpeed,
   } = useSimulationContext();
 
   // View state
@@ -313,71 +295,81 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
   const [showMinimap, setShowMinimap] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const MIN_ZOOM = 0.2;
   const MAX_ZOOM = 2.5;
-  const PADDING = 40; // Padding around diagram
+  const PADDING = 20;
 
-  // Fit diagram to viewport
+  // Calculate fit zoom and pan based on viewport size
+  const fitTransform = useMemo(() => {
+    if (viewportSize.width === 0 || viewportSize.height === 0) {
+      return { zoom: 0.5, panX: 0, panY: 0 };
+    }
+
+    const viewWidth = viewportSize.width - PADDING * 2;
+    const viewHeight = viewportSize.height - PADDING * 2;
+
+    const scaleX = viewWidth / CANVAS_WIDTH;
+    const scaleY = viewHeight / CANVAS_HEIGHT;
+    const fitZoom = Math.max(MIN_ZOOM, Math.min(scaleX, scaleY, 1));
+
+    const scaledWidth = CANVAS_WIDTH * fitZoom;
+    const scaledHeight = CANVAS_HEIGHT * fitZoom;
+    const panX = (viewportSize.width - scaledWidth) / 2;
+    const panY = (viewportSize.height - scaledHeight) / 2;
+
+    return { zoom: fitZoom, panX, panY };
+  }, [viewportSize]);
+
+  // Fit to view
   const fitToView = useCallback(() => {
-    if (!viewportRef.current) return;
+    setZoom(fitTransform.zoom);
+    setPan({ x: fitTransform.panX, y: fitTransform.panY });
+  }, [fitTransform]);
 
-    const viewport = viewportRef.current.getBoundingClientRect();
-    const viewWidth = viewport.width - PADDING * 2;
-    const viewHeight = viewport.height - PADDING * 2;
+  // Track viewport size with ResizeObserver
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
 
-    // Calculate zoom to fit
-    const scaleX = viewWidth / LAYOUT.canvasWidth;
-    const scaleY = viewHeight / LAYOUT.canvasHeight;
-    const newZoom = Math.min(scaleX, scaleY, 1); // Don't zoom in beyond 100%
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setViewportSize({ width, height });
+      }
+    });
 
-    // Center the diagram
-    const scaledWidth = LAYOUT.canvasWidth * newZoom;
-    const scaledHeight = LAYOUT.canvasHeight * newZoom;
-    const newPanX = (viewport.width - scaledWidth) / 2;
-    const newPanY = (viewport.height - scaledHeight) / 2;
-
-    setZoom(Math.max(MIN_ZOOM, newZoom));
-    setPan({ x: newPanX, y: newPanY });
+    observer.observe(viewport);
+    return () => observer.disconnect();
   }, []);
 
-  // Auto-fit on mount and window resize
+  // Auto-fit when viewport size changes
   useEffect(() => {
-    // Initial fit after a short delay to ensure DOM is ready
-    const timer = setTimeout(fitToView, 100);
+    if (viewportSize.width > 0 && viewportSize.height > 0) {
+      fitToView();
+    }
+  }, [viewportSize, fitToView]);
 
-    // Refit on window resize
-    const handleResize = () => fitToView();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [fitToView]);
-
-  // Refit when fullscreen changes
-  useEffect(() => {
-    const timer = setTimeout(fitToView, 100);
-    return () => clearTimeout(timer);
-  }, [isFullscreen, fitToView]);
-
-  // ============================================
-  // HANDLERS
-  // ============================================
+  // Handlers
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const rect = viewportRef.current?.getBoundingClientRect();
     if (!rect) return;
+
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     const zoomFactor = e.deltaY > 0 ? 0.92 : 1.08;
     const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * zoomFactor));
     const scale = newZoom / zoom;
-    setPan(p => ({ x: mouseX - (mouseX - p.x) * scale, y: mouseY - (mouseY - p.y) * scale }));
+
+    setPan(p => ({
+      x: mouseX - (mouseX - p.x) * scale,
+      y: mouseY - (mouseY - p.y) * scale
+    }));
     setZoom(newZoom);
   }, [zoom]);
 
@@ -389,15 +381,17 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   }, [pan]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging) setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    if (isDragging) {
+      setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    }
   }, [isDragging, dragStart]);
 
   const handleMouseUp = useCallback(() => setIsDragging(false), []);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     reset();
     fitToView();
-  };
+  }, [reset, fitToView]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -409,13 +403,9 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
     }
   }, []);
 
-  // ============================================
-  // DERIVED DATA
-  // ============================================
+  // Derived data
   const massBalance = useMemo(() => {
-    if (!kpis) {
-      return { influent: 0, water: 0, oil: 0, solids: 0 };
-    }
+    if (!kpis) return { influent: 0, water: 0, oil: 0, solids: 0 };
     const inst = kpis.instantaneous;
     return {
       influent: inst.infeedRate || 0,
@@ -427,37 +417,30 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
   const nodesByGroup = useMemo(() => {
     const groups: Record<string, GraphNode[]> = {};
-    for (const node of graph.nodes) {
+    for (const node of NODES) {
       if (!groups[node.group]) groups[node.group] = [];
       groups[node.group].push(node);
     }
     return groups;
-  }, [graph.nodes]);
+  }, []);
 
   const groupBounds = useMemo(() => {
     const bounds: Record<string, { minX: number; minY: number; maxX: number; maxY: number }> = {};
     for (const [group, nodes] of Object.entries(nodesByGroup)) {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       for (const node of nodes) {
-        const pos = LAYOUT.positions[node.id];
+        const pos = NODE_POSITIONS[node.id];
         if (pos) {
-          minX = Math.min(minX, pos.x - LAYOUT.nodeWidth / 2);
-          minY = Math.min(minY, pos.y - LAYOUT.nodeHeight / 2);
-          maxX = Math.max(maxX, pos.x + LAYOUT.nodeWidth / 2);
-          maxY = Math.max(maxY, pos.y + LAYOUT.nodeHeight / 2);
+          minX = Math.min(minX, pos.x - NODE_WIDTH / 2);
+          minY = Math.min(minY, pos.y - NODE_HEIGHT / 2);
+          maxX = Math.max(maxX, pos.x + NODE_WIDTH / 2);
+          maxY = Math.max(maxY, pos.y + NODE_HEIGHT / 2);
         }
       }
       bounds[group] = { minX: minX - 25, minY: minY - 35, maxX: maxX + 25, maxY: maxY + 25 };
     }
     return bounds;
   }, [nodesByGroup]);
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
 
   const currentDate = new Date().toLocaleDateString('en-AU');
 
@@ -477,9 +460,9 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
         <div className="h-6 w-px bg-slate-600" />
 
-        <div className="flex-1">
-          <h1 className="text-white font-semibold text-sm">KARRATHA WTP - LIVE PROCESS FLOW</h1>
-          <p className="text-slate-400 text-xs">CWY-KAR-PFD-001 | Connected to Simulation Engine | {currentDate}</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-white font-semibold text-sm truncate">KARRATHA WTP - LIVE PROCESS FLOW</h1>
+          <p className="text-slate-400 text-xs truncate">CWY-KAR-PFD-001 | SimV2 | {currentDate}</p>
         </div>
 
         {/* Simulation Controls */}
@@ -487,26 +470,13 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
           <button
             onClick={() => isRunning ? stop() : start()}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-medium text-sm transition-all ${
-              isRunning
-                ? 'bg-red-600 hover:bg-red-500 text-white'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-            }`}
+              isRunning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
+            } text-white`}
           >
             {isRunning ? (
-              <>
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <rect x="6" y="4" width="4" height="16" rx="1" />
-                  <rect x="14" y="4" width="4" height="16" rx="1" />
-                </svg>
-                Stop
-              </>
+              <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>Stop</>
             ) : (
-              <>
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                Start
-              </>
+              <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Start</>
             )}
           </button>
 
@@ -515,15 +485,11 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-xs">Speed:</span>
             <input
-              type="range"
-              min="0.5"
-              max="10"
-              step="0.5"
-              value={simSpeed}
+              type="range" min="0.5" max="10" step="0.5" value={simSpeed}
               onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="w-20 h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              className="w-16 h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
             />
-            <span className="text-cyan-400 text-xs font-mono w-8">{simSpeed}x</span>
+            <span className="text-cyan-400 text-xs font-mono w-6">{simSpeed}x</span>
           </div>
 
           <div className="w-px h-6 bg-slate-600" />
@@ -535,7 +501,6 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
         <div className="h-6 w-px bg-slate-600" />
 
-        {/* Time Display */}
         <div className="bg-slate-700/50 rounded px-3 py-1">
           <div className="text-slate-400 text-[10px]">SIM TIME</div>
           <div className="text-cyan-400 font-mono text-sm">{formatTime(simTime)}</div>
@@ -543,19 +508,10 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
         <div className="h-6 w-px bg-slate-600" />
 
-        {/* View Controls */}
-        <button
-          onClick={fitToView}
-          className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-600 rounded bg-slate-700"
-          title="Fit to view"
-        >
+        <button onClick={fitToView} className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-600 rounded bg-slate-700" title="Fit to view">
           Fit
         </button>
-        <button
-          onClick={() => setShowMinimap(m => !m)}
-          className={`p-2 rounded-lg ${showMinimap ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-          title="Toggle minimap"
-        >
+        <button onClick={() => setShowMinimap(m => !m)} className={`p-2 rounded-lg ${showMinimap ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-300'}`} title="Minimap">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
@@ -569,7 +525,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Diagram */}
+        {/* Diagram Viewport */}
         <div
           ref={viewportRef}
           className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing relative"
@@ -581,85 +537,72 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
           onMouseLeave={handleMouseUp}
         >
           <svg
-            width="100%"
-            height="100%"
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: '0 0',
-              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+              transition: isDragging ? 'none' : 'transform 0.15s ease-out',
             }}
           >
             <defs>
-              {Object.entries(STYLES.edge).map(([type, style]) => (
+              {Object.entries(EDGE_STYLES).map(([type, style]) => (
                 <marker key={type} id={`arrow-${type}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={style.stroke} />
                 </marker>
               ))}
-              <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur" /><feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             </defs>
 
             {/* Grid */}
             <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
               <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(148,163,184,0.08)" strokeWidth="0.5" />
             </pattern>
-            <rect width={LAYOUT.canvasWidth} height={LAYOUT.canvasHeight} fill="url(#grid)" />
+            <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="url(#grid)" />
 
             {/* Groups */}
             {Object.entries(groupBounds).map(([group, bounds]) => {
-              const style = STYLES.groups[group];
+              const style = GROUP_STYLES[group];
               if (!style) return null;
               return (
                 <g key={group}>
-                  <rect x={bounds.minX} y={bounds.minY} width={bounds.maxX - bounds.minX} height={bounds.maxY - bounds.minY}
-                    fill={style.bg} stroke={style.color} strokeWidth={1} strokeDasharray="6,4" rx={10} />
-                  <text x={bounds.minX + 10} y={bounds.minY + 16} fill={style.color} fontSize={11} fontWeight={600}>{group.toUpperCase()}</text>
+                  <rect
+                    x={bounds.minX} y={bounds.minY}
+                    width={bounds.maxX - bounds.minX} height={bounds.maxY - bounds.minY}
+                    fill={style.bg} stroke={style.color} strokeWidth={1} strokeDasharray="6,4" rx={10}
+                  />
+                  <text x={bounds.minX + 10} y={bounds.minY + 16} fill={style.color} fontSize={11} fontWeight={600}>
+                    {group.toUpperCase()}
+                  </text>
                 </g>
               );
             })}
 
-            {/* Edges with flow animation */}
-            {graph.edges.map(edge => {
-              const source = LAYOUT.positions[edge.source];
-              const target = LAYOUT.positions[edge.target];
-              if (!source || !target) return null;
-
-              const style = STYLES.edge[edge.type];
-              const route = EDGE_ROUTES[edge.id] || { waypoints: [] };
-              const path = buildOrthogonalPath(source, target, route.waypoints);
+            {/* Edges */}
+            {EDGES.map(edge => {
+              const style = EDGE_STYLES[edge.type];
+              const waypoints = EDGE_WAYPOINTS[edge.id] || [];
+              const path = buildOrthogonalPath(edge.source, edge.target, waypoints);
               const flowRate = flowRates[edge.id] || 0;
               const isActive = flowRate > 0;
               const isHovered = hoveredEdge === edge.id;
+              const sourcePos = NODE_POSITIONS[edge.source];
+              const targetPos = NODE_POSITIONS[edge.target];
 
               return (
                 <g key={edge.id} onMouseEnter={() => setHoveredEdge(edge.id)} onMouseLeave={() => setHoveredEdge(null)}>
-                  {/* Define path for animation */}
                   <path id={`path-${edge.id}`} d={path} fill="none" stroke="none" />
-
-                  {/* Visible edge */}
                   <path d={path} fill="none" stroke="transparent" strokeWidth={20} style={{ cursor: 'pointer' }} />
                   <path
-                    d={path}
-                    fill="none"
-                    stroke={style.stroke}
+                    d={path} fill="none" stroke={style.stroke}
                     strokeWidth={isHovered ? style.strokeWidth + 2 : style.strokeWidth}
                     strokeDasharray={style.dash}
                     markerEnd={`url(#arrow-${edge.type})`}
                     opacity={isActive ? 1 : 0.4}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
+                    strokeLinejoin="round" strokeLinecap="round"
                   />
-
-                  {/* Flow particles */}
-                  <FlowParticles
-                    pathId={`path-${edge.id}`}
-                    color={style.particle}
-                    isRunning={isRunning && isActive}
-                    flowRate={flowRate}
-                  />
-
-                  {/* Flow label */}
-                  {isHovered && (
-                    <g transform={`translate(${(source.x + target.x) / 2}, ${(source.y + target.y) / 2 - 16})`}>
+                  <FlowParticles pathId={`path-${edge.id}`} color={style.particle} isRunning={isRunning && isActive} flowRate={flowRate} />
+                  {isHovered && sourcePos && targetPos && (
+                    <g transform={`translate(${(sourcePos.x + targetPos.x) / 2}, ${(sourcePos.y + targetPos.y) / 2 - 16})`}>
                       <rect x={-50} y={-12} width={100} height={24} fill="#1e293b" stroke={style.stroke} rx={4} opacity={0.95} />
                       <text fill="white" fontSize={11} fontWeight={600} textAnchor="middle" dominantBaseline="middle">
                         {flowRate > 0 ? `${flowRate.toFixed(2)} m3/hr` : 'No Flow'}
@@ -671,11 +614,11 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
             })}
 
             {/* Nodes */}
-            {graph.nodes.map(node => {
-              const pos = LAYOUT.positions[node.id];
+            {NODES.map(node => {
+              const pos = NODE_POSITIONS[node.id];
               if (!pos) return null;
 
-              const style = STYLES.node[node.type];
+              const style = NODE_STYLES[node.type];
               const status = equipmentStatus[node.id] || 'standby';
               const level = tankLevels[node.id];
               const isSelected = selectedNode === node.id;
@@ -691,52 +634,39 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                     fill={style.fill}
                     stroke={isSelected ? '#fbbf24' : style.stroke}
                     strokeWidth={isSelected ? 4 : 2}
-                    opacity={status === 'running' ? 1 : status === 'alarm' ? 1 : 0.6}
+                    opacity={status === 'running' || status === 'alarm' ? 1 : 0.6}
                   >
-                    <EquipmentSymbol type={node.type} width={LAYOUT.nodeWidth} height={LAYOUT.nodeHeight} />
+                    <EquipmentSymbol type={node.type} width={NODE_WIDTH} height={NODE_HEIGHT} />
                   </g>
 
-                  {/* Tank level indicator */}
                   {node.type === 'storage' && level !== undefined && (
                     <rect
-                      x={-LAYOUT.nodeWidth / 2 + 4}
-                      y={LAYOUT.nodeHeight / 2 - 4 - (level / 100) * (LAYOUT.nodeHeight - 20)}
-                      width={LAYOUT.nodeWidth - 8}
-                      height={(level / 100) * (LAYOUT.nodeHeight - 20)}
-                      fill={style.stroke}
-                      opacity={0.3}
-                      rx={2}
+                      x={-NODE_WIDTH / 2 + 4}
+                      y={NODE_HEIGHT / 2 - 4 - (level / 100) * (NODE_HEIGHT - 20)}
+                      width={NODE_WIDTH - 8}
+                      height={(level / 100) * (NODE_HEIGHT - 20)}
+                      fill={style.stroke} opacity={0.3} rx={2}
                     />
                   )}
 
-                  {/* Node ID */}
-                  <rect x={-LAYOUT.nodeWidth / 2} y={-LAYOUT.nodeHeight / 2 - 2} width={32} height={16} fill={style.stroke} rx={3} />
-                  <text x={-LAYOUT.nodeWidth / 2 + 16} y={-LAYOUT.nodeHeight / 2 + 10} fill="white" fontSize={10} fontWeight={700} textAnchor="middle" fontFamily="monospace">
+                  <rect x={-NODE_WIDTH / 2} y={-NODE_HEIGHT / 2 - 2} width={32} height={16} fill={style.stroke} rx={3} />
+                  <text x={-NODE_WIDTH / 2 + 16} y={-NODE_HEIGHT / 2 + 10} fill="white" fontSize={10} fontWeight={700} textAnchor="middle" fontFamily="monospace">
                     {node.id}
                   </text>
 
-                  {/* Label */}
                   <text y={4} fill={style.textColor} fontSize={10} fontWeight={600} textAnchor="middle">
                     {node.label.split('\n').map((line, i, arr) => (
                       <tspan key={i} x={0} dy={i === 0 ? -((arr.length - 1) * 6) : 13}>{line}</tspan>
                     ))}
                   </text>
 
-                  {/* Status indicator */}
                   <circle
-                    cx={LAYOUT.nodeWidth / 2 - 10}
-                    cy={-LAYOUT.nodeHeight / 2 + 10}
-                    r={6}
+                    cx={NODE_WIDTH / 2 - 10} cy={-NODE_HEIGHT / 2 + 10} r={6}
                     fill={status === 'running' ? '#22c55e' : status === 'alarm' ? '#ef4444' : '#64748b'}
-                    stroke="white"
-                    strokeWidth={2}
+                    stroke="white" strokeWidth={2}
                   >
-                    {status === 'running' && (
-                      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
-                    )}
-                    {status === 'alarm' && (
-                      <animate attributeName="fill" values="#ef4444;#fbbf24;#ef4444" dur="0.5s" repeatCount="indefinite" />
-                    )}
+                    {status === 'running' && <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />}
+                    {status === 'alarm' && <animate attributeName="fill" values="#ef4444;#fbbf24;#ef4444" dur="0.5s" repeatCount="indefinite" />}
                   </circle>
                 </g>
               );
@@ -745,35 +675,36 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
           {/* Minimap */}
           {showMinimap && (
-            <div className="absolute bottom-4 right-4 w-52 h-32 bg-slate-800/95 rounded-lg border border-slate-600 p-2">
-              <svg viewBox={`0 0 ${LAYOUT.canvasWidth} ${LAYOUT.canvasHeight}`} className="w-full h-full">
-                {graph.edges.map(edge => {
-                  const source = LAYOUT.positions[edge.source];
-                  const target = LAYOUT.positions[edge.target];
-                  if (!source || !target) return null;
-                  return <line key={edge.id} x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke={STYLES.edge[edge.type].stroke} strokeWidth={3} opacity={0.5} />;
+            <div className="absolute bottom-4 right-4 w-48 h-28 bg-slate-800/95 rounded-lg border border-slate-600 p-2">
+              <svg viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`} className="w-full h-full">
+                {EDGES.map(edge => {
+                  const src = NODE_POSITIONS[edge.source];
+                  const tgt = NODE_POSITIONS[edge.target];
+                  if (!src || !tgt) return null;
+                  return <line key={edge.id} x1={src.x} y1={src.y} x2={tgt.x} y2={tgt.y} stroke={EDGE_STYLES[edge.type].stroke} strokeWidth={4} opacity={0.5} />;
                 })}
-                {graph.nodes.map(node => {
-                  const pos = LAYOUT.positions[node.id];
+                {NODES.map(node => {
+                  const pos = NODE_POSITIONS[node.id];
                   if (!pos) return null;
-                  return <rect key={node.id} x={pos.x - 18} y={pos.y - 12} width={36} height={24} fill={STYLES.node[node.type].fill} stroke={STYLES.node[node.type].stroke} strokeWidth={2} rx={3} />;
+                  return <rect key={node.id} x={pos.x - 20} y={pos.y - 14} width={40} height={28} fill={NODE_STYLES[node.type].fill} stroke={NODE_STYLES[node.type].stroke} strokeWidth={2} rx={4} />;
                 })}
-                {viewportRef.current && (
-                  <rect x={-pan.x / zoom} y={-pan.y / zoom} width={viewportRef.current.clientWidth / zoom} height={viewportRef.current.clientHeight / zoom}
-                    fill="none" stroke="#fbbf24" strokeWidth={6} rx={4} />
-                )}
+                <rect
+                  x={-pan.x / zoom} y={-pan.y / zoom}
+                  width={viewportSize.width / zoom} height={viewportSize.height / zoom}
+                  fill="none" stroke="#fbbf24" strokeWidth={8} rx={4}
+                />
               </svg>
             </div>
           )}
         </div>
 
         {/* Sidebar */}
-        <div className="w-72 bg-slate-800 border-l border-slate-700 flex flex-col">
-          {/* Live Mass Balance */}
+        <div className="w-72 bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden">
+          {/* Mass Balance */}
           <div className="p-4 border-b border-slate-700">
             <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
-              Live Mass Balance (SimV2)
+              Live Mass Balance
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
@@ -786,73 +717,35 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                 <div className="h-full bg-slate-400 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.solids / massBalance.influent) * 100 : 0}%` }} />
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-sky-400">Water Out</div>
-                  <div className="text-white font-mono">{massBalance.water.toFixed(2)} m3/hr</div>
-                </div>
-                <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-amber-400">Oil Out</div>
-                  <div className="text-white font-mono">{massBalance.oil.toFixed(2)} m3/hr</div>
-                </div>
-                <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-slate-400">Solids Out</div>
-                  <div className="text-white font-mono">{massBalance.solids.toFixed(2)} m3/hr</div>
-                </div>
-                <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-slate-500">Closure</div>
-                  <div className="text-emerald-400 font-mono">
-                    {massBalance.influent > 0 ? ((massBalance.water + massBalance.oil + massBalance.solids) / massBalance.influent * 100).toFixed(1) : 0}%
-                  </div>
-                </div>
+                <div className="bg-slate-700/50 rounded p-2"><div className="text-sky-400">Water</div><div className="text-white font-mono">{massBalance.water.toFixed(2)}</div></div>
+                <div className="bg-slate-700/50 rounded p-2"><div className="text-amber-400">Oil</div><div className="text-white font-mono">{massBalance.oil.toFixed(2)}</div></div>
+                <div className="bg-slate-700/50 rounded p-2"><div className="text-slate-400">Solids</div><div className="text-white font-mono">{massBalance.solids.toFixed(2)}</div></div>
+                <div className="bg-slate-700/50 rounded p-2"><div className="text-slate-500">Closure</div><div className="text-emerald-400 font-mono">{massBalance.influent > 0 ? ((massBalance.water + massBalance.oil + massBalance.solids) / massBalance.influent * 100).toFixed(1) : 0}%</div></div>
               </div>
             </div>
           </div>
 
-          {/* KPI Summary */}
+          {/* KPIs */}
           {kpis && (
             <div className="p-4 border-b border-slate-700">
               <h3 className="text-white font-semibold text-sm mb-3">Process KPIs</h3>
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">API Efficiency</span>
-                  <span className="text-emerald-400 font-mono">{kpis.instantaneous.apiRemovalEfficiency.toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Centrifuge Recovery</span>
-                  <span className="text-emerald-400 font-mono">{kpis.instantaneous.centrifugeOilRecovery.toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Water Quality</span>
-                  <span className="text-cyan-400 font-mono">{kpis.instantaneous.treatedWaterQuality.toFixed(1)} mg/L</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Specific Energy</span>
-                  <span className="text-amber-400 font-mono">{kpis.instantaneous.specificEnergy.toFixed(2)} kWh/m3</span>
-                </div>
+                <div className="flex justify-between"><span className="text-slate-400">API Efficiency</span><span className="text-emerald-400 font-mono">{kpis.instantaneous.apiRemovalEfficiency.toFixed(1)}%</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Centrifuge Recovery</span><span className="text-emerald-400 font-mono">{kpis.instantaneous.centrifugeOilRecovery.toFixed(1)}%</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Water Quality</span><span className="text-cyan-400 font-mono">{kpis.instantaneous.treatedWaterQuality.toFixed(1)} mg/L</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Specific Energy</span><span className="text-amber-400 font-mono">{kpis.instantaneous.specificEnergy.toFixed(2)} kWh/m3</span></div>
               </div>
             </div>
           )}
 
-          {/* Session Totals */}
+          {/* Totals */}
           <div className="p-4 border-b border-slate-700">
             <h3 className="text-white font-semibold text-sm mb-3">Session Totals</h3>
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Water Produced</span>
-                <span className="text-sky-400 font-mono">{totals.waterProduced.toFixed(1)} m3</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Oil Recovered</span>
-                <span className="text-amber-400 font-mono">{totals.oilRecovered.toFixed(2)} m3</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Solids Removed</span>
-                <span className="text-slate-300 font-mono">{totals.solidsRemoved.toFixed(2)} m3</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Energy Used</span>
-                <span className="text-orange-400 font-mono">{totals.energyConsumed.toFixed(1)} kWh</span>
-              </div>
+              <div className="flex justify-between"><span className="text-slate-400">Water Produced</span><span className="text-sky-400 font-mono">{totals.waterProduced.toFixed(1)} m3</span></div>
+              <div className="flex justify-between"><span className="text-slate-400">Oil Recovered</span><span className="text-amber-400 font-mono">{totals.oilRecovered.toFixed(2)} m3</span></div>
+              <div className="flex justify-between"><span className="text-slate-400">Solids Removed</span><span className="text-slate-300 font-mono">{totals.solidsRemoved.toFixed(2)} m3</span></div>
+              <div className="flex justify-between"><span className="text-slate-400">Energy Used</span><span className="text-orange-400 font-mono">{totals.energyConsumed.toFixed(1)} kWh</span></div>
             </div>
           </div>
 
@@ -864,7 +757,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <div>
                     <span className="px-1.5 py-0.5 rounded text-xs font-mono font-bold bg-slate-600 text-white">{selectedNode}</span>
                     <h4 className="text-white font-semibold mt-2 text-sm">
-                      {graph.nodes.find(n => n.id === selectedNode)?.label.replace(/\n/g, ' ')}
+                      {NODES.find(n => n.id === selectedNode)?.label.replace(/\n/g, ' ')}
                     </h4>
                   </div>
                   <button onClick={() => setSelectedNode(null)} className="p-1 hover:bg-slate-700 rounded">
@@ -873,14 +766,10 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                     </svg>
                   </button>
                 </div>
-
                 <div className="bg-slate-700/50 rounded-lg p-3 space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Status</span>
-                    <span className={`font-semibold ${
-                      equipmentStatus[selectedNode] === 'running' ? 'text-emerald-400' :
-                      equipmentStatus[selectedNode] === 'alarm' ? 'text-red-400' : 'text-slate-400'
-                    }`}>
+                    <span className={`font-semibold ${equipmentStatus[selectedNode] === 'running' ? 'text-emerald-400' : equipmentStatus[selectedNode] === 'alarm' ? 'text-red-400' : 'text-slate-400'}`}>
                       {(equipmentStatus[selectedNode] || 'standby').toUpperCase()}
                     </span>
                   </div>
@@ -891,15 +780,13 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                     </div>
                   )}
                 </div>
-
-                {/* Connected flows */}
                 <div>
                   <h5 className="text-slate-300 text-xs font-semibold mb-2">Connected Streams</h5>
                   <div className="space-y-1">
-                    {graph.edges.filter(e => e.source === selectedNode || e.target === selectedNode).map(edge => (
+                    {EDGES.filter(e => e.source === selectedNode || e.target === selectedNode).map(edge => (
                       <div key={edge.id} className="flex items-center justify-between text-xs bg-slate-700/30 rounded px-2 py-1.5">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-0" style={{ borderTop: `2px solid ${STYLES.edge[edge.type].stroke}` }} />
+                          <div className="w-4 h-0" style={{ borderTop: `2px solid ${EDGE_STYLES[edge.type].stroke}` }} />
                           <span className="text-slate-300">{edge.label}</span>
                         </div>
                         <span className="text-slate-400 font-mono">{(flowRates[edge.id] || 0).toFixed(2)}</span>
@@ -920,7 +807,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-700 bg-slate-800/50">
+          <div className="p-3 border-t border-slate-700 bg-slate-800/50">
             <div className="flex justify-between text-xs text-slate-500">
               <span>Scroll: Zoom</span>
               <span>Drag: Pan</span>
