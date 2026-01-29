@@ -5,6 +5,7 @@
  * Main application with navigation between:
  * - Front Page (tile navigation)
  * - Process Overview (block flow diagram)
+ * - PFD Viewer (connected to simulation engine)
  * - Full Simulator (process control)
  */
 
@@ -13,6 +14,7 @@ import FrontPage from './components/FrontPage';
 import CentrifugeProcessControl from './components/CentrifugeProcessControl';
 import ProcessOverview from './components/ProcessOverview';
 import PFDViewer from './components/PFDViewer';
+import { SimulationProvider } from './contexts/SimulationContext';
 
 type Page = 'home' | 'process-overview' | 'pfd-viewer' | 'simulator';
 
@@ -33,7 +35,7 @@ const TILE_TO_TAB_MAP: Record<string, string> = {
   simulator: 'feed',          // Full simulator -> Feed Lab
 };
 
-export default function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [initialTab, setInitialTab] = useState<string>('feed');
   const [plantStatus, setPlantStatus] = useState({
@@ -100,7 +102,7 @@ export default function App() {
     );
   }
 
-  // PFD Viewer page
+  // PFD Viewer page - wrapped with SimulationProvider for real data
   if (currentPage === 'pfd-viewer') {
     return (
       <PFDViewer
@@ -126,5 +128,14 @@ export default function App() {
       {/* Main Simulator */}
       <CentrifugeProcessControl initialTab={initialTab} />
     </div>
+  );
+}
+
+// Main App with SimulationProvider wrapper
+export default function App() {
+  return (
+    <SimulationProvider>
+      <AppContent />
+    </SimulationProvider>
   );
 }

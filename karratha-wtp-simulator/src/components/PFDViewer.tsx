@@ -1,16 +1,18 @@
 /**
- * PFD VIEWER V3 - INTERACTIVE PROCESS FLOW DIAGRAM WITH SIMULATION
- * =================================================================
+ * PFD VIEWER V4 - INTEGRATED WITH SIMULATION ENGINE
+ * ==================================================
+ * Connected to the main batch processing simulation via SimulationContext
+ *
  * Features:
- * - Start/Stop simulation controls
- * - Adjustable simulation speed
- * - Animated flow particles on pipes
- * - Live material flow rates
- * - Real-time mass balance
- * - Interactive nodes with details panel
+ * - Real-time flow rates from SimulationEngineV2
+ * - Actual tank levels from simulation state
+ * - Equipment status synced with process control
+ * - Live mass balance from calculated KPIs
+ * - Animated flow particles based on real throughput
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useSimulationContext } from '@/contexts/SimulationContext';
 
 // ============================================
 // TYPES
@@ -30,31 +32,19 @@ interface GraphEdge {
   type: 'mainline' | 'water' | 'oil' | 'solids' | 'sludge_flush' | 'utility';
 }
 
-interface FlowState {
-  flow: number;      // m³/hr
-  velocity: number;  // animation speed factor
-  active: boolean;
-}
-
-interface NodeState {
-  level?: number;    // % for tanks
-  status: 'running' | 'stopped' | 'alarm' | 'standby';
-  throughput?: number;
-}
-
 interface PFDViewerProps {
   onBackToHome: () => void;
 }
 
 // ============================================
-// GRAPH DATA
+// GRAPH DATA - Process Topology
 // ============================================
 const DEFAULT_GRAPH: { nodes: GraphNode[]; edges: GraphEdge[] } = {
   nodes: [
     { id: 'N01', label: 'TANKER', group: 'Influent', type: 'interface' },
     { id: 'N02', label: 'TIP LOCATION', group: 'Influent', type: 'process' },
     { id: 'N03', label: 'COARSE FILTER\n(Screen/Trommel)', group: 'Pretreatment', type: 'process' },
-    { id: 'N04', label: 'PRETREATMENT\nTANKS (×4)', group: 'Pretreatment', type: 'process' },
+    { id: 'N04', label: 'PRETREATMENT\nTANKS (x4)', group: 'Pretreatment', type: 'storage' },
     { id: 'N05', label: 'FINE FILTERS\n(Trommel/Similar)', group: 'Pretreatment', type: 'process' },
     { id: 'N06', label: 'DECANTER\nCENTRIFUGE', group: 'Separation', type: 'process' },
     { id: 'N07', label: 'WATER\nSTORAGE', group: 'Water', type: 'storage' },
@@ -62,13 +52,13 @@ const DEFAULT_GRAPH: { nodes: GraphNode[]; edges: GraphEdge[] } = {
     { id: 'N09', label: 'POST DAF\nBIO BUFFER', group: 'Water', type: 'storage' },
     { id: 'N10', label: 'MBR\nAEROBIC BIO', group: 'Bio', type: 'process' },
     { id: 'N11', label: 'KTA PONDS', group: 'Water', type: 'interface' },
-    { id: 'N12', label: 'OIL STORAGE\nTANKS (×2)', group: 'Oil', type: 'storage' },
+    { id: 'N12', label: 'OIL STORAGE\nTANKS (x2)', group: 'Oil', type: 'storage' },
     { id: 'N13', label: 'OIL OUT', group: 'Oil', type: 'interface' },
     { id: 'N14', label: 'SOLIDS\nSTORAGE', group: 'Solids', type: 'storage' },
     { id: 'N15', label: 'SOLIDS OUT', group: 'Solids', type: 'interface' },
     { id: 'N16', label: 'SLUDGE\nSTORAGE', group: 'Solids', type: 'storage' },
     { id: 'N17', label: 'DIESEL\nBOILER', group: 'Utilities', type: 'utility' },
-    { id: 'N18', label: 'CHEMICALS\nPolymer, HCl, NaOH\nNa₂S, FeCl, Demulsifier', group: 'Utilities', type: 'utility' },
+    { id: 'N18', label: 'CHEMICALS\nPolymer, HCl, NaOH\nNa2S, FeCl, Demulsifier', group: 'Utilities', type: 'utility' },
     { id: 'N19', label: 'CHEMICALS\nPhos Acid, N-Source\nCIP', group: 'Utilities', type: 'utility' },
   ],
   edges: [
@@ -96,51 +86,39 @@ const DEFAULT_GRAPH: { nodes: GraphNode[]; edges: GraphEdge[] } = {
 };
 
 // ============================================
-// BASE FLOW RATES (m³/hr at 100% throughput)
-// ============================================
-const BASE_FLOWS: Record<string, number> = {
-  E01: 15.0, E02: 15.0, E03: 14.85, E04: 14.85, E05: 14.7,  // Main flow
-  E06: 12.0, E07: 12.0, E08: 11.7, E09: 11.7, E10: 11.5,    // Water
-  E11: 1.5, E12: 1.5,                                        // Oil
-  E13: 0.75, E14: 0.75,                                      // Solids
-  E15: 0.3, E16: 0.3, E17: 0.15,                            // Sludge
-  E18: 0, E19: 0, E20: 0,                                    // Utilities (no flow)
-};
-
-// ============================================
 // LAYOUT
 // ============================================
 const LAYOUT = {
   positions: {
-    N12: { x: 1300, y: 100 }, N13: { x: 1520, y: 100 },
-    N17: { x: 580, y: 240 }, N18: { x: 800, y: 240 },
-    N01: { x: 100, y: 400 }, N02: { x: 290, y: 400 }, N03: { x: 480, y: 400 },
-    N04: { x: 690, y: 400 }, N05: { x: 900, y: 400 }, N06: { x: 1120, y: 400 },
-    N14: { x: 1400, y: 560 }, N15: { x: 1620, y: 560 }, N16: { x: 1620, y: 400 },
-    N07: { x: 1120, y: 720 }, N08: { x: 1300, y: 720 }, N09: { x: 1480, y: 720 },
-    N10: { x: 1660, y: 720 }, N11: { x: 1860, y: 720 },
-    N19: { x: 1660, y: 880 },
+    N12: { x: 1300, y: 120 }, N13: { x: 1520, y: 120 },
+    N17: { x: 580, y: 260 }, N18: { x: 800, y: 260 },
+    N01: { x: 100, y: 420 }, N02: { x: 290, y: 420 }, N03: { x: 480, y: 420 },
+    N04: { x: 690, y: 420 }, N05: { x: 900, y: 420 }, N06: { x: 1120, y: 420 },
+    N14: { x: 1400, y: 580 }, N15: { x: 1620, y: 580 }, N16: { x: 1620, y: 420 },
+    N07: { x: 1120, y: 740 }, N08: { x: 1300, y: 740 }, N09: { x: 1480, y: 740 },
+    N10: { x: 1660, y: 740 }, N11: { x: 1860, y: 740 },
+    N19: { x: 1660, y: 900 },
   } as Record<string, { x: number; y: number }>,
   nodeWidth: 120,
   nodeHeight: 70,
   canvasWidth: 2000,
-  canvasHeight: 980,
+  canvasHeight: 1000,
 };
 
 // ============================================
-// EDGE ROUTES
+// EDGE ROUTES (orthogonal waypoints)
 // ============================================
 const EDGE_ROUTES: Record<string, { waypoints: Array<{ x: number; y: number }> }> = {
   E01: { waypoints: [] }, E02: { waypoints: [] }, E03: { waypoints: [] },
   E04: { waypoints: [] }, E05: { waypoints: [] }, E06: { waypoints: [] },
   E07: { waypoints: [] }, E08: { waypoints: [] }, E09: { waypoints: [] },
-  E10: { waypoints: [] }, E11: { waypoints: [{ x: 1120, y: 100 }] },
-  E12: { waypoints: [] }, E13: { waypoints: [{ x: 1400, y: 400 }] },
+  E10: { waypoints: [] }, E11: { waypoints: [{ x: 1120, y: 120 }] },
+  E12: { waypoints: [] }, E13: { waypoints: [{ x: 1400, y: 420 }] },
   E14: { waypoints: [] }, E15: { waypoints: [] },
-  E16: { waypoints: [{ x: 1620, y: 720 }] },
-  E17: { waypoints: [{ x: 1860, y: 720 }, { x: 1860, y: 240 }, { x: 1120, y: 240 }] },
-  E18: { waypoints: [{ x: 580, y: 340 }, { x: 690, y: 340 }] },
-  E19: { waypoints: [{ x: 800, y: 340 }, { x: 690, y: 340 }] },
+  E16: { waypoints: [{ x: 1620, y: 740 }] },
+  E17: { waypoints: [{ x: 1860, y: 740 }, { x: 1860, y: 260 }, { x: 1120, y: 260 }] },
+  E18: { waypoints: [{ x: 580, y: 360 }, { x: 690, y: 360 }] },
+  E19: { waypoints: [{ x: 800, y: 360 }, { x: 690, y: 360 }] },
   E20: { waypoints: [] },
 };
 
@@ -199,7 +177,7 @@ const EquipmentSymbol = ({ type, width, height }: { type: string; width: number;
           <ellipse cx={0} cy={-hh + 12} rx={hw} ry={12} fill="currentColor" opacity={0.12} />
         </g>
       );
-    case 'utility':
+    case 'utility': {
       const hex = hw * 0.92;
       return (
         <polygon
@@ -207,7 +185,8 @@ const EquipmentSymbol = ({ type, width, height }: { type: string; width: number;
           strokeDasharray="4,2"
         />
       );
-    default:
+    }
+    default: {
       const bevel = 8;
       return (
         <path
@@ -215,6 +194,7 @@ const EquipmentSymbol = ({ type, width, height }: { type: string; width: number;
              L${hw - bevel},${hh} L${-hw + bevel},${hh} L${-hw},${hh - bevel} L${-hw},${-hh + bevel} Z`}
         />
       );
+    }
   }
 };
 
@@ -271,21 +251,19 @@ const buildOrthogonalPath = (
 const FlowParticles = ({
   pathId,
   color,
-  speed,
   isRunning,
-  flowRate
+  flowRate,
 }: {
   pathId: string;
   color: string;
-  speed: number;
   isRunning: boolean;
   flowRate: number;
 }) => {
   if (!isRunning || flowRate <= 0) return null;
 
-  // Number of particles based on flow rate
-  const particleCount = Math.max(1, Math.min(5, Math.floor(flowRate / 3)));
-  const duration = Math.max(1, 8 / speed / (flowRate / 5 + 0.5));
+  // Scale particles based on actual flow rate
+  const particleCount = Math.max(1, Math.min(6, Math.ceil(flowRate / 2)));
+  const duration = Math.max(1, 10 / Math.max(flowRate, 0.1));
 
   return (
     <>
@@ -310,44 +288,25 @@ const FlowParticles = ({
 export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const graph = DEFAULT_GRAPH;
 
-  // Simulation state
-  const [isRunning, setIsRunning] = useState(false);
-  const [simSpeed, setSimSpeed] = useState(1);
-  const [simTime, setSimTime] = useState(0);
-  const [throughput, setThroughput] = useState(100); // % of design capacity
+  // Get simulation state from context
+  const {
+    isRunning,
+    simSpeed,
+    simTime,
+    kpis,
+    flowRates,
+    tankLevels,
+    equipmentStatus,
+    totals,
+    start,
+    stop,
+    reset,
+    setSpeed,
+  } = useSimulationContext();
 
-  // Flow states
-  const [flowStates, setFlowStates] = useState<Record<string, FlowState>>(() => {
-    const initial: Record<string, FlowState> = {};
-    for (const edge of graph.edges) {
-      initial[edge.id] = { flow: 0, velocity: 0, active: false };
-    }
-    return initial;
-  });
-
-  // Node states
-  const [nodeStates, setNodeStates] = useState<Record<string, NodeState>>(() => {
-    const initial: Record<string, NodeState> = {};
-    for (const node of graph.nodes) {
-      initial[node.id] = {
-        status: 'stopped',
-        level: node.type === 'storage' ? 50 : undefined,
-        throughput: 0
-      };
-    }
-    return initial;
-  });
-
-  // Totals
-  const [totals, setTotals] = useState({
-    waterProduced: 0,
-    oilRecovered: 0,
-    solidsRemoved: 0,
-  });
-
-  // View state
-  const [zoom, setZoom] = useState(0.6);
-  const [pan, setPan] = useState({ x: 20, y: 10 });
+  // View state - initial zoom to fit diagram, pan to center
+  const [zoom, setZoom] = useState(0.5);
+  const [pan, setPan] = useState({ x: 10, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -357,96 +316,9 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const simIntervalRef = useRef<number | null>(null);
 
   const MIN_ZOOM = 0.25;
   const MAX_ZOOM = 2.5;
-
-  // ============================================
-  // SIMULATION LOOP
-  // ============================================
-  useEffect(() => {
-    if (isRunning) {
-      simIntervalRef.current = window.setInterval(() => {
-        const dt = 0.1 * simSpeed; // Time step in hours
-
-        setSimTime(t => t + dt);
-
-        // Update flow states based on throughput
-        setFlowStates(prev => {
-          const next = { ...prev };
-          for (const edge of graph.edges) {
-            const baseFlow = BASE_FLOWS[edge.id] || 0;
-            const actualFlow = baseFlow * (throughput / 100);
-            // Add some random variation (±5%)
-            const variation = 1 + (Math.random() - 0.5) * 0.1;
-            next[edge.id] = {
-              flow: actualFlow * variation,
-              velocity: actualFlow > 0 ? 1 : 0,
-              active: actualFlow > 0,
-            };
-          }
-          return next;
-        });
-
-        // Update node states
-        setNodeStates(prev => {
-          const next = { ...prev };
-          for (const node of graph.nodes) {
-            next[node.id] = {
-              ...prev[node.id],
-              status: throughput > 0 ? 'running' : 'standby',
-              throughput: throughput,
-            };
-            // Update tank levels
-            if (node.type === 'storage' && prev[node.id].level !== undefined) {
-              const levelChange = (Math.random() - 0.48) * 2 * simSpeed;
-              next[node.id].level = Math.max(10, Math.min(90, (prev[node.id].level || 50) + levelChange));
-            }
-          }
-          return next;
-        });
-
-        // Update totals
-        setTotals(prev => ({
-          waterProduced: prev.waterProduced + (11.5 * (throughput / 100) * dt),
-          oilRecovered: prev.oilRecovered + (1.5 * (throughput / 100) * dt),
-          solidsRemoved: prev.solidsRemoved + (0.75 * (throughput / 100) * dt),
-        }));
-
-      }, 100);
-    } else {
-      if (simIntervalRef.current) {
-        clearInterval(simIntervalRef.current);
-      }
-    }
-
-    return () => {
-      if (simIntervalRef.current) {
-        clearInterval(simIntervalRef.current);
-      }
-    };
-  }, [isRunning, simSpeed, throughput, graph.edges, graph.nodes]);
-
-  // Stop flows when simulation stops
-  useEffect(() => {
-    if (!isRunning) {
-      setFlowStates(prev => {
-        const next = { ...prev };
-        for (const key of Object.keys(next)) {
-          next[key] = { ...next[key], active: false };
-        }
-        return next;
-      });
-      setNodeStates(prev => {
-        const next = { ...prev };
-        for (const key of Object.keys(next)) {
-          next[key] = { ...next[key], status: 'stopped' };
-        }
-        return next;
-      });
-    }
-  }, [isRunning]);
 
   // ============================================
   // HANDLERS
@@ -478,10 +350,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const handleMouseUp = useCallback(() => setIsDragging(false), []);
 
   const handleReset = () => {
-    setIsRunning(false);
-    setSimTime(0);
-    setThroughput(100);
-    setTotals({ waterProduced: 0, oilRecovered: 0, solidsRemoved: 0 });
+    reset();
   };
 
   const toggleFullscreen = useCallback(() => {
@@ -498,12 +367,17 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   // DERIVED DATA
   // ============================================
   const massBalance = useMemo(() => {
-    const influent = flowStates['E01']?.flow || 0;
-    const water = flowStates['E10']?.flow || 0;
-    const oil = flowStates['E12']?.flow || 0;
-    const solids = flowStates['E14']?.flow || 0;
-    return { influent, water, oil, solids };
-  }, [flowStates]);
+    if (!kpis) {
+      return { influent: 0, water: 0, oil: 0, solids: 0 };
+    }
+    const inst = kpis.instantaneous;
+    return {
+      influent: inst.infeedRate || 0,
+      water: inst.pondDischargeRate || 0,
+      oil: inst.oilRecoveryRate || 0,
+      solids: inst.sludgeGenerationRate || 0,
+    };
+  }, [kpis]);
 
   const nodesByGroup = useMemo(() => {
     const groups: Record<string, GraphNode[]> = {};
@@ -532,10 +406,11 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
     return bounds;
   }, [nodesByGroup]);
 
-  const formatTime = (hours: number) => {
-    const h = Math.floor(hours);
-    const m = Math.floor((hours - h) * 60);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const currentDate = new Date().toLocaleDateString('en-AU');
@@ -557,14 +432,14 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
         <div className="h-6 w-px bg-slate-600" />
 
         <div className="flex-1">
-          <h1 className="text-white font-semibold text-sm">KARRATHA WTP — LIVE PROCESS VIEW</h1>
-          <p className="text-slate-400 text-xs">CWY-KAR-PFD-001 • {currentDate}</p>
+          <h1 className="text-white font-semibold text-sm">KARRATHA WTP - LIVE PROCESS FLOW</h1>
+          <p className="text-slate-400 text-xs">CWY-KAR-PFD-001 | Connected to Simulation Engine | {currentDate}</p>
         </div>
 
         {/* Simulation Controls */}
         <div className="flex items-center gap-2 bg-slate-700/80 rounded-lg px-3 py-1.5">
           <button
-            onClick={() => setIsRunning(!isRunning)}
+            onClick={() => isRunning ? stop() : start()}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-medium text-sm transition-all ${
               isRunning
                 ? 'bg-red-600 hover:bg-red-500 text-white'
@@ -599,26 +474,10 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               max="10"
               step="0.5"
               value={simSpeed}
-              onChange={(e) => setSimSpeed(parseFloat(e.target.value))}
+              onChange={(e) => setSpeed(parseFloat(e.target.value))}
               className="w-20 h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
             />
-            <span className="text-cyan-400 text-xs font-mono w-8">{simSpeed}×</span>
-          </div>
-
-          <div className="w-px h-6 bg-slate-600" />
-
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400 text-xs">Load:</span>
-            <input
-              type="range"
-              min="0"
-              max="120"
-              step="5"
-              value={throughput}
-              onChange={(e) => setThroughput(parseInt(e.target.value))}
-              className="w-20 h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-amber-500"
-            />
-            <span className="text-amber-400 text-xs font-mono w-10">{throughput}%</span>
+            <span className="text-cyan-400 text-xs font-mono w-8">{simSpeed}x</span>
           </div>
 
           <div className="w-px h-6 bg-slate-600" />
@@ -713,7 +572,8 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               const style = STYLES.edge[edge.type];
               const route = EDGE_ROUTES[edge.id] || { waypoints: [] };
               const path = buildOrthogonalPath(source, target, route.waypoints);
-              const flowState = flowStates[edge.id];
+              const flowRate = flowRates[edge.id] || 0;
+              const isActive = flowRate > 0;
               const isHovered = hoveredEdge === edge.id;
 
               return (
@@ -730,7 +590,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                     strokeWidth={isHovered ? style.strokeWidth + 2 : style.strokeWidth}
                     strokeDasharray={style.dash}
                     markerEnd={`url(#arrow-${edge.type})`}
-                    opacity={flowState?.active ? 1 : 0.4}
+                    opacity={isActive ? 1 : 0.4}
                     strokeLinejoin="round"
                     strokeLinecap="round"
                   />
@@ -739,17 +599,16 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <FlowParticles
                     pathId={`path-${edge.id}`}
                     color={style.particle}
-                    speed={simSpeed}
-                    isRunning={isRunning && flowState?.active}
-                    flowRate={flowState?.flow || 0}
+                    isRunning={isRunning && isActive}
+                    flowRate={flowRate}
                   />
 
                   {/* Flow label */}
-                  {isHovered && flowState?.flow > 0 && (
+                  {isHovered && (
                     <g transform={`translate(${(source.x + target.x) / 2}, ${(source.y + target.y) / 2 - 16})`}>
-                      <rect x={-45} y={-12} width={90} height={24} fill="#1e293b" stroke={style.stroke} rx={4} opacity={0.95} />
+                      <rect x={-50} y={-12} width={100} height={24} fill="#1e293b" stroke={style.stroke} rx={4} opacity={0.95} />
                       <text fill="white" fontSize={11} fontWeight={600} textAnchor="middle" dominantBaseline="middle">
-                        {flowState.flow.toFixed(2)} m³/hr
+                        {flowRate > 0 ? `${flowRate.toFixed(2)} m3/hr` : 'No Flow'}
                       </text>
                     </g>
                   )}
@@ -763,7 +622,8 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
               if (!pos) return null;
 
               const style = STYLES.node[node.type];
-              const nodeState = nodeStates[node.id];
+              const status = equipmentStatus[node.id] || 'standby';
+              const level = tankLevels[node.id];
               const isSelected = selectedNode === node.id;
 
               return (
@@ -777,18 +637,18 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                     fill={style.fill}
                     stroke={isSelected ? '#fbbf24' : style.stroke}
                     strokeWidth={isSelected ? 4 : 2}
-                    opacity={nodeState?.status === 'running' ? 1 : 0.6}
+                    opacity={status === 'running' ? 1 : status === 'alarm' ? 1 : 0.6}
                   >
                     <EquipmentSymbol type={node.type} width={LAYOUT.nodeWidth} height={LAYOUT.nodeHeight} />
                   </g>
 
                   {/* Tank level indicator */}
-                  {node.type === 'storage' && nodeState?.level !== undefined && (
+                  {node.type === 'storage' && level !== undefined && (
                     <rect
                       x={-LAYOUT.nodeWidth / 2 + 4}
-                      y={LAYOUT.nodeHeight / 2 - 4 - (nodeState.level / 100) * (LAYOUT.nodeHeight - 20)}
+                      y={LAYOUT.nodeHeight / 2 - 4 - (level / 100) * (LAYOUT.nodeHeight - 20)}
                       width={LAYOUT.nodeWidth - 8}
-                      height={(nodeState.level / 100) * (LAYOUT.nodeHeight - 20)}
+                      height={(level / 100) * (LAYOUT.nodeHeight - 20)}
                       fill={style.stroke}
                       opacity={0.3}
                       rx={2}
@@ -813,12 +673,15 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                     cx={LAYOUT.nodeWidth / 2 - 10}
                     cy={-LAYOUT.nodeHeight / 2 + 10}
                     r={6}
-                    fill={nodeState?.status === 'running' ? '#22c55e' : nodeState?.status === 'alarm' ? '#ef4444' : '#64748b'}
+                    fill={status === 'running' ? '#22c55e' : status === 'alarm' ? '#ef4444' : '#64748b'}
                     stroke="white"
                     strokeWidth={2}
                   >
-                    {nodeState?.status === 'running' && (
+                    {status === 'running' && (
                       <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
+                    )}
+                    {status === 'alarm' && (
+                      <animate attributeName="fill" values="#ef4444;#fbbf24;#ef4444" dur="0.5s" repeatCount="indefinite" />
                     )}
                   </circle>
                 </g>
@@ -856,33 +719,33 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
           <div className="p-4 border-b border-slate-700">
             <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
-              Live Mass Balance
+              Live Mass Balance (SimV2)
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Influent</span>
-                <span className="text-cyan-400 font-mono">{massBalance.influent.toFixed(2)} m³/hr</span>
+                <span className="text-slate-400">Influent Rate</span>
+                <span className="text-cyan-400 font-mono">{massBalance.influent.toFixed(2)} m3/hr</span>
               </div>
               <div className="h-4 bg-slate-700 rounded-full overflow-hidden flex">
-                <div className="h-full bg-sky-500 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.water / massBalance.influent) * 100 : 80}%` }} />
-                <div className="h-full bg-amber-500 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.oil / massBalance.influent) * 100 : 10}%` }} />
-                <div className="h-full bg-slate-400 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.solids / massBalance.influent) * 100 : 5}%` }} />
+                <div className="h-full bg-sky-500 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.water / massBalance.influent) * 100 : 0}%` }} />
+                <div className="h-full bg-amber-500 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.oil / massBalance.influent) * 100 : 0}%` }} />
+                <div className="h-full bg-slate-400 transition-all" style={{ width: `${massBalance.influent > 0 ? (massBalance.solids / massBalance.influent) * 100 : 0}%` }} />
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-sky-400">Water</div>
-                  <div className="text-white font-mono">{massBalance.water.toFixed(2)} m³/hr</div>
+                  <div className="text-sky-400">Water Out</div>
+                  <div className="text-white font-mono">{massBalance.water.toFixed(2)} m3/hr</div>
                 </div>
                 <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-amber-400">Oil</div>
-                  <div className="text-white font-mono">{massBalance.oil.toFixed(2)} m³/hr</div>
+                  <div className="text-amber-400">Oil Out</div>
+                  <div className="text-white font-mono">{massBalance.oil.toFixed(2)} m3/hr</div>
                 </div>
                 <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-slate-400">Solids</div>
-                  <div className="text-white font-mono">{massBalance.solids.toFixed(2)} m³/hr</div>
+                  <div className="text-slate-400">Solids Out</div>
+                  <div className="text-white font-mono">{massBalance.solids.toFixed(2)} m3/hr</div>
                 </div>
                 <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-slate-500">Recovery</div>
+                  <div className="text-slate-500">Closure</div>
                   <div className="text-emerald-400 font-mono">
                     {massBalance.influent > 0 ? ((massBalance.water + massBalance.oil + massBalance.solids) / massBalance.influent * 100).toFixed(1) : 0}%
                   </div>
@@ -891,21 +754,50 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
             </div>
           </div>
 
+          {/* KPI Summary */}
+          {kpis && (
+            <div className="p-4 border-b border-slate-700">
+              <h3 className="text-white font-semibold text-sm mb-3">Process KPIs</h3>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">API Efficiency</span>
+                  <span className="text-emerald-400 font-mono">{kpis.instantaneous.apiRemovalEfficiency.toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Centrifuge Recovery</span>
+                  <span className="text-emerald-400 font-mono">{kpis.instantaneous.centrifugeOilRecovery.toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Water Quality</span>
+                  <span className="text-cyan-400 font-mono">{kpis.instantaneous.treatedWaterQuality.toFixed(1)} mg/L</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Specific Energy</span>
+                  <span className="text-amber-400 font-mono">{kpis.instantaneous.specificEnergy.toFixed(2)} kWh/m3</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Session Totals */}
           <div className="p-4 border-b border-slate-700">
             <h3 className="text-white font-semibold text-sm mb-3">Session Totals</h3>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-400">Water Produced</span>
-                <span className="text-sky-400 font-mono">{totals.waterProduced.toFixed(1)} m³</span>
+                <span className="text-sky-400 font-mono">{totals.waterProduced.toFixed(1)} m3</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Oil Recovered</span>
-                <span className="text-amber-400 font-mono">{totals.oilRecovered.toFixed(2)} m³</span>
+                <span className="text-amber-400 font-mono">{totals.oilRecovered.toFixed(2)} m3</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Solids Removed</span>
-                <span className="text-slate-300 font-mono">{totals.solidsRemoved.toFixed(2)} m³</span>
+                <span className="text-slate-300 font-mono">{totals.solidsRemoved.toFixed(2)} m3</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Energy Used</span>
+                <span className="text-orange-400 font-mono">{totals.energyConsumed.toFixed(1)} kWh</span>
               </div>
             </div>
           </div>
@@ -931,20 +823,19 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                 <div className="bg-slate-700/50 rounded-lg p-3 space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Status</span>
-                    <span className={`font-semibold ${nodeStates[selectedNode]?.status === 'running' ? 'text-emerald-400' : 'text-slate-400'}`}>
-                      {nodeStates[selectedNode]?.status?.toUpperCase()}
+                    <span className={`font-semibold ${
+                      equipmentStatus[selectedNode] === 'running' ? 'text-emerald-400' :
+                      equipmentStatus[selectedNode] === 'alarm' ? 'text-red-400' : 'text-slate-400'
+                    }`}>
+                      {(equipmentStatus[selectedNode] || 'standby').toUpperCase()}
                     </span>
                   </div>
-                  {nodeStates[selectedNode]?.level !== undefined && (
+                  {tankLevels[selectedNode] !== undefined && (
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-400">Level</span>
-                      <span className="text-cyan-400 font-mono">{nodeStates[selectedNode]?.level?.toFixed(1)}%</span>
+                      <span className="text-cyan-400 font-mono">{tankLevels[selectedNode]?.toFixed(1)}%</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Load</span>
-                    <span className="text-amber-400 font-mono">{throughput}%</span>
-                  </div>
                 </div>
 
                 {/* Connected flows */}
@@ -957,7 +848,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                           <div className="w-4 h-0" style={{ borderTop: `2px solid ${STYLES.edge[edge.type].stroke}` }} />
                           <span className="text-slate-300">{edge.label}</span>
                         </div>
-                        <span className="text-slate-400 font-mono">{(flowStates[edge.id]?.flow || 0).toFixed(2)}</span>
+                        <span className="text-slate-400 font-mono">{(flowRates[edge.id] || 0).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -969,7 +860,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-slate-400 text-sm">Click a node to view details</p>
-                <p className="text-slate-500 text-xs mt-1">Hover streams to see flow rates</p>
+                <p className="text-slate-500 text-xs mt-1">Hover streams for flow rates</p>
               </div>
             )}
           </div>
