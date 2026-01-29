@@ -48,6 +48,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 // Extracted modules
 import { usePhaseTracking, ProcessDataSnapshot } from '../hooks/usePhaseTracking';
+import { useSimulationContext } from '@/contexts/SimulationContext';
 import { FEEDSTOCK_TYPES, TRANSPORT_DESTINATIONS, DEFAULT_COSTS } from '../lib/constants';
 import { BATCH_PHASES, getTotalBatchVolume } from '../lib/constants/batch-phases';
 import { generatePhaseReportHTML } from '../lib/reports/phase-report';
@@ -410,10 +411,31 @@ interface CentrifugeProcessControlProps {
 }
 
 export default function CentrifugeProcessControl({ initialTab = 'feed' }: CentrifugeProcessControlProps) {
+  // Connect to shared simulation context for cross-page state sync
+  const simContext = useSimulationContext();
+
   const [isRunning, setIsRunning] = useState(false);
   const [simSpeed, setSimSpeed] = useState(10);
   const [simTime, setSimTime] = useState(0);
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync with SimulationContext: when local isRunning changes, update context
+  // This ensures PFD Viewer and Plant Overview show data when simulator runs
+  useEffect(() => {
+    if (isRunning) {
+      simContext.start();
+      simContext.setSpeed(simSpeed / 10); // Convert local speed to context speed
+    } else {
+      simContext.stop();
+    }
+  }, [isRunning, simSpeed]);
+
+  // Bidirectional sync: if context isRunning changes (started from PFD/PlantOverview), sync local state
+  useEffect(() => {
+    if (simContext.isRunning !== isRunning) {
+      setIsRunning(simContext.isRunning);
+    }
+  }, [simContext.isRunning]);
 
   // Sync activeTab when initialTab changes (user navigates from home with different tile)
   useEffect(() => {
