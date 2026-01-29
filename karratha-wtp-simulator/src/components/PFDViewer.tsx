@@ -11,7 +11,7 @@
  * - Animated flow particles based on real throughput
  */
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSimulationContext } from '@/contexts/SimulationContext';
 
 // ============================================
@@ -304,9 +304,9 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
     setSpeed,
   } = useSimulationContext();
 
-  // View state - initial zoom to fit diagram, pan to center
-  const [zoom, setZoom] = useState(0.5);
-  const [pan, setPan] = useState({ x: 10, y: 0 });
+  // View state
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -317,8 +317,53 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  const MIN_ZOOM = 0.25;
+  const MIN_ZOOM = 0.2;
   const MAX_ZOOM = 2.5;
+  const PADDING = 40; // Padding around diagram
+
+  // Fit diagram to viewport
+  const fitToView = useCallback(() => {
+    if (!viewportRef.current) return;
+
+    const viewport = viewportRef.current.getBoundingClientRect();
+    const viewWidth = viewport.width - PADDING * 2;
+    const viewHeight = viewport.height - PADDING * 2;
+
+    // Calculate zoom to fit
+    const scaleX = viewWidth / LAYOUT.canvasWidth;
+    const scaleY = viewHeight / LAYOUT.canvasHeight;
+    const newZoom = Math.min(scaleX, scaleY, 1); // Don't zoom in beyond 100%
+
+    // Center the diagram
+    const scaledWidth = LAYOUT.canvasWidth * newZoom;
+    const scaledHeight = LAYOUT.canvasHeight * newZoom;
+    const newPanX = (viewport.width - scaledWidth) / 2;
+    const newPanY = (viewport.height - scaledHeight) / 2;
+
+    setZoom(Math.max(MIN_ZOOM, newZoom));
+    setPan({ x: newPanX, y: newPanY });
+  }, []);
+
+  // Auto-fit on mount and window resize
+  useEffect(() => {
+    // Initial fit after a short delay to ensure DOM is ready
+    const timer = setTimeout(fitToView, 100);
+
+    // Refit on window resize
+    const handleResize = () => fitToView();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [fitToView]);
+
+  // Refit when fullscreen changes
+  useEffect(() => {
+    const timer = setTimeout(fitToView, 100);
+    return () => clearTimeout(timer);
+  }, [isFullscreen, fitToView]);
 
   // ============================================
   // HANDLERS
@@ -351,6 +396,7 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
   const handleReset = () => {
     reset();
+    fitToView();
   };
 
   const toggleFullscreen = useCallback(() => {
@@ -499,14 +545,22 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
 
         {/* View Controls */}
         <button
+          onClick={fitToView}
+          className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-600 rounded bg-slate-700"
+          title="Fit to view"
+        >
+          Fit
+        </button>
+        <button
           onClick={() => setShowMinimap(m => !m)}
           className={`p-2 rounded-lg ${showMinimap ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+          title="Toggle minimap"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
         </button>
-        <button onClick={toggleFullscreen} className="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300">
+        <button onClick={toggleFullscreen} className="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300" title="Fullscreen">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
