@@ -4,6 +4,7 @@
  *
  * Main application with navigation between:
  * - Front Page (tile navigation)
+ * - Plant Overview (L1 dashboard with KPIs)
  * - Process Overview (block flow diagram)
  * - PFD Viewer (connected to simulation engine)
  * - Full Simulator (process control)
@@ -14,13 +15,14 @@ import FrontPage from './components/FrontPage';
 import CentrifugeProcessControl from './components/CentrifugeProcessControl';
 import ProcessOverview from './components/ProcessOverview';
 import PFDViewer from './components/PFDViewer';
+import PlantOverview from './components/PlantOverview';
 import { SimulationProvider } from './contexts/SimulationContext';
 
-type Page = 'home' | 'process-overview' | 'pfd-viewer' | 'simulator';
+type Page = 'home' | 'plant-overview' | 'process-overview' | 'pfd-viewer' | 'simulator';
 
 // Map FrontPage tile IDs to simulator tab IDs
+// Note: 'overview', 'process-overview', 'pfd-viewer' are handled separately as distinct pages
 const TILE_TO_TAB_MAP: Record<string, string> = {
-  overview: 'feed',           // Plant overview -> Feed Lab (main KPIs)
   centrifuge: 'centrifuge',   // Centrifuge control -> Centrifuge tab
   tankfarm: 'tankage',        // Tank farm -> Tanks tab
   chemical: 'chemDosing',     // Chemical dosing -> Chemicals tab
@@ -48,8 +50,11 @@ function AppContent() {
   const handleNavigate = useCallback((page: string) => {
     if (page === 'home') {
       setCurrentPage('home');
+    } else if (page === 'overview') {
+      // Navigate to Plant Overview dashboard
+      setCurrentPage('plant-overview');
     } else if (page === 'process-overview') {
-      // Navigate to Process Overview page
+      // Navigate to Process Overview page (block flow diagram)
       setCurrentPage('process-overview');
     } else if (page === 'pfd-viewer') {
       // Navigate to Canonical PFD Viewer page
@@ -77,6 +82,19 @@ function AppContent() {
     }
   }, []);
 
+  // Handle navigation from Plant Overview to other pages or simulator tabs
+  const handlePlantOverviewNavigate = useCallback((destination: string) => {
+    if (destination === 'pfd-viewer') {
+      setCurrentPage('pfd-viewer');
+    } else if (destination === 'process-overview') {
+      setCurrentPage('process-overview');
+    } else {
+      // Navigate to simulator with specific tab
+      setInitialTab(destination);
+      setCurrentPage('simulator');
+    }
+  }, []);
+
   // Render current page
   if (currentPage === 'home') {
     return (
@@ -87,7 +105,17 @@ function AppContent() {
     );
   }
 
-  // Process Overview page
+  // Plant Overview page - L1 dashboard with KPIs
+  if (currentPage === 'plant-overview') {
+    return (
+      <PlantOverview
+        onBackToHome={handleBackToHome}
+        onNavigate={handlePlantOverviewNavigate}
+      />
+    );
+  }
+
+  // Process Overview page (block flow diagram)
   if (currentPage === 'process-overview') {
     return (
       <ProcessOverview
