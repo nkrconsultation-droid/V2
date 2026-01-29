@@ -90,19 +90,19 @@ const DEFAULT_GRAPH: { nodes: GraphNode[]; edges: GraphEdge[] } = {
 // ============================================
 const LAYOUT = {
   positions: {
-    N12: { x: 1300, y: 100 }, N13: { x: 1520, y: 100 },
-    N17: { x: 580, y: 240 }, N18: { x: 800, y: 240 },
-    N01: { x: 100, y: 400 }, N02: { x: 290, y: 400 }, N03: { x: 480, y: 400 },
-    N04: { x: 690, y: 400 }, N05: { x: 900, y: 400 }, N06: { x: 1120, y: 400 },
-    N14: { x: 1400, y: 560 }, N15: { x: 1620, y: 560 }, N16: { x: 1620, y: 400 },
-    N07: { x: 1120, y: 720 }, N08: { x: 1300, y: 720 }, N09: { x: 1480, y: 720 },
-    N10: { x: 1660, y: 720 }, N11: { x: 1860, y: 720 },
-    N19: { x: 1660, y: 880 },
+    N12: { x: 1300, y: 120 }, N13: { x: 1520, y: 120 },
+    N17: { x: 580, y: 260 }, N18: { x: 800, y: 260 },
+    N01: { x: 100, y: 420 }, N02: { x: 290, y: 420 }, N03: { x: 480, y: 420 },
+    N04: { x: 690, y: 420 }, N05: { x: 900, y: 420 }, N06: { x: 1120, y: 420 },
+    N14: { x: 1400, y: 580 }, N15: { x: 1620, y: 580 }, N16: { x: 1620, y: 420 },
+    N07: { x: 1120, y: 740 }, N08: { x: 1300, y: 740 }, N09: { x: 1480, y: 740 },
+    N10: { x: 1660, y: 740 }, N11: { x: 1860, y: 740 },
+    N19: { x: 1660, y: 900 },
   } as Record<string, { x: number; y: number }>,
   nodeWidth: 120,
   nodeHeight: 70,
   canvasWidth: 2000,
-  canvasHeight: 980,
+  canvasHeight: 1000,
 };
 
 // ============================================
@@ -112,13 +112,13 @@ const EDGE_ROUTES: Record<string, { waypoints: Array<{ x: number; y: number }> }
   E01: { waypoints: [] }, E02: { waypoints: [] }, E03: { waypoints: [] },
   E04: { waypoints: [] }, E05: { waypoints: [] }, E06: { waypoints: [] },
   E07: { waypoints: [] }, E08: { waypoints: [] }, E09: { waypoints: [] },
-  E10: { waypoints: [] }, E11: { waypoints: [{ x: 1120, y: 100 }] },
-  E12: { waypoints: [] }, E13: { waypoints: [{ x: 1400, y: 400 }] },
+  E10: { waypoints: [] }, E11: { waypoints: [{ x: 1120, y: 120 }] },
+  E12: { waypoints: [] }, E13: { waypoints: [{ x: 1400, y: 420 }] },
   E14: { waypoints: [] }, E15: { waypoints: [] },
-  E16: { waypoints: [{ x: 1620, y: 720 }] },
-  E17: { waypoints: [{ x: 1860, y: 720 }, { x: 1860, y: 240 }, { x: 1120, y: 240 }] },
-  E18: { waypoints: [{ x: 580, y: 340 }, { x: 690, y: 340 }] },
-  E19: { waypoints: [{ x: 800, y: 340 }, { x: 690, y: 340 }] },
+  E16: { waypoints: [{ x: 1620, y: 740 }] },
+  E17: { waypoints: [{ x: 1860, y: 740 }, { x: 1860, y: 260 }, { x: 1120, y: 260 }] },
+  E18: { waypoints: [{ x: 580, y: 360 }, { x: 690, y: 360 }] },
+  E19: { waypoints: [{ x: 800, y: 360 }, { x: 690, y: 360 }] },
   E20: { waypoints: [] },
 };
 
@@ -304,9 +304,9 @@ export default function PFDViewer({ onBackToHome }: PFDViewerProps) {
     setSpeed,
   } = useSimulationContext();
 
-  // View state
-  const [zoom, setZoom] = useState(0.6);
-  const [pan, setPan] = useState({ x: 20, y: 10 });
+  // View state - initial zoom to fit diagram, pan to center
+  const [zoom, setZoom] = useState(0.5);
+  const [pan, setPan] = useState({ x: 10, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
